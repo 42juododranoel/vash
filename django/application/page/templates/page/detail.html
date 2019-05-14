@@ -1,0 +1,24 @@
+{% load i18n static %}
+<!doctype html>
+<html lang='{{ config.SITE_LANGUAGE }}'>
+  <head>
+    <meta charset='utf-8'/>
+    <meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no' />
+    <link rel='stylesheet' href='{% static "vash/css/styles.min.css" %}' />
+    <title>{{ page.title }}</title>
+    {% include 'page/fonts.html' %}
+    {{ page.clean_meta|safe }}
+  </head>
+  <body>
+    <main>
+      {{ page.clean_content|safe }}
+    </main>
+    <script
+      src='https://code.jquery.com/jquery-3.4.0.min.js'
+      integrity='sha256-BJeo0qm959uMBGb65z40ejJYGSgR7REI4+CW1fNKwOg='
+      crossorigin='anonymous'
+    ></script>
+    {% include 'page/cache.html' %}
+    {% include 'page/br.html' %}
+  </body>
+</html>

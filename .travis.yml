@@ -1,0 +1,10 @@
+language: bash
+
+
+before_install:
+  - whoami
+
+addons:
+  apt:
+    packages:
+    - sshpass

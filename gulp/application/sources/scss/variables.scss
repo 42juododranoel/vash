@@ -1,0 +1,45 @@
+// Color
+
+$white:     #fff;
+$gray-100:  #f8f9fa;
+$gray-200:  #e9ecef;
+$gray-300:  #dee2e6;
+$gray-400:  #ced4da;
+$gray-500:  #adb5bd;
+$gray-600:  #6c757d;
+$gray-700:  #495057;
+$gray-800:  #343a40;
+$gray-900:  #212529;
+$black:     #000;
+$blue:      #007bff;
+
+
+// Font
+
+$font-family-sans:    'PT Sans', 'Arial', 'Liberation Sans', sans-serif;
+$font-family-serif:   'PT Serif', 'Georgia', 'FreeSerif', serif;
+$font-family-mono:    'PT Mono', 'Courier New', 'DejaVu Sans Mono', monospace;
+
+$font-size-sm:        1.1rem;
+$font-size-md:        $font-size-sm;
+$font-size-lg:        1.3rem;
+$font-size-current:   1em;
+
+$font-weight-lighter:   lighter;
+$font-weight-light:     300;
+$font-weight-normal:    400;
+$font-weight-bold:      700;
+$font-weight-bolder:    bolder;
+
+$line-height-base:  1.5;
+$line-height-sm:    $line-height-base;
+$line-height-md:    $line-height-base;
+$line-height-lg:    1.6;
+
+
+// Other
+
+$link-color:        $blue;
+$link-hover-color:  darken($link-color, 15%);
+
+$paragraph-margin-bottom: $font-size-current;

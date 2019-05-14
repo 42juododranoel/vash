@@ -1,0 +1,11 @@
+version: '3.4'
+
+services:
+  django:
+    volumes:
+      - ${MEDIA_DIRECTORY}/:/resources/media/
+      - ${STATIC_DIRECTORY}/:/resources/static/
+      - ${ROOT_DIRECTORY}/django/application/:/application/
+    ports:
+      - 8000:8000
+    command: sleep 1d

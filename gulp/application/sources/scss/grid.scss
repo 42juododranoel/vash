@@ -1,0 +1,194 @@
+// Viewport and field variables
+
+$width-sm: 0px;
+
+$width-md: 960px;
+$width-centered-md: 1250px;
+
+$width-lg: 1400px;
+$width-centered-lg: 1590px;
+
+$viewport-widths: (
+  sm: $width-sm,
+  md: $width-md,
+  lg: $width-lg,
+);
+$viewports: sm, md, lg;
+
+$content-max-width-md: 1100px;
+$content-max-width-lg: 1400px;
+
+$field-size-default: 6vw;
+$field-size-sm: 20px;
+$field-size-md: calc((100vw - #{$content-max-width-md}) / 2);
+$field-size-lg: calc((100vw - #{$content-max-width-lg}) / 2);
+
+$grid-columns: 16;
+$columns-shortcut: repeat($grid-columns, 1fr);
+
+
+// Dynamic fields. I <3 Bureau https://bureau.ru/soviet/20190221/
+
+// 960px in Bureau
+@include media-breakpoint-down($width-md - 1px) {
+  .grid {
+    grid-template-columns: $field-size-sm $columns-shortcut $field-size-sm
+  }
+  .px-field {
+    padding-left: $field-size-sm;
+    padding-right: $field-size-sm;
+  }
+}
+
+// 961px in Bureau. I've changed it to 960 to fit breakpoint `md`
+@include media-breakpoint-between($width-md, $width-centered-md) {
+  .grid {
+    grid-template-columns: $field-size-default $columns-shortcut $field-size-default
+  }
+  .px-field {
+    padding-left: $field-size-default;
+    padding-right: $field-size-default;
+  }
+}
+
+@include media-breakpoint-between($width-centered-md + 1px, $width-lg - 1px) {
+  .grid {
+    grid-template-columns: $field-size-md $columns-shortcut $field-size-md
+  }
+  .px-field {
+    padding-left: $field-size-md;
+    padding-right: $field-size-md;
+  }
+}
+
+@include media-breakpoint-between($width-lg, $width-centered-lg) {
+  .grid {
+    grid-template-columns: $field-size-default $columns-shortcut $field-size-default
+  }
+  .px-field {
+    padding-left: $field-size-default;
+    padding-right: $field-size-default;
+  }
+}
+
+@include media-breakpoint-up($width-centered-lg + 1px) {
+  .grid {
+    grid-template-columns: $field-size-lg $columns-shortcut $field-size-lg
+  }
+  .px-field {
+    padding-left: $field-size-lg;
+    padding-right: $field-size-lg;
+  }
+}
+
+
+// Bootstrap stuff
+
+.grid { display: grid }
+
+// Classes:
+// col-full
+// col, col-md, col-lg
+// col-1...16, col-md-1...16, col-lg-1...16
+// off-1...16, off-md-1...16, off-lg-1...16
+
+.col-full { grid-column: 1 / -1 }
+
+@each $viewport, $width in $viewport-widths {
+  $infix: get-breakpoint-infix($viewport);
+
+  @include media-breakpoint-up($width) {
+    .col#{$infix} { grid-column: 2 / -2 }  // avoid side fields
+
+    @for $span from 1 through $grid-columns {
+      .off#{$infix}-#{$span} { grid-column-start: $span + 2 } // +2 means left field
+      .col#{$infix}-#{$span} { grid-column-end: span $span }
+    }
+  }
+}
+
+
+// Margin, padding
+
+$spacer: 1em;
+$spacers: (
+  '0':     0,
+  '025':  ($spacer * 0.25),
+  '05':   ($spacer * 0.5),
+  '075':  ($spacer * 0.75),
+  '1':     $spacer,
+  '2':    ($spacer * 2),
+  '3':    ($spacer * 3),
+  '4':    ($spacer * 4),
+  '5':    ($spacer * 5),
+);
+
+@each $viewport, $width in $viewport-widths {
+  $infix: get-breakpoint-infix($viewport);
+
+  @include media-breakpoint-up($width) {
+    @each $prop, $abbrev in (margin: m, padding: p) {
+      @each $size, $length in $spacers {
+        .#{$abbrev}#{$infix}-#{$size} { #{$prop}: $length !important; }
+        .#{$abbrev}t#{$infix}-#{$size},
+        .#{$abbrev}y#{$infix}-#{$size} {
+          #{$prop}-top: $length !important;
+        }
+        .#{$abbrev}r#{$infix}-#{$size},
+        .#{$abbrev}x#{$infix}-#{$size} {
+          #{$prop}-right: $length !important;
+        }
+        .#{$abbrev}b#{$infix}-#{$size},
+        .#{$abbrev}y#{$infix}-#{$size} {
+          #{$prop}-bottom: $length !important;
+        }
+        .#{$abbrev}l#{$infix}-#{$size},
+        .#{$abbrev}x#{$infix}-#{$size} {
+          #{$prop}-left: $length !important;
+        }
+      }
+    }
+
+    // Negative margins (e.g., where `.mb-n1` is negative version of `.mb-1`)
+    @each $size, $length in $spacers {
+      @if $size != 0 {
+        .m#{$infix}-n#{$size} { margin: -$length !important; }
+        .mt#{$infix}-n#{$size},
+        .my#{$infix}-n#{$size} {
+          margin-top: -$length !important;
+        }
+        .mr#{$infix}-n#{$size},
+        .mx#{$infix}-n#{$size} {
+          margin-right: -$length !important;
+        }
+        .mb#{$infix}-n#{$size},
+        .my#{$infix}-n#{$size} {
+          margin-bottom: -$length !important;
+        }
+        .ml#{$infix}-n#{$size},
+        .mx#{$infix}-n#{$size} {
+          margin-left: -$length !important;
+        }
+      }
+    }
+
+    // Some special margin utils
+    .m#{$infix}-auto { margin: auto !important; }
+    .mt#{$infix}-auto,
+    .my#{$infix}-auto {
+      margin-top: auto !important;
+    }
+    .mr#{$infix}-auto,
+    .mx#{$infix}-auto {
+      margin-right: auto !important;
+    }
+    .mb#{$infix}-auto,
+    .my#{$infix}-auto {
+      margin-bottom: auto !important;
+    }
+    .ml#{$infix}-auto,
+    .mx#{$infix}-auto {
+      margin-left: auto !important;
+    }
+  }
+}

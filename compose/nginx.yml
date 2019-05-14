@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  nginx:
+    build: ./nginx/
+    volumes:
+      - ${MEDIA_DIRECTORY}/:/resources/media/
+      - ${STATIC_DIRECTORY}/:/resources/static/
+      - ${CERTBOT_DIRECTORY}/etc/letsencrypt:/etc/letsencrypt
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - django

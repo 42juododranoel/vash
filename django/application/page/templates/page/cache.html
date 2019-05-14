@@ -1,0 +1,117 @@
+<script>
+    const STATE_LOADED = 0,  // current page loaded
+          STATE_CACHED = 1,  // related pages cached
+          META_START_SELECTOR = 'meta[property="meta-start"]',
+          META_END_SELECTOR = 'meta[property="meta-end"]',
+          CONTENT_SELECTOR = 'main'
+
+    var cache = {},
+        state = STATE_LOADED,
+        link = '{{ page.link }}',
+        title = '{{ page.title }}',
+        cache_link = '{{ page.cache_link }}'
+
+
+    function update_cache(cache, cache_link) {
+        $.get(cache_link, function(response_data) {
+            for (var i = 0; i < response_data.count; i++) {
+                cached_page = response_data.results[i]
+                cache[cached_page.link] = {
+                    title: cached_page.title,
+                    cache_link: cached_page.cache_link,
+                    clean_meta: cached_page.clean_meta,
+                    clean_content: cached_page.clean_content,
+                }
+            }
+        })
+        return cache
+    }
+
+
+    function check_if_link_is_cached(cache, link) {
+        for (var property in cache) {
+            if (cache.hasOwnProperty(property)) {
+                if (link == property) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+
+    function render_meta(meta) {
+        $(META_START_SELECTOR)
+            .nextUntil(META_END_SELECTOR)
+            .add(META_END_SELECTOR)
+            .remove()
+        $(META_START_SELECTOR).replaceWith(meta)
+    }
+
+
+    function render_content(content) {
+        $(CONTENT_SELECTOR).html(content)
+    }
+
+    function render_title(title) {
+        $('title').html(title)
+        document.title = title
+    }
+
+
+    function handle_click(event) {
+        var link = $(this).attr('href'),
+            is_link_local = link.startsWith('/'),
+            is_clicked_with_button = (
+                event.ctrlKey
+                || event.shiftKey
+                || event.metaKey
+                || (event.button && event.button == 1)
+            ),
+            is_link_cached = check_if_link_is_cached(cache, link)
+
+        if (is_link_local && is_link_cached && !is_clicked_with_button) {
+            transition_cached_to_loaded(link, update_history=true)
+            event.preventDefault()
+            transition_loaded_to_cached()
+        }
+    }
+
+
+    function handle_popstate(event) {
+        var link = event.originalEvent.state.link
+        transition_cached_to_loaded(link, update_history=false)
+        transition_loaded_to_cached()
+    }
+
+
+    function transition_cached_to_loaded(link, update_history) {
+        render_title(cache[link].title)
+        render_meta(cache[link].clean_meta)
+        render_content(cache[link].clean_content)
+
+        document.body.scrollTop = document.documentElement.scrollTop = 0
+
+        cache_link = cache[link].cache_link
+
+        if (update_history) {
+            history.pushState({link: link}, document.title, link)
+        }
+        state = STATE_LOADED
+    }
+
+
+    function transition_loaded_to_cached() {
+        var is_update_needed = true
+        if (is_update_needed) {
+            cache = update_cache(cache, cache_link)
+        }
+        $('main a').on('click', handle_click)
+        state = STATE_CACHED
+    }
+
+
+    history.replaceState({link: link}, title, link)
+    $(window).on('load', transition_loaded_to_cached)
+    $(window).on('popstate', handle_popstate)
+</script>

@@ -1,0 +1,15 @@
+version: '3.4'
+
+services:
+  gulp:
+    build:
+      context: ./gulp/
+      args:
+        - HOST_USER_ID
+    ports:
+      - 3000:3000
+      - 3001:3001
+    volumes:
+      - ${ROOT_DIRECTORY}/gulp/application/:/application/
+      - ${ROOT_DIRECTORY}/django/application/vash/static/vash/:/resources/assets/
+    command: bash -c 'npm install && npm start'

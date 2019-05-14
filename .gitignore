@@ -1,0 +1,6 @@
+__pycache__
+resources/certbot/
+resources/media/
+resources/static/
+scripts/
+gulp/application/node_modules/
