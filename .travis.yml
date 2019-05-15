@@ -1,9 +1,8 @@
 language: bash
 
-
 before_install:
-  - whoami
-  - echo 'foobarbaz'
+  - export HOST_USER_ID=`id -g`
+  - cd ~ && pwd
 
 addons:
   apt:
