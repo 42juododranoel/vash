@@ -7,14 +7,14 @@ before_install:
 - export MEDIA_DIRECTORY=${TRAVIS_BUILD_DIR}/resources/media
 - export STATIC_DIRECTORY=${TRAVIS_BUILD_DIR}/resources/static
 - export CERTBOT_DIRECTORY=${TRAVIS_BUILD_DIR}/resources/certbot
+
 - >
   docker-compose \
     -f compose/postgres.yml \
     -f compose/django.yml \
-    -f compose/gulp.yml \
     --project-directory . \
     build
-  
+
 addons:
   apt:
     packages:
