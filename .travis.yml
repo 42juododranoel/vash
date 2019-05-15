@@ -3,6 +3,7 @@ language: bash
 
 before_install:
   - whoami
+  - echo 'foobarbaz'
 
 addons:
   apt:
