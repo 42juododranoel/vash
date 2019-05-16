@@ -16,10 +16,11 @@ before_install:
   - shopt -s expand_aliases
   - ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
 
-  - export PRODUCTION_USER_ID=(ssh_to_production 'id -u')
+  - PRODUCTION_USER_ID=(ssh_to_production 'id -u')
 
 # Build
 install:
+  - echo ssh_to_production 'id -u'
   - echo "${PRODUCTION_USER_ID}awdawd"
   - >
     HOST_USER_ID=${PRODUCTION_USER_ID} docker-compose \
