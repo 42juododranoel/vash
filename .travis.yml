@@ -3,7 +3,7 @@ language: bash
 
 # Prepare environment and dependencies
 before_install:
-  - export HOST_USER_ID=`id -g`
+  - export HOST_USER_ID=`id -u`
 
   - export PARENT_DIRECTORY=/home/travis/build/vsevolod-skripnik
   - export ROOT_DIRECTORY=${TRAVIS_BUILD_DIR}
@@ -17,7 +17,7 @@ before_install:
   - ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
 
   - export PRODUCTION_SERVER_ROOT_DIRECTORY='/home/vash/repositories/vash'
-  - export PRODUCTION_USER_ID=ssh_to_production "id ${PRODUCTION_SERVER_USERNAME} -u"
+  - export PRODUCTION_USER_ID=ssh_to_production 'id -u'
   - echo '#############################'
   - echo ${PRODUCTION_USER_ID}
 
