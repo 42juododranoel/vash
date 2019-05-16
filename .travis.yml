@@ -16,19 +16,12 @@ install:
       --project-directory . \
       build
 
-# before_script
-# script
-# after_success or after_failure
-
 before_deploy:
   - docker save -o vash_django.tar vash_django
   - docker save -o vash_postgres.tar vash_postgres
 
 deploy:
   - echo deploy!
-
-# OPTIONAL after_deploy
-# after_script
 
 addons:
   apt:
