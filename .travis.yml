@@ -10,6 +10,10 @@ before_install:
   - export STATIC_DIRECTORY=${TRAVIS_BUILD_DIR}/resources/static
   - export CERTBOT_DIRECTORY=${TRAVIS_BUILD_DIR}/resources/certbot
 
+  - export SSHPASS=${PRODUCTION_SERVER_PASSWORD}
+  - alias ssh_to_production='sshpass -e ssh ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}'
+  - shopt -s expand_aliases
+
 # Build
 install:
   - >
