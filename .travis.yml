@@ -34,12 +34,10 @@ before_script:
 # Deploy to production
 script:
   - docker save -o vash_django.tar vash_django
-  -
-    >
-    sshpass \
-      -e scp \
-      vash_django.tar \
-      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_DOMAIN}:~/images
+  - > sshpass \
+        -e scp \
+        vash_django.tar \
+        ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
 
 # Check if alive
 after_script:
