@@ -1,5 +1,6 @@
 language: bash
 
+# test
 
 # Prepare environment and dependencies
 before_install:
