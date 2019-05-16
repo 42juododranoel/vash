@@ -21,12 +21,12 @@ before_install:
 
 # Build
 install:
-  - > HOST_USER_ID=${PRODUCTION_USER_ID} \
-        docker-compose \
-          -f compose/postgres.yml \
-          -f compose/django.yml \
-          --project-directory . \
-          build
+  > HOST_USER_ID=${PRODUCTION_USER_ID} \
+      docker-compose \
+        -f compose/postgres.yml \
+        -f compose/django.yml \
+        --project-directory . \
+        build
 
 # Test
 before_script:
@@ -35,10 +35,10 @@ before_script:
 # Deploy to production
 script:
   - docker save -o vash_django.tar vash_django
-  - > sshpass \
-        -e scp \
-        vash_django.tar \
-        ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
+  > sshpass \
+      -e scp \
+      vash_django.tar \
+      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
 
 # Check if alive
 after_script:
