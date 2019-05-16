@@ -1,6 +1,10 @@
 language: bash
 
+
+# Prepare environment and dependencies
 before_install:
+  - export HOST_USER_ID=`id -u`
+
   - export PARENT_DIRECTORY=/home/travis/build/vsevolod-skripnik
   - export ROOT_DIRECTORY=${TRAVIS_BUILD_DIR}
   - export MEDIA_DIRECTORY=${TRAVIS_BUILD_DIR}/resources/media
@@ -12,14 +16,13 @@ before_install:
   - shopt -s expand_aliases
   - ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
 
-  - export HOST_USER_ID=`id -u`
   - export PRODUCTION_USER_ID=`(ssh_to_production 'id -u')`
-
   - export DOCKER_DJANGO_IMAGE=vash_django:${TRAVIS_COMMIT}
+
 
 # Build
 install:
-  - > 
+  - >
     HOST_USER_ID=${PRODUCTION_USER_ID} \
       docker-compose \
         -f compose/postgres.yml \
@@ -27,18 +30,21 @@ install:
         --project-directory . \
         build
 
+
 # Test
 before_script:
   - echo 'Testing goes here'
 
+
 # Deploy to production
 script:
   - docker save -o vash_django.tar vash_django
-  - > 
+  - >
     sshpass \
       -e scp \
       vash_django.tar \
       ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
+
 
 # Check if alive
 after_script:
