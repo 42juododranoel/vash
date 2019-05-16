@@ -17,14 +17,13 @@ install:
       --project-directory . \
       build
 
-before_deploy:
+before_script:
   - docker save -o vash_django.tar vash_django
 
-deploy:
-  provider: script
-  script: whoami
+script:
+  - whoami
 
-after_deploy:
+after_script:
   - whoami
 
 
