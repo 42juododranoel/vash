@@ -1,6 +1,5 @@
 language: bash
 
-# test
 
 # Prepare environment and dependencies
 before_install:
@@ -21,9 +20,10 @@ before_install:
 
 # Build
 install:
-  > HOST_USER_ID=${PRODUCTION_USER_ID} \
+  - > 
+    HOST_USER_ID=${PRODUCTION_USER_ID} \
       docker-compose \
-        -f compose/postgres.yml \
+        -f compose/postgres.yml 
         -f compose/django.yml \
         --project-directory . \
         build
@@ -35,7 +35,8 @@ before_script:
 # Deploy to production
 script:
   - docker save -o vash_django.tar vash_django
-  > sshpass \
+  - > 
+    sshpass \
       -e scp \
       vash_django.tar \
       ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
