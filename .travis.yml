@@ -15,9 +15,10 @@ before_install:
   - alias ssh_to_production='sshpass -e ssh ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}'
   - shopt -s expand_aliases
   - ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
-
   - export PRODUCTION_USER_ID=`(ssh_to_production 'id -u')`
+  
   - export DOCKER_DJANGO_IMAGE=vash_django:${TRAVIS_COMMIT}
+  - export DOCKER_DJANGO_IMAGE_FILENAME=${DOCKER_DJANGO_IMAGE}.tar
 
 
 # Build
@@ -38,11 +39,11 @@ before_script:
 
 # Deploy to production
 script:
-  - docker save -o vash_django_${TRAVIS_COMMIT}.tar vash_django:${TRAVIS_COMMIT}
+  - docker save -o ${DOCKER_DJANGO_IMAGE_FILENAME} ${DOCKER_DJANGO_IMAGE}
   - >
     sshpass \
       -e scp \
-      vash_django.tar \
+      ${DOCKER_DJANGO_IMAGE_FILENAME} \
       ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
 
 
