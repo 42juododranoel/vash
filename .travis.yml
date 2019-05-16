@@ -1,5 +1,6 @@
 language: bash
 
+
 before_install:
   - export HOST_USER_ID=`id -g`
   - export PARENT_DIRECTORY=/home/travis/build/vsevolod-skripnik
@@ -18,11 +19,14 @@ install:
 
 before_deploy:
   - docker save -o vash_django.tar vash_django
-  # - docker save -o vash_postgres.tar vash_postgres
 
 deploy:
   provider: script
   script: whoami
+
+after_deploy:
+  - whoami
+
 
 addons:
   apt:
