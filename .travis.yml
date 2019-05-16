@@ -20,6 +20,7 @@ before_install:
 
 # Build
 install:
+  - echo "${PRODUCTION_USER_ID}awdawd"
   - >
     HOST_USER_ID=${PRODUCTION_USER_ID} docker-compose \
         -f compose/postgres.yml \
