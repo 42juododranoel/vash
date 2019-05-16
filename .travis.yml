@@ -4,6 +4,7 @@ language: bash
 # Prepare environment and dependencies
 before_install:
   - export HOST_USER_ID=`id -g`
+
   - export PARENT_DIRECTORY=/home/travis/build/vsevolod-skripnik
   - export ROOT_DIRECTORY=${TRAVIS_BUILD_DIR}
   - export MEDIA_DIRECTORY=${TRAVIS_BUILD_DIR}/resources/media
@@ -13,6 +14,12 @@ before_install:
   - export SSHPASS=${PRODUCTION_SERVER_PASSWORD}
   - alias ssh_to_production='sshpass -e ssh ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}'
   - shopt -s expand_aliases
+  - ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
+
+  - export PRODUCTION_SERVER_ROOT_DIRECTORY='/home/vash/repositories/vash'
+  - export PRODUCTION_USER_ID ssh_to_production 'id vash -u'
+  - echo '#############################'
+  - echo ${PRODUCTION_USER_ID}
 
 # Build
 install:
@@ -31,7 +38,6 @@ before_script:
 script:
   - docker save -o vash_django.tar vash_django
   # and db
-  - whoami
 
 # Check if alive
 after_script:
