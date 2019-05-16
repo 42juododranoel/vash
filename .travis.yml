@@ -38,7 +38,7 @@ before_script:
 
 # Deploy to production
 script:
-  - docker save -o vash_django.tar vash_django
+  - docker save -o vash_django_${TRAVIS_COMMIT}.tar vash_django:${TRAVIS_COMMIT}
   - >
     sshpass \
       -e scp \
