@@ -21,7 +21,7 @@ before_deploy:
   - docker save -o vash_postgres.tar vash_postgres
 
 deploy:
-  - echo deploy!
+  - echo
 
 addons:
   apt:
