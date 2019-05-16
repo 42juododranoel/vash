@@ -2,6 +2,7 @@ version: '3.4'
 
 services:
   django:
+    image: ${DOCKER_DJANGO_IMAGE}
     build:
       context: ./django/
       args:

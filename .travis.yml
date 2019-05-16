@@ -1,27 +1,51 @@
 language: bash
 
+
+# Prepare environment and dependencies
 before_install:
-  - export HOST_USER_ID=`id -g`
   - export PARENT_DIRECTORY=/home/travis/build/vsevolod-skripnik
   - export ROOT_DIRECTORY=${TRAVIS_BUILD_DIR}
   - export MEDIA_DIRECTORY=${TRAVIS_BUILD_DIR}/resources/media
   - export STATIC_DIRECTORY=${TRAVIS_BUILD_DIR}/resources/static
   - export CERTBOT_DIRECTORY=${TRAVIS_BUILD_DIR}/resources/certbot
 
+  - export SSHPASS=${PRODUCTION_SERVER_PASSWORD}
+  - alias ssh_to_production='sshpass -e ssh ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}'
+  - shopt -s expand_aliases
+  - ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
+
+  - export HOST_USER_ID=`id -u`
+  - export PRODUCTION_USER_ID=(ssh_to_production 'id -u')
+
+  - export DOCKER_DJANGO_IMAGE=vash_django:${TRAVIS_COMMIT}
+
+# Build
 install:
   - >
-    docker-compose \
-      -f compose/postgres.yml \
-      -f compose/django.yml \
-      --project-directory . \
-      build
+    HOST_USER_ID=${PRODUCTION_USER_ID} docker-compose \
+        -f compose/postgres.yml \
+        -f compose/django.yml \
+        --project-directory . \
+        build
 
-before_deploy:
+# Test
+before_script:
+  - echo 'Testing goes here'
+
+# Deploy to production
+script:
   - docker save -o vash_django.tar vash_django
-  - docker save -o vash_postgres.tar vash_postgres
+  -
+    >
+    sshpass \
+      -e scp \
+      vash_django.tar \
+      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_DOMAIN}:~/images
 
-# deploy:
-#   - echo
+# Check if alive
+after_script:
+  - whoami
+
 
 addons:
   apt:
