@@ -7,6 +7,7 @@ services:
       context: ./django/
       args:
         - HOST_USER_ID
+        - DJANGO_SECRET_KEY
     environment:
       - DJANGO_DEBUG
       - DJANGO_SECRET_KEY

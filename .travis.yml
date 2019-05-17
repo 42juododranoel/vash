@@ -1,7 +1,5 @@
 language: bash
 
-
-# Prepare environment and dependencies
 before_install:
   - export HOST_USER_ID=`id -u`
 
@@ -16,13 +14,10 @@ before_install:
   - shopt -s expand_aliases
   - ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
   - export PRODUCTION_USER_ID=`(ssh_to_production 'id -u')`
-  
+
   - export DOCKER_DJANGO_IMAGE=vash_django:${TRAVIS_COMMIT}
   - export DOCKER_DJANGO_IMAGE_FILENAME=vash_django_${TRAVIS_COMMIT}.tar
 
-
-# Build
-install:
   - >
     HOST_USER_ID=${PRODUCTION_USER_ID} \
       docker-compose \
@@ -31,14 +26,6 @@ install:
         --project-directory . \
         build
 
-
-# Test
-before_script:
-  - echo 'Testing goes here'
-
-
-# Deploy to production
-script:
   - docker save -o ${DOCKER_DJANGO_IMAGE_FILENAME} ${DOCKER_DJANGO_IMAGE}
   - >
     sshpass \
@@ -46,10 +33,7 @@ script:
       ${DOCKER_DJANGO_IMAGE_FILENAME} \
       ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
 
-
-# Check if alive
-after_script:
-  - whoami
+  - ssh_to_production "docker load < ~/images/${DOCKER_DJANGO_IMAGE_FILENAME}"
 
 
 addons:
