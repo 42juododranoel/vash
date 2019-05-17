@@ -41,6 +41,8 @@ before_install:
       --build
 
   # Upload Django image to production
+  - echo ${DOCKER_DJANGO_IMAGE_FILENAME}
+  - echo ${DOCKER_DJANGO_IMAGE}
   - docker save -o ${DOCKER_DJANGO_IMAGE_FILENAME} ${DOCKER_DJANGO_IMAGE}
   - >
     sshpass \
