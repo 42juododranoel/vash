@@ -76,11 +76,28 @@ before_install:
   # Update compose on production
   - on_production "cd ~/repositories/vash && git pull origin master"
 
-
   # Test section
   - >
     on_production "
-      cd ~/repositories/vash &&
-      whoami &&
-      pwd
+      export DOCKER_NGINX_IMAGE=${DOCKER_NGINX_IMAGE}
+      export DOCKER_DJANGO_IMAGE=${DOCKER_DJANGO_IMAGE}
+      export DOCKER_POSTGRES_IMAGE=${DOCKER_POSTGRES_IMAGE}
+
+      export HOST_USER_ID=${PRODUCTION_USER_ID}
+      export DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+
+      export PARENT_DIRECTORY=~/repositories
+      export ROOT_DIRECTORY=~/repositories/vash
+      export MEDIA_DIRECTORY=~/resources/vash/media
+      export STATIC_DIRECTORY=~/resources/vash/static
+      export CERTBOT_DIRECTORY=~/resources/vash/certbot
+
+      cd ~/repositories/vash
+      docker-compose \
+        -f compose/nginx.yml \
+        -f compose/django.yml \
+        -f compose/postgres.yml \
+        --project-directory . \
+        up \
+        -d
     "
