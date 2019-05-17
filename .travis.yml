@@ -1,5 +1,11 @@
 language: bash
 
+addons:
+  apt:
+    packages:
+    - sshpass
+    - docker-ce
+
 before_install:
   # Easy environment
   - export PARENT_DIRECTORY=/home/travis/build/vsevolod-skripnik
@@ -14,18 +20,18 @@ before_install:
   - shopt -s expand_aliases
   - ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
   - export PRODUCTION_USER_ID=`(on_production 'id -u')`
-  - export HOST_USER_UD=${PRODUCTION_USER_ID}
+  - export HOST_USER_ID=${PRODUCTION_USER_ID}
 
   # Get Nginx image names
   - export DOCKER_NGINX_IMAGE=vash_nginx:${TRAVIS_COMMIT}
-  - export DOCKER_NGINX_IMAGE_FILENAME=`echo ${DOCKER_NGINX_IMAGE/:/_}`
+  - export DOCKER_NGINX_IMAGE_FILENAME=`echo ${DOCKER_NGINX_IMAGE/:/_}.tar`
   # Get Django image names
   - export DOCKER_DJANGO_IMAGE=vash_django:${TRAVIS_COMMIT}
-  - export DOCKER_DJANGO_IMAGE_FILENAME=`echo ${DOCKER_DJANGO_IMAGE/:/_}`
+  - export DOCKER_DJANGO_IMAGE_FILENAME=`echo ${DOCKER_DJANGO_IMAGE/:/_}.tar`
   # Get Postgres image names
   - export docker_postgres_line=`cat .env | grep DOCKER_POSTGRES_IMAGE`
   - export DOCKER_POSTGRES_IMAGE=`echo ${postgres_line/DOCKER_POSTGRES_IMAGE=/}`
-  - export DOCKER_POSTGRES_IMAGE_FILENAME=`echo ${DOCKER_POSTGRES_IMAGE/:/_}`
+  - export DOCKER_POSTGRES_IMAGE_FILENAME=`echo ${DOCKER_POSTGRES_IMAGE/:/_.tar}`
 
   # Build and run images
   - >
@@ -72,10 +78,3 @@ before_install:
 
   # Test section
 
-
-addons:
-  apt:
-    packages:
-    - sshpass
-    - docker-ce
-    - docker-compose
