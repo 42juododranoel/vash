@@ -2,6 +2,7 @@ version: '3.4'
 
 services:
   nginx:
+    image: ${DOCKER_NGINX_IMAGE}
     build: ./nginx/
     volumes:
       - ${MEDIA_DIRECTORY}/:/resources/media/

@@ -14,25 +14,37 @@ before_install:
   - shopt -s expand_aliases
   - ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
   - export PRODUCTION_USER_ID=`(on_production 'id -u')`
+  - export HOST_USER_UD=${PRODUCTION_USER_ID}
 
+  # Get Nginx image names
+  - export DOCKER_NGINX_IMAGE=vash_nginx:${TRAVIS_COMMIT}
+  - export DOCKER_NGINX_IMAGE_FILENAME=`echo ${DOCKER_NGINX_IMAGE/:/_}`
   # Get Django image names
   - export DOCKER_DJANGO_IMAGE=vash_django:${TRAVIS_COMMIT}
   - export DOCKER_DJANGO_IMAGE_FILENAME=`echo ${DOCKER_DJANGO_IMAGE/:/_}`
-
   # Get Postgres image names
   - export docker_postgres_line=`cat .env | grep DOCKER_POSTGRES_IMAGE`
   - export DOCKER_POSTGRES_IMAGE=`echo ${postgres_line/DOCKER_POSTGRES_IMAGE=/}`
   - export DOCKER_POSTGRES_IMAGE_FILENAME=`echo ${DOCKER_POSTGRES_IMAGE/:/_}`
 
-  # Build images
+  # Build and run images
   - >
-    HOST_USER_ID=${PRODUCTION_USER_ID} \
-      docker-compose \
-        -f compose/postgres.yml \
-        --project-directory . \
-        up \
-        -d \
-        --build
+    docker-compose \
+      -f compose/nginx.yml \
+      -f compose/django.yml \
+      -f compose/postgres.yml \
+      --project-directory . \
+      up \
+      -d \
+      --build
+
+  # Upload Nginx image to production
+  - docker save -o ${DOCKER_NGINX_IMAGE_FILENAME} ${DOCKER_NGINX_IMAGE}
+  - >
+    sshpass \
+      -e scp \
+      ${DOCKER_NGINX_IMAGE_FILENAME} \
+      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
 
   # Upload Django image to production
   - docker save -o ${DOCKER_DJANGO_IMAGE_FILENAME} ${DOCKER_DJANGO_IMAGE}
@@ -51,8 +63,14 @@ before_install:
       ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
 
   # Load images on production
+  - on_production "docker load < ~/images/${DOCKER_NGINX_IMAGE_FILENAME}"
   - on_production "docker load < ~/images/${DOCKER_DJANGO_IMAGE_FILENAME}"
   - on_production "docker load < ~/images/${DOCKER_POSTGRES_IMAGE_FILENAME}"
+
+  # Update compose on production
+  - on_production "cd ~/repositories/vash && git pull origin master"
+
+  # Test section
 
 
 addons:
