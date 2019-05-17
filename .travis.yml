@@ -29,7 +29,6 @@ before_install:
     HOST_USER_ID=${PRODUCTION_USER_ID} \
       docker-compose \
         -f compose/postgres.yml \
-        -f compose/django.yml \
         --project-directory . \
         up \
         -d \
