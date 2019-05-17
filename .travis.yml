@@ -90,7 +90,7 @@ before_install:
       export STATIC_DIRECTORY=~/resources/vash/static &&
       export CERTBOT_DIRECTORY=~/resources/vash/certbot &&
       cd ~/repositories/vash &&
-      echo 'test'
+      echo $DJANGO_SECRET_KEY > /tmp/test.txt
     "
 
 # docker-compose \
