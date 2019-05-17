@@ -59,6 +59,5 @@ addons:
   apt:
     packages:
     - sshpass
-
-services:
-  - docker
+    - docker-ce
+    - docker-compose
