@@ -1,8 +1,6 @@
 language: bash
 
 before_install:
-  - export HOST_USER_ID=`id -u`
-
   - export PARENT_DIRECTORY=/home/travis/build/vsevolod-skripnik
   - export ROOT_DIRECTORY=${TRAVIS_BUILD_DIR}
   - export MEDIA_DIRECTORY=${TRAVIS_BUILD_DIR}/resources/media
@@ -10,14 +8,13 @@ before_install:
   - export CERTBOT_DIRECTORY=${TRAVIS_BUILD_DIR}/resources/certbot
 
   - export SSHPASS=${PRODUCTION_SERVER_PASSWORD}
-  - alias ssh_to_production='sshpass -e ssh ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}'
+  - alias on_production='sshpass -e ssh ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}'
   - shopt -s expand_aliases
   - ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
-  - export PRODUCTION_USER_ID=`(ssh_to_production 'id -u')`
+  - export PRODUCTION_USER_ID=`(on_production 'id -u')`
 
   - export DOCKER_DJANGO_IMAGE=vash_django:${TRAVIS_COMMIT}
-  - export DOCKER_DJANGO_IMAGE_FILENAME=vash_django_${TRAVIS_COMMIT}.tar
-
+  - export DOCKER_DJANGO_IMAGE_FILENAME=`echo "${DOCKER_DJANGO_IMAGE/:/_}"`
   - >
     HOST_USER_ID=${PRODUCTION_USER_ID} \
       docker-compose \
@@ -25,15 +22,16 @@ before_install:
         -f compose/django.yml \
         --project-directory . \
         build
-
   - docker save -o ${DOCKER_DJANGO_IMAGE_FILENAME} ${DOCKER_DJANGO_IMAGE}
-  - >
-    sshpass \
-      -e scp \
-      ${DOCKER_DJANGO_IMAGE_FILENAME} \
-      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
-
-  - ssh_to_production "docker load < ~/images/${DOCKER_DJANGO_IMAGE_FILENAME}"
+  - docker ps -a
+  - docker images -a
+  # - >
+  #   sshpass \
+  #     -e scp \
+  #     ${DOCKER_DJANGO_IMAGE_FILENAME} \
+  #     ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
+  #
+  # - on_production "docker load < ~/images/${DOCKER_DJANGO_IMAGE_FILENAME}"
 
 
 addons:
