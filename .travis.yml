@@ -1,5 +1,11 @@
 language: bash
 
+addons:
+  apt:
+    packages:
+    - sshpass
+    - docker-ce
+
 before_install:
   # Easy environment
   - export PARENT_DIRECTORY=/home/travis/build/vsevolod-skripnik
@@ -53,11 +59,3 @@ before_install:
   # Load images on production
   - on_production "docker load < ~/images/${DOCKER_DJANGO_IMAGE_FILENAME}"
   - on_production "docker load < ~/images/${DOCKER_POSTGRES_IMAGE_FILENAME}"
-
-
-addons:
-  apt:
-    packages:
-    - sshpass
-    - docker-ce
-    - docker-compose
