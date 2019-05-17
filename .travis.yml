@@ -31,6 +31,8 @@ before_install:
   - export DOCKER_POSTGRES_IMAGE=`echo ${postgres_line/DOCKER_POSTGRES_IMAGE=/}`
   - export DOCKER_POSTGRES_IMAGE_FILENAME=`echo ${DOCKER_POSTGRES_IMAGE/:/_}`
 
+  - cat .env
+  - cat .env | grep DOCKER_POSTGRES_IMAGE
   - echo ${DOCKER_DJANGO_IMAGE}
   - echo ${DOCKER_POSTGRES_IMAGE}
 
