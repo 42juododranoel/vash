@@ -30,7 +30,7 @@ before_install:
   - export DOCKER_DJANGO_IMAGE_FILENAME=`echo ${DOCKER_DJANGO_IMAGE/:/_}.tar`
   # Get Postgres image names
   - export docker_postgres_line=`cat .env | grep DOCKER_POSTGRES_IMAGE`
-  - export DOCKER_POSTGRES_IMAGE=`echo ${postgres_line/DOCKER_POSTGRES_IMAGE=/}`
+  - export DOCKER_POSTGRES_IMAGE=`echo ${docker_postgres_line/DOCKER_POSTGRES_IMAGE=/}`
   - export DOCKER_POSTGRES_IMAGE_FILENAME=`echo ${DOCKER_POSTGRES_IMAGE/:/_.tar}`
 
   # Build and run images
@@ -77,4 +77,3 @@ before_install:
   - on_production "cd ~/repositories/vash && git pull origin master"
 
   # Test section
-
