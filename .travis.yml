@@ -34,6 +34,7 @@ before_install:
   # Build images
   - >
     docker-compose \
+      -f compose/django.yml \
       -f compose/postgres.yml \
       --project-directory . \
       up \
