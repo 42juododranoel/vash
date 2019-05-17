@@ -24,12 +24,12 @@ before_install:
 
   # Get Django image names
   - export DOCKER_DJANGO_IMAGE=vash_django:${TRAVIS_COMMIT}
-  - export DOCKER_DJANGO_IMAGE_FILENAME=`echo ${DOCKER_DJANGO_IMAGE/:/_}`
+  - export DOCKER_DJANGO_IMAGE_FILENAME=`echo ${DOCKER_DJANGO_IMAGE/:/_}.tar`
 
   # Get Postgres image names
   - export docker_postgres_line=`cat .env | grep DOCKER_POSTGRES_IMAGE`
   - export DOCKER_POSTGRES_IMAGE=`echo ${docker_postgres_line/DOCKER_POSTGRES_IMAGE=/}`
-  - export DOCKER_POSTGRES_IMAGE_FILENAME=`echo ${DOCKER_POSTGRES_IMAGE/:/_}`
+  - export DOCKER_POSTGRES_IMAGE_FILENAME=`echo ${DOCKER_POSTGRES_IMAGE/:/_}.tar`
 
   # Build images
   - >
@@ -41,8 +41,7 @@ before_install:
       --build
 
   # Upload Django image to production
-  - echo ${DOCKER_DJANGO_IMAGE_FILENAME}
-  - echo ${DOCKER_DJANGO_IMAGE}
+  - docker images -a
   - docker save -o ${DOCKER_DJANGO_IMAGE_FILENAME} ${DOCKER_DJANGO_IMAGE}
   - >
     sshpass \
