@@ -86,7 +86,7 @@ before_install:
 
       export HOST_USER_ID=${PRODUCTION_USER_ID}
       export DJANGO_SECRET_KEY=\"${DJANGO_SECRET_KEY}\"
-      export DJANGO_DEBUG=True
+      export DJANGO_DEBUG=False
 
       export PARENT_DIRECTORY=~/repositories
       export ROOT_DIRECTORY=~/repositories/vash
