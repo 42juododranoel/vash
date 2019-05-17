@@ -39,6 +39,7 @@ before_install:
       -f compose/nginx.yml \
       -f compose/django.yml \
       -f compose/postgres.yml \
+      -f compose/production.yml \
       --project-directory . \
       up \
       -d \
@@ -76,7 +77,7 @@ before_install:
   # Update compose on production
   - on_production "cd ~/repositories/vash && git pull origin master"
 
-  # Test section
+  # Run images on production
   - >
     on_production "
       export DOCKER_NGINX_IMAGE=${DOCKER_NGINX_IMAGE}
@@ -97,7 +98,13 @@ before_install:
         -f compose/nginx.yml \
         -f compose/django.yml \
         -f compose/postgres.yml \
+        -f compose/production.yml \
         --project-directory . \
         up \
         -d
     "
+
+
+- Делаем, чтоб просто докер композ апалось нормально
+- Делаем, чтоб удалялись старые тарники и имейджи
+- База качается с прода на травис, там мигрируется, потом отправляется на прод новая
