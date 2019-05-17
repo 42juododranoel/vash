@@ -10,9 +10,8 @@
     {{ page.clean_meta|safe }}
   </head>
   <body>
-    <main>
-      {{ page.clean_content|safe }}
-    </main>
+    <main>{{ page.clean_content|safe }}</main>
+    {% include 'page/lazyload.html' %}
     <script
       src='https://code.jquery.com/jquery-3.4.0.min.js'
       integrity='sha256-BJeo0qm959uMBGb65z40ejJYGSgR7REI4+CW1fNKwOg='

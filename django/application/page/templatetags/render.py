@@ -45,10 +45,10 @@ def render_picture(file_id, classes='', is_gif=False):
                 source_tag += ' />'
             html += source_tag
 
-    default_classes = 'lazyload'
+    default_classes = 'lazy'
     classes = ' '.join([default_classes, classes])
 
-    img_tag = f'<img class="{classes}" src="{image.url}"'
+    img_tag = f'<img class="{classes}" data-src="{image.url}"'
     if image.default_alt_text:
         img_tag += f' alt="{image.default_alt_text}" />'
     else:
