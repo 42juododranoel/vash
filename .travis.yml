@@ -1,37 +1,59 @@
 language: bash
 
 before_install:
+  # Easy environment
   - export PARENT_DIRECTORY=/home/travis/build/vsevolod-skripnik
   - export ROOT_DIRECTORY=${TRAVIS_BUILD_DIR}
   - export MEDIA_DIRECTORY=${TRAVIS_BUILD_DIR}/resources/media
   - export STATIC_DIRECTORY=${TRAVIS_BUILD_DIR}/resources/static
   - export CERTBOT_DIRECTORY=${TRAVIS_BUILD_DIR}/resources/certbot
 
+  # Tricky environment, shortcuts
   - export SSHPASS=${PRODUCTION_SERVER_PASSWORD}
   - alias on_production='sshpass -e ssh ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}'
   - shopt -s expand_aliases
   - ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
   - export PRODUCTION_USER_ID=`(on_production 'id -u')`
 
+  # Get Django image names
   - export DOCKER_DJANGO_IMAGE=vash_django:${TRAVIS_COMMIT}
-  - export DOCKER_DJANGO_IMAGE_FILENAME=`echo "${DOCKER_DJANGO_IMAGE/:/_}"`
+  - export DOCKER_DJANGO_IMAGE_FILENAME=`echo ${DOCKER_DJANGO_IMAGE/:/_}`
+
+  # Get Postgres image names
+  - export docker_postgres_line=`cat .env | grep DOCKER_POSTGRES_IMAGE`
+  - export DOCKER_POSTGRES_IMAGE=`echo ${postgres_line/DOCKER_POSTGRES_IMAGE=/}`
+  - export DOCKER_POSTGRES_IMAGE_FILENAME=`echo ${DOCKER_POSTGRES_IMAGE/:/_}`
+
+  # Build images
   - >
     HOST_USER_ID=${PRODUCTION_USER_ID} \
       docker-compose \
         -f compose/postgres.yml \
         -f compose/django.yml \
         --project-directory . \
-        build
+        up \
+        -d \
+        --build
+
+  # Upload Django image to production
   - docker save -o ${DOCKER_DJANGO_IMAGE_FILENAME} ${DOCKER_DJANGO_IMAGE}
-  - docker ps -a
-  - docker images -a
-  # - >
-  #   sshpass \
-  #     -e scp \
-  #     ${DOCKER_DJANGO_IMAGE_FILENAME} \
-  #     ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
-  #
-  # - on_production "docker load < ~/images/${DOCKER_DJANGO_IMAGE_FILENAME}"
+  - >
+    sshpass \
+      -e scp \
+      ${DOCKER_DJANGO_IMAGE_FILENAME} \
+      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
+
+  # Upload Postgres image to production
+  - docker save -o ${DOCKER_POSTGRES_IMAGE_FILENAME} ${DOCKER_POSTGRES_IMAGE}
+  - >
+    sshpass \
+      -e scp \
+      ${DOCKER_POSTGRES_IMAGE_FILENAME} \
+      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
+
+  # Load images on production
+  - on_production "docker load < ~/images/${DOCKER_DJANGO_IMAGE_FILENAME}"
+  - on_production "docker load < ~/images/${DOCKER_POSTGRES_IMAGE_FILENAME}"
 
 
 addons:
