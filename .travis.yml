@@ -60,3 +60,6 @@ addons:
   apt:
     packages:
     - sshpass
+
+services:
+  - docker
