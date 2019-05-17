@@ -34,44 +34,44 @@ before_install:
   - export DOCKER_POSTGRES_IMAGE_FILENAME=`echo ${DOCKER_POSTGRES_IMAGE/:/_}.tar`
 
   # Build and run images
-  - >
-    docker-compose \
-      -f compose/nginx.yml \
-      -f compose/django.yml \
-      -f compose/postgres.yml \
-      --project-directory . \
-      up \
-      -d \
-      --build
+  # - >
+  #   docker-compose \
+  #     -f compose/nginx.yml \
+  #     -f compose/django.yml \
+  #     -f compose/postgres.yml \
+  #     --project-directory . \
+  #     up \
+  #     -d \
+  #     --build
 
   # Upload Nginx image to production
-  - docker save -o ${DOCKER_NGINX_IMAGE_FILENAME} ${DOCKER_NGINX_IMAGE}
-  - >
-    sshpass \
-      -e scp \
-      ${DOCKER_NGINX_IMAGE_FILENAME} \
-      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
+  # - docker save -o ${DOCKER_NGINX_IMAGE_FILENAME} ${DOCKER_NGINX_IMAGE}
+  # - >
+  #   sshpass \
+  #     -e scp \
+  #     ${DOCKER_NGINX_IMAGE_FILENAME} \
+  #     ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
 
   # Upload Django image to production
-  - docker save -o ${DOCKER_DJANGO_IMAGE_FILENAME} ${DOCKER_DJANGO_IMAGE}
-  - >
-    sshpass \
-      -e scp \
-      ${DOCKER_DJANGO_IMAGE_FILENAME} \
-      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
+  # - docker save -o ${DOCKER_DJANGO_IMAGE_FILENAME} ${DOCKER_DJANGO_IMAGE}
+  # - >
+  #   sshpass \
+  #     -e scp \
+  #     ${DOCKER_DJANGO_IMAGE_FILENAME} \
+  #     ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
 
   # Upload Postgres image to production
-  - docker save -o ${DOCKER_POSTGRES_IMAGE_FILENAME} ${DOCKER_POSTGRES_IMAGE}
-  - >
-    sshpass \
-      -e scp \
-      ${DOCKER_POSTGRES_IMAGE_FILENAME} \
-      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
+  # - docker save -o ${DOCKER_POSTGRES_IMAGE_FILENAME} ${DOCKER_POSTGRES_IMAGE}
+  # - >
+  #   sshpass \
+  #     -e scp \
+  #     ${DOCKER_POSTGRES_IMAGE_FILENAME} \
+  #     ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
 
   # Load images on production
-  - on_production "docker load < ~/images/${DOCKER_NGINX_IMAGE_FILENAME}"
-  - on_production "docker load < ~/images/${DOCKER_DJANGO_IMAGE_FILENAME}"
-  - on_production "docker load < ~/images/${DOCKER_POSTGRES_IMAGE_FILENAME}"
+  # - on_production "docker load < ~/images/${DOCKER_NGINX_IMAGE_FILENAME}"
+  # - on_production "docker load < ~/images/${DOCKER_DJANGO_IMAGE_FILENAME}"
+  # - on_production "docker load < ~/images/${DOCKER_POSTGRES_IMAGE_FILENAME}"
 
   # Update compose on production
   - on_production "cd ~/repositories/vash && git pull origin master"
@@ -90,11 +90,13 @@ before_install:
       export STATIC_DIRECTORY=~/resources/vash/static &&
       export CERTBOT_DIRECTORY=~/resources/vash/certbot &&
       cd ~/repositories/vash &&
-      docker-compose \
-        -f compose/nginx.yml \
-        -f compose/django.yml \
-        -f compose/postgres.yml \
-        --project-directory . \
-        up \
-        -d
+      echo 'test'
     "
+
+# docker-compose \
+#   -f compose/nginx.yml \
+#   -f compose/django.yml \
+#   -f compose/postgres.yml \
+#   --project-directory . \
+#   up \
+#   -d
