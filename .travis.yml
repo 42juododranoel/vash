@@ -31,7 +31,7 @@ before_install:
   # Get Postgres image names
   - export docker_postgres_line=`cat .env | grep DOCKER_POSTGRES_IMAGE`
   - export DOCKER_POSTGRES_IMAGE=`echo ${docker_postgres_line/DOCKER_POSTGRES_IMAGE=/}`
-  - export DOCKER_POSTGRES_IMAGE_FILENAME=`echo ${DOCKER_POSTGRES_IMAGE/:/_.tar}`
+  - export DOCKER_POSTGRES_IMAGE_FILENAME=`echo ${DOCKER_POSTGRES_IMAGE/:/_}.tar`
 
   # Build and run images
   - >
@@ -76,4 +76,11 @@ before_install:
   # Update compose on production
   - on_production "cd ~/repositories/vash && git pull origin master"
 
+
   # Test section
+  - >
+    on_production "
+      cd ~/repositories/vash &&
+      whoami &&
+      pwd
+    "
