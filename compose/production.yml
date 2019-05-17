@@ -6,5 +6,4 @@ services:
       - GUNICORN_WORKERS_NUMBER
     volumes:
       - ${MEDIA_DIRECTORY}/:/resources/media/
-      - ${STATIC_DIRECTORY}/:/resources/static/
     command: gunicorn vash.wsgi --reload -b :8000 --error-logfile - --access-logfile - -w ${GUNICORN_WORKERS_NUMBER}

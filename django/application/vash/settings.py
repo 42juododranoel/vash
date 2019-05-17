@@ -3,8 +3,8 @@ import os
 from django.utils.translation import gettext_lazy as _
 
 ALLOWED_HOSTS = ['*']
-SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
-DEBUG = True if os.environ['DJANGO_DEBUG'] == 'True' else False
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+DEBUG = True if os.environ.get('DJANGO_DEBUG') == 'True' else False
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 USE_TZ = True
