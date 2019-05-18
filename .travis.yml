@@ -69,8 +69,8 @@ install:
       --build
   # Wait for database to get ready, then load backup
   - >
-    while [ "$( psql -U vash -tAc "SELECT 1 FROM pg_database WHERE datname='vash'" )" != '1' ] \
-    do \
-      sleep 5s \
+    while [ "$( psql -U vash -tAc "SELECT 1 FROM pg_database WHERE datname='vash'" )" != '1' ];
+    do
+      sleep 5s;
     done
   - docker exec vash_postgres_1 psql -U vash vash < ${PRODUCTION_DATABASE_BACKUP_PATH}
