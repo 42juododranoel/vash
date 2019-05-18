@@ -67,10 +67,15 @@ install:
       up \
       -d \
       --build
-  # Wait for database to get ready, then load backup
+
+  # Wait for database to get ready
+  - query="SELECT 1 FROM pg_database WHERE datname='vash'"
+  - alias is_database_ready='docker exec vash_postgres_1 psql -U vash -tAc ${query}'
   - >
-    while [ "$( psql -U vash -tAc "SELECT 1 FROM pg_database WHERE datname='vash'" )" != '1' ];
+    while [ "$( ${is_database_ready} )" != '1' ];
     do
       sleep 5s;
     done
+  # Load backup and migrate
   - docker exec vash_postgres_1 psql -U vash vash < ${PRODUCTION_DATABASE_BACKUP_PATH}
+  - docker exec vash_django_1 python manage.py migrate --noinput
