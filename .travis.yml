@@ -103,13 +103,11 @@ before_script:
   - DOCKER_NGINX_IMAGE_DIRECTORY=/tmp/images/nginx
   - DOCKER_NGINX_IMAGE_FILENAME=${DOCKER_NGINX_IMAGE_DIRECTORY}/${COMMIT}.tar
   - mkdir ${DOCKER_NGINX_IMAGE_DIRECTORY}
+  - docker save -o ${DOCKER_NGINX_IMAGE_FILENAME} ${DOCKER_NGINX_IMAGE}
   - ls -lah /tmp
   - ls -lah /tmp/images
   - ls -lah ${DOCKER_NGINX_IMAGE_DIRECTORY}
-  - echo ${DOCKER_NGINX_IMAGE}
-  - echo ${DOCKER_NGINX_IMAGE_FILENAME}
-  - ls -lah ${DOCKER_NGINX_IMAGE_FILENAME}
-  - docker save -o ${DOCKER_NGINX_IMAGE_FILENAME} ${DOCKER_NGINX_IMAGE}
+  - ls -lah /tmp/images/nginx
   - >
     sshpass \
       -e scp \
