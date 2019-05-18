@@ -70,26 +70,18 @@ install:
 
   # Wait for Postgres to get ready
   - >
-    while [[ "$( docker exec vash_postgres_1 pg_isready )" ]];
-    do
-      sleep 5s;
-    done
+    until [[ "$( docker exec vash_postgres_1 pg_isready )" ]];
+    do sleep 1s; done
 
   # Wait for Postgres to create a database
   - >
     while [ "$( docker exec vash_postgres_1 psql -U vash -tAc "SELECT 1 FROM pg_database WHERE datname='vash'" )" != '1' ];
-    do
-      sleep 5s;
-    done
+    do sleep 1s; done
 
-  - sleep 5s  # Wait while Postgres reloads after creating a database
-
-  # Wait for Postgres to get ready again
+  # Wait for Postgres to get ready again. Postgres reloads after creating a database
   - >
-    while [[ "$( docker exec vash_postgres_1 pg_isready )" ]];
-    do
-      sleep 5s;
-    done
+    until [[ "$( docker exec vash_postgres_1 pg_isready )" ]];
+    do sleep 1s; done
 
   # Load backup and migrate
   - docker exec vash_postgres_1 psql -U vash vash < ${PRODUCTION_DATABASE_BACKUP_PATH}
