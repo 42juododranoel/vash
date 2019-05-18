@@ -1,10 +1,12 @@
 language: bash
 
+
 addons:
   apt:
     packages:
     - sshpass
     - docker-ce
+
 
 before_install:
   - export COMMIT=`echo ${TRAVIS_COMMIT:0:7}`  # Shorten commit hash
@@ -37,8 +39,7 @@ before_install:
   - export DOCKER_POSTGRES_IMAGE=`echo ${docker_postgres_line/DOCKER_POSTGRES_IMAGE=/}`
   - export DOCKER_POSTGRES_IMAGE_FILENAME=`echo ${DOCKER_POSTGRES_IMAGE/:/_}.tar`
 
-  # Test
-  - ls -lah /tmp
+  # Download production database to migrate
   - >
     on_production "
       echo > /tmp/vash_database.sql
@@ -50,7 +51,6 @@ before_install:
       -e scp \
       ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:/tmp/vash_database.sql \
       /tmp/vash_database.sql
-
   - on_production 'rm -rf /tmp/vash_database.sql'
 
 
@@ -65,3 +65,4 @@ install:
       up \
       -d \
       --build
+  - docker exec vash_postgres_1 psql -U vash vash < /tmp/vash_database.sql
