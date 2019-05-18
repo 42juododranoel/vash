@@ -59,6 +59,10 @@ install:
   # Prepare directories
   - mkdir -p ${MEDIA_DIRECTORY} ${STATIC_DIRECTORY} ${CERTBOT_DIRECTORY}
 
+  # TEST
+  - ls -lah
+  - ls -lah django
+
   # Build and run
   - >
     docker-compose \
