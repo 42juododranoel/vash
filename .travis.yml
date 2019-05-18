@@ -36,3 +36,31 @@ before_install:
   - export docker_postgres_line=`cat .env | grep DOCKER_POSTGRES_IMAGE`
   - export DOCKER_POSTGRES_IMAGE=`echo ${docker_postgres_line/DOCKER_POSTGRES_IMAGE=/}`
   - export DOCKER_POSTGRES_IMAGE_FILENAME=`echo ${DOCKER_POSTGRES_IMAGE/:/_}.tar`
+
+  # Test
+  - ls -lah /tmp
+  - >
+    on_production "
+      echo > /tmp/vash_database.sql
+      chown 660 /tmp/vash_database.sql
+      docker exec vash_postgres_1 pg_dump -U vash vash > /tmp/vash_database.sql
+    "
+  - >
+    sshpass
+      -e scp
+      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:/tmp/vash_database.sql
+      /tmp/vash_database.sql
+  - on_production 'rm -rf /tmp/vash_database.sql'
+
+
+install:
+  - >
+    docker-compose \
+      -f compose/nginx.yml \
+      -f compose/django.yml \
+      -f compose/postgres.yml \
+      -f compose/production.yml \
+      --project-directory . \
+      up \
+      -d \
+      --build
