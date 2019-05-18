@@ -52,7 +52,7 @@ before_install:
       -e scp \
       ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:${PRODUCTION_DATABASE_BACKUP_PATH} \
       ${PRODUCTION_DATABASE_BACKUP_PATH}
-  - on_production "rm -rf ${PRODUCTION_DATABASE_BACKUP_PATH}"
+  # - on_production "rm -rf ${PRODUCTION_DATABASE_BACKUP_PATH}"
 
 
 install:
@@ -72,11 +72,18 @@ install:
   - >
     while [ "$( docker exec vash_postgres_1 psql -U vash -tAc "SELECT 1 FROM pg_database WHERE datname='vash'" )" != '1' ];
     do
+      echo 'sleeping';
       sleep 5s;
     done
   # Load backup and migrate
   - docker exec vash_postgres_1 psql -U vash vash < ${PRODUCTION_DATABASE_BACKUP_PATH}
+
+  # Test
+  - docker exec vash_postgres_1 psql -U vash vash -tAc "SELECT id FROM page_page"
+  #
+
   - docker exec vash_django_1 python manage.py migrate --noinput
 
   # Test
   - docker exec vash_postgres_1 psql -U vash vash -tAc "SELECT id FROM page_page"
+  #
