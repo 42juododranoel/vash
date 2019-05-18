@@ -71,24 +71,23 @@ install:
   # Wait for Postgres to get ready
   - >
     until [[ "$( docker exec vash_postgres_1 pg_isready )" ]];
-    do sleep 1s; done
+    do echo 'Sleeping.'; sleep 1s; done
+  - sleep 5s  # Ensure it is ready
 
   # Wait for Postgres to create a database
   - >
     while [ "$( docker exec vash_postgres_1 psql -U vash -tAc "SELECT 1 FROM pg_database WHERE datname='vash'" )" != '1' ];
-    do sleep 1s; done
+    do echo 'Sleeping.'; sleep 1s; done
+  - sleep 5s  # Ensure database is created
 
-  # Wait for Postgres to get ready again. Postgres reloads after creating a database
+  # Wait for Postgres to get ready again. Postgres restarts after creating a database
   - >
     until [[ "$( docker exec vash_postgres_1 pg_isready )" ]];
-    do sleep 1s; done
+    do echo 'Sleeping.'; sleep 1s; done
+  - sleep 5s  # Ensure it is restarted
 
   # Load backup and migrate
   - docker exec vash_postgres_1 psql -U vash vash < ${PRODUCTION_DATABASE_BACKUP_PATH}
-
-  - docker exec vash_postgres_1 psql -U vash vash -tAc "\d"
-  - docker exec vash_postgres_1 psql -U vash vash -tAc "SELECT id FROM page_page"
-
   - docker exec vash_django_1 python manage.py migrate --noinput
 
   # Collect static
