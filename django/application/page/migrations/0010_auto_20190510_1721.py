@@ -14,8 +14,4 @@ class Migration(migrations.Migration):
             name='page',
             unique_together=set(),
         ),
-        migrations.RemoveField(
-            model_name='page',
-            name='site',
-        ),
     ]

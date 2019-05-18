@@ -20,11 +20,6 @@ class Migration(migrations.Migration):
                 ('description', models.TextField(blank=True, null=True, verbose_name='Description')),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Created at')),
                 ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Updated at')),
-                ('site', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='sites.Site', verbose_name='Site')),
             ],
-        ),
-        migrations.AlterUniqueTogether(
-            name='page',
-            unique_together={('slug', 'site')},
         ),
     ]
