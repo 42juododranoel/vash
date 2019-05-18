@@ -56,10 +56,6 @@ before_install:
 
 
 install:
-  # Prepare directories
-  - mkdir -p ${MEDIA_DIRECTORY} ${STATIC_DIRECTORY} ${CERTBOT_DIRECTORY}
-  - chown -R travis:${PRODUCTION_USER_ID} .
-
   # Build and run
   - >
     docker-compose \
@@ -93,4 +89,5 @@ install:
   - docker exec vash_django_1 python manage.py migrate --noinput
 
   # Collect static
+  - docker exec vash_django_1 chown -R user:user /resources/static
   - docker exec vash_django_1 python manage.py collectstatic --noinput
