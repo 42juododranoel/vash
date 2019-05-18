@@ -52,7 +52,7 @@ before_install:
       -e scp \
       ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:${PRODUCTION_DATABASE_BACKUP_PATH} \
       ${PRODUCTION_DATABASE_BACKUP_PATH}
-  # - on_production "rm -rf ${PRODUCTION_DATABASE_BACKUP_PATH}"
+  - on_production "rm -rf ${PRODUCTION_DATABASE_BACKUP_PATH}"
 
 
 install:
@@ -77,6 +77,8 @@ install:
     done
   # Load backup and migrate
   - docker exec vash_postgres_1 psql -U vash vash < ${PRODUCTION_DATABASE_BACKUP_PATH}
+
+  - docker logs vash_postgres_1
 
   # Test
   - docker exec vash_postgres_1 psql -U vash vash -tAc "SELECT id FROM page_page"
