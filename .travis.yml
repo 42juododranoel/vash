@@ -29,11 +29,9 @@ before_install:
 
   # Get Nginx image names and filename
   - export DOCKER_NGINX_IMAGE=vash_nginx:${COMMIT}
-  - export DOCKER_NGINX_IMAGE_FILENAME=`echo ${DOCKER_NGINX_IMAGE/:/_}.tar`
 
   # Get Django image name and filename
   - export DOCKER_DJANGO_IMAGE=vash_django:${COMMIT}
-  - export DOCKER_DJANGO_IMAGE_FILENAME=`echo ${DOCKER_DJANGO_IMAGE/:/_}.tar`
 
   # Get Postgres image name and filename
   - export docker_postgres_line=`cat .env | grep DOCKER_POSTGRES_IMAGE`
@@ -56,6 +54,8 @@ before_install:
 
 
 install:
+  - sudo chown -R ${PRODUCTION_USER_ID}:travis .
+
   # Build and run
   - >
     docker-compose \
@@ -89,6 +89,49 @@ install:
   - docker exec vash_django_1 python manage.py migrate --noinput
 
   # Collect static
-  - sudo chown -R ${PRODUCTION_USER_ID}:travis ${STATIC_DIRECTORY}
-  - ls -lah ${STATIC_DIRECTORY}
   - docker exec vash_django_1 python manage.py collectstatic --noinput
+
+
+before_deploy:
+  - mkdir /tmp/images
+
+  # Upload Nginx image to production
+  - DOCKER_NGINX_IMAGE_DIRECTORY=/tmp/images/nginx
+  - DOCKER_NGINX_IMAGE_FILENAME=${DOCKER_NGINX_IMAGE_DIRECTORY}/${COMMIT}.tar
+  - mkdir ${DOCKER_NGINX_IMAGE_DIRECTORY}
+  - docker save -o ${DOCKER_NGINX_IMAGE_FILENAME} ${DOCKER_NGINX_IMAGE}
+  - >
+    sshpass \
+      -e scp \
+      ${DOCKER_NGINX_IMAGE_FILENAME} \
+      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images/vash/nginx
+
+  # Upload Django image to production
+  - DOCKER_DJANGO_IMAGE_DIRECTORY=/tmp/images/django
+  - DOCKER_DJANGO_IMAGE_FILENAME=${DOCKER_DJANGO_IMAGE_DIRECTORY}/${COMMIT}.tar
+  - mkdir ${DOCKER_DJANGO_IMAGE_DIRECTORY}
+  - docker save -o ${DOCKER_DJANGO_IMAGE_FILENAME} ${DOCKER_DJANGO_IMAGE}
+  - >
+    sshpass \
+      -e scp \
+      ${DOCKER_DJANGO_IMAGE_FILENAME} \
+      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images/vash/django
+
+  # Upload Postgres image to production
+  - DOCKER_POSTGRES_IMAGE_DIRECTORY=/tmp/images/postgres
+  - DOCKER_POSTGRES_IMAGE_FILENAME=${DOCKER_POSTGRES_IMAGE_DIRECTORY}/${COMMIT}.tar
+  - mkdir ${DOCKER_POSTGRES_IMAGE_DIRECTORY}
+  - docker save -o ${DOCKER_POSTGRES_IMAGE_FILENAME} ${DOCKER_POSTGRES_IMAGE}
+  - >
+    sshpass \
+      -e scp \
+      ${DOCKER_POSTGRES_IMAGE_FILENAME} \
+      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images/vash/postgres
+
+  # Load images on production
+  - on_production "docker load < ~/images/vash/nginx/${COMMIT}.tar"
+  - on_production "docker load < ~/images/vash/django/${COMMIT}.tar"
+  - on_production "docker load < ~/images/vash/postgres/${COMMIT}.tar"
+
+  # Update compose on production
+  - on_production "cd ~/repositories/vash && git pull origin master"
