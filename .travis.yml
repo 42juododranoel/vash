@@ -7,14 +7,16 @@ addons:
     - docker-ce
 
 before_install:
-  # Easy environment
+  - export COMMIT=`echo ${TRAVIS_COMMIT:0:7}`  # Shorten commit hash
+
+  # Directories
   - export PARENT_DIRECTORY=/home/travis/build/vsevolod-skripnik
   - export ROOT_DIRECTORY=${TRAVIS_BUILD_DIR}
   - export MEDIA_DIRECTORY=${TRAVIS_BUILD_DIR}/resources/media
   - export STATIC_DIRECTORY=${TRAVIS_BUILD_DIR}/resources/static
   - export CERTBOT_DIRECTORY=${TRAVIS_BUILD_DIR}/resources/certbot
 
-  # Tricky environment, shortcuts
+  # Production-related environment, shortcut `on_production`
   - export SSHPASS=${PRODUCTION_SERVER_PASSWORD}
   - alias on_production='sshpass -e ssh ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}'
   - shopt -s expand_aliases
@@ -22,85 +24,15 @@ before_install:
   - export PRODUCTION_USER_ID=`(on_production 'id -u')`
   - export HOST_USER_ID=${PRODUCTION_USER_ID}
 
-  # Get Nginx image names
-  - export DOCKER_NGINX_IMAGE=vash_nginx:${TRAVIS_COMMIT}
+  # Get Nginx image names and filename
+  - export DOCKER_NGINX_IMAGE=vash_nginx:${COMMIT}
   - export DOCKER_NGINX_IMAGE_FILENAME=`echo ${DOCKER_NGINX_IMAGE/:/_}.tar`
-  # Get Django image names
-  - export DOCKER_DJANGO_IMAGE=vash_django:${TRAVIS_COMMIT}
+
+  # Get Django image name and filename
+  - export DOCKER_DJANGO_IMAGE=vash_django:${COMMIT}
   - export DOCKER_DJANGO_IMAGE_FILENAME=`echo ${DOCKER_DJANGO_IMAGE/:/_}.tar`
-  # Get Postgres image names
+
+  # Get Postgres image name and filename
   - export docker_postgres_line=`cat .env | grep DOCKER_POSTGRES_IMAGE`
   - export DOCKER_POSTGRES_IMAGE=`echo ${docker_postgres_line/DOCKER_POSTGRES_IMAGE=/}`
   - export DOCKER_POSTGRES_IMAGE_FILENAME=`echo ${DOCKER_POSTGRES_IMAGE/:/_}.tar`
-
-  # Build and run images
-  - >
-    docker-compose \
-      -f compose/nginx.yml \
-      -f compose/django.yml \
-      -f compose/postgres.yml \
-      -f compose/production.yml \
-      --project-directory . \
-      up \
-      -d \
-      --build
-
-  # Upload Nginx image to production
-  - docker save -o ${DOCKER_NGINX_IMAGE_FILENAME} ${DOCKER_NGINX_IMAGE}
-  - >
-    sshpass \
-      -e scp \
-      ${DOCKER_NGINX_IMAGE_FILENAME} \
-      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
-
-  # Upload Django image to production
-  - docker save -o ${DOCKER_DJANGO_IMAGE_FILENAME} ${DOCKER_DJANGO_IMAGE}
-  - >
-    sshpass \
-      -e scp \
-      ${DOCKER_DJANGO_IMAGE_FILENAME} \
-      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
-
-  # Upload Postgres image to production
-  - docker save -o ${DOCKER_POSTGRES_IMAGE_FILENAME} ${DOCKER_POSTGRES_IMAGE}
-  - >
-    sshpass \
-      -e scp \
-      ${DOCKER_POSTGRES_IMAGE_FILENAME} \
-      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/images
-
-  # Load images on production
-  - on_production "docker load < ~/images/${DOCKER_NGINX_IMAGE_FILENAME}"
-  - on_production "docker load < ~/images/${DOCKER_DJANGO_IMAGE_FILENAME}"
-  - on_production "docker load < ~/images/${DOCKER_POSTGRES_IMAGE_FILENAME}"
-
-  # Update compose on production
-  - on_production "cd ~/repositories/vash && git pull origin master"
-
-  # Run images on production
-  - >
-    on_production "
-      export DOCKER_NGINX_IMAGE=${DOCKER_NGINX_IMAGE}
-      export DOCKER_DJANGO_IMAGE=${DOCKER_DJANGO_IMAGE}
-      export DOCKER_POSTGRES_IMAGE=${DOCKER_POSTGRES_IMAGE}
-
-      export HOST_USER_ID=${PRODUCTION_USER_ID}
-      export DJANGO_SECRET_KEY=\"${DJANGO_SECRET_KEY}\"
-      export DJANGO_DEBUG=False
-
-      export PARENT_DIRECTORY=~/repositories
-      export ROOT_DIRECTORY=~/repositories/vash
-      export MEDIA_DIRECTORY=~/resources/vash/media
-      export STATIC_DIRECTORY=~/resources/vash/static
-      export CERTBOT_DIRECTORY=~/resources/vash/certbot
-
-      cd ~/repositories/vash
-      docker-compose \
-        -f compose/nginx.yml \
-        -f compose/django.yml \
-        -f compose/postgres.yml \
-        -f compose/production.yml \
-        --project-directory . \
-        up \
-        -d
-    "
