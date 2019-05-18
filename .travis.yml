@@ -57,7 +57,7 @@ before_install:
 
 install:
   # Prepare directories
-  - mkdir ${MEDIA_DIRECTORY} ${STATIC_DIRECTORY} ${CERTBOT_DIRECTORY}
+  - mkdir -p ${MEDIA_DIRECTORY} ${STATIC_DIRECTORY} ${CERTBOT_DIRECTORY}
 
   # Build and run
   - >
