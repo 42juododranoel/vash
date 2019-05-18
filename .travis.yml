@@ -51,7 +51,7 @@ before_install:
     sshpass \
       -e scp \
       ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:${PRODUCTION_DATABASE_BACKUP_PATH} \
-      ${DATABASE_BACKUP_PATH}
+      /tmp/vash_database.sql
   - on_production "rm -rf ${PRODUCTION_DATABASE_BACKUP_PATH}"
 
 
