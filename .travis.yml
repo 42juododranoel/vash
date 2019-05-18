@@ -89,6 +89,6 @@ install:
   - docker exec vash_django_1 python manage.py migrate --noinput
 
   # Collect static
-  - sudo chown -R ${PRODICTION_USER_ID}:travis ${STATIC_DIRECTORY}
+  - sudo chown -R ${PRODUCTION_USER_ID}:travis ${STATIC_DIRECTORY}
   - ls -lah ${STATIC_DIRECTORY}
   - docker exec vash_django_1 python manage.py collectstatic --noinput
