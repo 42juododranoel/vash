@@ -67,4 +67,5 @@ install:
       up \
       -d \
       --build
-  - docker exec vash_postgres_1 psql -U vash postgres < /tmp/vash_database.sql
+  - sleep 30s
+  - docker exec vash_postgres_1 psql -U vash vash < /tmp/vash_database.sql
