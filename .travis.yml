@@ -96,10 +96,19 @@ install:
 before_script:
   - mkdir /tmp/images  # Will store docker tar images here
 
+  - ls -lah /tmp/
+  - ls -lah /tmp/images
+
   # Upload Nginx image to production
   - DOCKER_NGINX_IMAGE_DIRECTORY=/tmp/images/nginx
   - DOCKER_NGINX_IMAGE_FILENAME=${DOCKER_NGINX_IMAGE_DIRECTORY}/${COMMIT}.tar
   - mkdir ${DOCKER_NGINX_IMAGE_DIRECTORY}
+  - ls -lah /tmp
+  - ls -lah /tmp/images
+  - ls -lah ${DOCKER_NGINX_IMAGE_DIRECTORY}
+  - echo ${DOCKER_NGINX_IMAGE}
+  - echo ${DOCKER_NGINX_IMAGE_FILENAME}
+  - ls -lah ${DOCKER_NGINX_IMAGE_FILENAME}
   - docker save -o ${DOCKER_NGINX_IMAGE_FILENAME} ${DOCKER_NGINX_IMAGE}
   - >
     sshpass \
