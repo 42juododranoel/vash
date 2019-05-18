@@ -58,10 +58,7 @@ before_install:
 install:
   # Prepare directories
   - mkdir -p ${MEDIA_DIRECTORY} ${STATIC_DIRECTORY} ${CERTBOT_DIRECTORY}
-
-  # TEST
-  - ls -lah
-  - ls -lah django
+  - chown -R travis:${PRODUCTION_USER_ID} .
 
   # Build and run
   - >
