@@ -38,7 +38,7 @@ before_install:
   - export DOCKER_POSTGRES_IMAGE=`echo ${docker_postgres_line/DOCKER_POSTGRES_IMAGE=/}`
   - export DOCKER_POSTGRES_IMAGE_FILENAME=`echo ${DOCKER_POSTGRES_IMAGE/:/_}.tar`
 
-  # Download production database to migrate
+  # Download production database to migrate later
   - >
     on_production "
       echo > ${PRODUCTION_DATABASE_BACKUP_PATH}
@@ -54,7 +54,7 @@ before_install:
 
 
 install:
-  - sudo chown -R ${PRODUCTION_USER_ID}:travis .
+  - sudo chown -R ${PRODUCTION_USER_ID}:travis .  # Travis and production user ids differ
 
   # Build and run
   - >
@@ -93,7 +93,7 @@ install:
 
 
 before_deploy:
-  - mkdir /tmp/images
+  - mkdir /tmp/images  # Will store docker tar images here
 
   # Upload Nginx image to production
   - DOCKER_NGINX_IMAGE_DIRECTORY=/tmp/images/nginx
@@ -133,5 +133,8 @@ before_deploy:
   - on_production "docker load < ~/images/vash/django/${COMMIT}.tar"
   - on_production "docker load < ~/images/vash/postgres/${COMMIT}.tar"
 
-  # Update compose on production
-  - on_production "cd ~/repositories/vash && git pull origin master"
+  # Clone project to another place to run second compose on production
+  - on_production "
+      cd ~/repositories/vash \
+      git clone https://github.com/vsevolod-skripnik/vash.git ${COMMIT}
+    "
