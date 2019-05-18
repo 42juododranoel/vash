@@ -77,3 +77,6 @@ install:
   # Load backup and migrate
   - docker exec vash_postgres_1 psql -U vash vash < ${PRODUCTION_DATABASE_BACKUP_PATH}
   - docker exec vash_django_1 python manage.py migrate --noinput
+
+  # Test
+  - docker exec vash_postgres_1 psql -U vash vash -tAc "SELECT id FROM page_page"
