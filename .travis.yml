@@ -23,6 +23,7 @@ before_install:
   - alias on_production='sshpass -e ssh ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}'
   - shopt -s expand_aliases
   - ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
+  - export PRODUCTION_DATABASE_BACKUP_PATH=/tmp/vash_database.sql
   - export PRODUCTION_USER_ID=`(on_production 'id -u')`
   - export HOST_USER_ID=${PRODUCTION_USER_ID}
 
@@ -42,19 +43,20 @@ before_install:
   # Download production database to migrate
   - >
     on_production "
-      echo > /tmp/vash_database.sql
-      chown 660 /tmp/vash_database.sql
-      docker exec vash_postgres_1 pg_dump -U vash vash > /tmp/vash_database.sql
+      echo > ${PRODUCTION_DATABASE_BACKUP_PATH}
+      chown 660 ${PRODUCTION_DATABASE_BACKUP_PATH}
+      docker exec vash_postgres_1 pg_dump -U vash vash > ${PRODUCTION_DATABASE_BACKUP_PATH}
     "
   - >
     sshpass \
       -e scp \
-      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:/tmp/vash_database.sql \
-      /tmp/vash_database.sql
-  - on_production 'rm -rf /tmp/vash_database.sql'
+      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:${PRODUCTION_DATABASE_BACKUP_PATH} \
+      ${PRODUCTION_DATABASE_BACKUP_PATH}
+  - on_production "rm -rf ${PRODUCTION_DATABASE_BACKUP_PATH}"
 
 
 install:
+  # Build and run
   - >
     docker-compose \
       -f compose/nginx.yml \
@@ -65,4 +67,4 @@ install:
       up \
       -d \
       --build
-  - docker exec vash_postgres_1 psql -U vash vash < /tmp/vash_database.sql
+  - docker exec vash_postgres_1 psql -U vash postgres < /tmp/vash_database.sql
