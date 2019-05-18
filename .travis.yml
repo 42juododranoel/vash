@@ -93,7 +93,7 @@ install:
   - docker exec vash_django_1 python manage.py collectstatic --noinput
 
 
-before_deploy:
+before_script:
   - mkdir /tmp/images  # Will store docker tar images here
 
   # Upload Nginx image to production
@@ -135,10 +135,14 @@ before_deploy:
   - on_production "docker load < ~/images/vash/postgres/${COMMIT}.tar"
 
   # Clone project to another place to run second compose on production
-  - on_production "
+  - >
+    on_production "
       cd ~/repositories/vash
       git clone https://github.com/vsevolod-skripnik/vash.git ${COMMIT}
       cd ${COMMIT}
       git checkout ${COMMIT}
       git reset --hard
     "
+
+script:
+  - whoami
