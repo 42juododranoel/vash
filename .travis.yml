@@ -46,10 +46,11 @@ before_install:
       docker exec vash_postgres_1 pg_dump -U vash vash > /tmp/vash_database.sql
     "
   - >
-    sshpass
-      -e scp
-      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:/tmp/vash_database.sql
+    sshpass \
+      -e scp \
+      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:/tmp/vash_database.sql \
       /tmp/vash_database.sql
+
   - on_production 'rm -rf /tmp/vash_database.sql'
 
 
