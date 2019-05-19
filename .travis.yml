@@ -93,7 +93,8 @@ install:
 
 
 before_script:
-  - mkdir /tmp/images  # Will store docker tar images here
+  - mkdir /tmp/images  # Will store Docker tar images here
+  - mkdir /tmp/artifacts  # Will store Django static gzipped tarballs here
 
   # Upload Nginx image to production
   - DOCKER_NGINX_IMAGE_DIRECTORY=/tmp/images/nginx
@@ -144,13 +145,13 @@ before_script:
     "
 
   # Static
-  - STATIC_TARBALL_FILENAME=${COMMIT}.tar.gz
+  - STATIC_TARBALL_FILENAME=/tmp/artifacts/${COMMIT}.tar.gz
   - tar -zcf ${STATIC_TARBALL_FILENAME} ${STATIC_DIRECTORY}
   - >
     sshpass \
       -e scp \
       ${STATIC_TARBALL_FILENAME} \
-      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/tmp/
+      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:/tmp/
 
   # Database
 
