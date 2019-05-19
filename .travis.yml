@@ -146,9 +146,7 @@ before_script:
 
   # Send static to production
   - STATIC_TARBALL_FILENAME=${COMMIT}.tar.gz
-  - cd ${STATIC_DIRECTORY}
-  - ls -lah
-  - tar -zcf ${STATIC_TARBALL_FILENAME} .
+  - tar -zcf ${STATIC_TARBALL_FILENAME} ${STATIC_DIRECTORY}
   - >
     sshpass \
       -e scp \
@@ -159,9 +157,8 @@ before_script:
   - >
     on_production "
       mkdir -p ${PRODUCTION_STATIC_DIRECTORY}
-      tar -zcf /tmp/${STATIC_TARBALL_FILENAME} ${PRODUCTION_STATIC_DIRECTORY}
+      tar -zxf /tmp/${STATIC_TARBALL_FILENAME} ${PRODUCTION_STATIC_DIRECTORY}
     "
-  - cd -
 
   # Database
 
