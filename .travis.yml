@@ -146,14 +146,17 @@ before_script:
 
   # Send static to production
   - STATIC_TARBALL_FILENAME=${COMMIT}.tar.gz
-  - tar -zcf ${STATIC_TARBALL_FILENAME} ${STATIC_DIRECTORY}
+  - >
+    cd ${STATIC_DIRECTORY}
+    tar -zcf /tmp/${STATIC_TARBALL_FILENAME} .
+    cd -
   - >
     sshpass \
       -e scp \
-      ${STATIC_TARBALL_FILENAME} \
-      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:/tmp/
+      /tmp/${STATIC_TARBALL_FILENAME} \
+      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:/tmp
 
-  - PRODUCTION_STATIC_DIRECTORY=~/artifacts/vash/static/${COMMIT}
+  - PRODUCTION_STATIC_DIRECTORY="~/artifacts/vash/static/${COMMIT}"
   - >
     on_production "
       mkdir -p ${PRODUCTION_STATIC_DIRECTORY}
@@ -165,12 +168,12 @@ before_script:
   - DATABASE_BACKUP_FILENAME=${COMMIT}.sql
   - docker exec vash_postgres_1 pg_dump -U vash vash > ${DATABASE_BACKUP_FILENAME}
   - >
-    mkdir -p ~/artifacts/database/${COMMIT}
+    on_production "mkdir -p ~/artifacts/database/${COMMIT}"
     sshpass \
       -e scp \
       ${DATABASE_BACKUP_FILENAME}
       ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/artifacts/database/${COMMIT} \
-  - on_production "rm -rf ${PRODUCTION_DATABASE_BACKUP_PATH}"
+    on_production "rm -rf ${PRODUCTION_DATABASE_BACKUP_PATH}"
 
 
 script:
