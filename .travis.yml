@@ -159,7 +159,7 @@ before_script:
   - >
     on_production "
       mkdir -p ${PRODUCTION_STATIC_DIRECTORY}
-      tar -zxf /tmp/${STATIC_TARBALL_FILENAME} ${PRODUCTION_STATIC_DIRECTORY}
+      tar -zxf /tmp/${STATIC_TARBALL_FILENAME} -С ${PRODUCTION_STATIC_DIRECTORY}
     "
 
   # Database
