@@ -143,9 +143,16 @@ before_script:
       git reset --hard
     "
 
-  # Database
   # Static
+  - STATIC_TARBALL_FILENAME=${COMMIT}.tar.gz
+  - tar -zcf ${STATIC_TARBALL_FILENAME} ${STATIC_DIRECTORY}
+  - >
+    sshpass \
+      -e scp \
+      ${STATIC_TARBALL_FILENAME} \
+      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/tmp/
 
+  # Database
 
 script:
   # Run second compose on production
@@ -166,9 +173,7 @@ script:
 
       cd ~/repositories/vash/${COMMIT}
       docker-compose \
-        # -f compose/django.yml \
         -f compose/postgres.yml \
-        # -f compose/production.yml \
         --project-directory . \
         up \
         -d
