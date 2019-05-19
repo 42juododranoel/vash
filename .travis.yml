@@ -145,7 +145,7 @@ before_script:
     "
 
   # Static
-  - STATIC_TARBALL_FILENAME=/tmp/artifacts/${COMMIT}.tar.gz
+  - STATIC_TARBALL_FILENAME=${COMMIT}.tar.gz
   - tar -zcf ${STATIC_TARBALL_FILENAME} ${STATIC_DIRECTORY}
   - >
     sshpass \
@@ -154,6 +154,7 @@ before_script:
       ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:/tmp/
 
   # Database
+
 
 script:
   # Run second compose on production
@@ -174,6 +175,7 @@ script:
 
       cd ~/repositories/vash/${COMMIT}
       docker-compose \
+        -f compose/django.yml \
         -f compose/postgres.yml \
         --project-directory . \
         up \
