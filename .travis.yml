@@ -168,7 +168,7 @@ before_script:
   - docker exec vash_postgres_1 pg_dump -U vash vash > ${DATABASE_BACKUP_FILENAME}
   - >
     on_production "
-      mkdir -p ~/artifacts/database/${COMMIT}"
+      mkdir -p ~/artifacts/database/${COMMIT}
       sshpass \
         -e scp \
         ${DATABASE_BACKUP_FILENAME} \
