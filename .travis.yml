@@ -146,15 +146,14 @@ before_script:
 
   # Send static to production
   - STATIC_TARBALL_FILENAME=${COMMIT}.tar.gz
-  - >
-    cd ${STATIC_DIRECTORY}
-    tar -zcf /tmp/${STATIC_TARBALL_FILENAME} .
-    cd -
+  - cd ${STATIC_DIRECTORY}
+  - tar -zcf /tmp/${STATIC_TARBALL_FILENAME} .
+  - cd -
   - >
     sshpass \
       -e scp \
       /tmp/${STATIC_TARBALL_FILENAME} \
-      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:/tmp
+      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:/tmp/
 
   - PRODUCTION_STATIC_DIRECTORY="~/artifacts/vash/static/${COMMIT}"
   - >
