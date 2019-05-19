@@ -147,6 +147,7 @@ before_script:
   # Send static to production
   - STATIC_TARBALL_FILENAME=${COMMIT}.tar.gz
   - cd ${STATIC_DIRECTORY}
+  - ls -lah
   - tar -zcf ${STATIC_TARBALL_FILENAME} .
   - >
     sshpass \
