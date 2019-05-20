@@ -162,16 +162,15 @@ before_script:
       tar -zxf /tmp/${STATIC_TARBALL_FILENAME} -C ${PRODUCTION_STATIC_DIRECTORY}
     "
 
-  # Database
-
+  # Send database to production
   - DATABASE_BACKUP_FILENAME=${COMMIT}.sql
   - docker exec vash_postgres_1 pg_dump -U vash vash > ${DATABASE_BACKUP_FILENAME}
-  - on_production "mkdir -p ~/artifacts/database/${COMMIT}"
+  - on_production "mkdir -p ~/artifacts/vash/database/${COMMIT}"
   - >
     sshpass \
       -e scp \
       ${DATABASE_BACKUP_FILENAME} \
-      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/artifacts/database/${COMMIT}
+      ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:~/artifacts/vash/database/${COMMIT}
 
 
 script:
@@ -203,4 +202,5 @@ script:
         --project-directory . \
         up \
         -d
+      sudo bash /root/scripts/change_20k_to_10k.sh
     "
