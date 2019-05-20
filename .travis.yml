@@ -190,8 +190,8 @@ script:
       export ROOT_DIRECTORY=~/repositories/vash/${COMMIT}
       export STATIC_DIRECTORY=${PRODUCTION_STATIC_DIRECTORY}
 
-      export NGINX_HOST_HTTP_PORT=20080
-      export NGINX_HOST_HTTPS_PORT=20443
+      export NGINX_HOST_HTTP_PORT=10080
+      export NGINX_HOST_HTTPS_PORT=10443
 
       cd ~/repositories/vash/${COMMIT}
       docker-compose \
@@ -202,7 +202,6 @@ script:
         --project-directory . \
         up \
         -d
-
 
       # Wait for Postgres to get ready
       sleep 10s
@@ -217,5 +216,5 @@ script:
       docker cp ~/artifacts/vash/database/${COMMIT}.sql ${COMMIT}_postgres_1:/tmp
       docker exec ${COMMIT}_postgres_1 bash -c \"psql -U vash vash < /tmp/${COMMIT}.sql\"
 
-      sudo bash /root/scripts/change_10k_to_20k.sh
+      sudo bash /root/scripts/change_20k_to_10k.sh
     "
