@@ -204,8 +204,7 @@ script:
         -d
 
       docker cp ~/artifacts/vash/database/${COMMIT}.sql ${COMMIT}_postgres_1:/tmp
-      docker exec ${COMMIT}_postgres_1 bash -c "psql -U vash vash < /tmp/${COMMIT}.sql"
+      docker exec ${COMMIT}_postgres_1 bash -c \"psql -U vash vash < /tmp/${COMMIT}.sql\"
 
       sudo bash /root/scripts/change_20k_to_10k.sh
     "
-  # to trigger build
