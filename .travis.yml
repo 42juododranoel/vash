@@ -203,17 +203,16 @@ script:
         up \
         -d
 
+
       # Wait for Postgres to get ready
-      until [[ \"$( docker exec ${COMMIT}_postgres_1 pg_isready )\" ]];
-      do echo 'Sleeping.'; sleep 5s; done
+      sleep 10s
+      until [[ \"$( docker exec ${COMMIT}_postgres_1 pg_isready )\" ]]; do echo 'Sleeping.'; sleep 5s; done
 
       # Wait for Postgres to create a database
-      while [ \"$( docker exec ${COMMIT}_postgres_1 psql -U vash -tAc \"SELECT 1 FROM pg_database WHERE datname='vash'\" )\" != '1' ];
-      do echo 'Sleeping.'; sleep 5s; done
+      while [ \"$( docker exec ${COMMIT}_postgres_1 psql -U vash -tAc \"SELECT 1 FROM pg_database WHERE datname='vash'\" )\" != '1' ]; do echo 'Sleeping.'; sleep 5s; done
 
       # Wait for Postgres to get ready again. Postgres restarts after creating a database
-      until [[ \"$( docker exec ${COMMIT}_postgres_1 pg_isready )\" ]];
-      do echo 'Sleeping.'; sleep 5s; done
+      until [[ \"$( docker exec ${COMMIT}_postgres_1 pg_isready )\" ]]; do echo 'Sleeping.'; sleep 5s; done
 
       docker cp ~/artifacts/vash/database/${COMMIT}.sql ${COMMIT}_postgres_1:/tmp
       docker exec ${COMMIT}_postgres_1 bash -c \"psql -U vash vash < /tmp/${COMMIT}.sql\"
