@@ -191,8 +191,12 @@ script:
       export ROOT_DIRECTORY=~/repositories/vash/${COMMIT}
       export STATIC_DIRECTORY=${PRODUCTION_STATIC_DIRECTORY}
 
+      export NGINX_HOST_HTTP_PORT=10080
+      export NGINX_HOST_HTTPS_PORT=10443
+
       cd ~/repositories/vash/${COMMIT}
       docker-compose \
+        -f compose/nginx.yml \
         -f compose/django.yml \
         -f compose/postgres.yml \
         -f compose/production.yml \
@@ -200,4 +204,3 @@ script:
         up \
         -d
     "
-  # commit to trigger travis build
