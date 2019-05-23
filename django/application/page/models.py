@@ -41,6 +41,8 @@ class PageQuerySet(models.QuerySet):
 
 
 class Page(models.Model):
+    MAIN_PAGE_SLUG = 'main'
+
     title = models.CharField(
         verbose_name=_('Title'),
         max_length=255,
@@ -164,6 +166,7 @@ class Page(models.Model):
         pattern = "{% url ['\"]page:visible['\"] ['\"]([\w+-]+)['\"] %}"
         slugs = re.findall(pattern, self.content)
         slugs.append(self.slug)  # for browser back button
+        slugs.append(self.MAIN_PAGE_SLUG)  # for `main` button on page
         return reverse('page-list') + '?slug__in=' + ','.join(slugs)
 
     def get_base_meta(self):
