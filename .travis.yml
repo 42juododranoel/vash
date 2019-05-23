@@ -122,7 +122,7 @@ before_install:
       export PRODUCTION_NGINX_PORT_SET_CURRENT="${nginx_ports_set_current/NGINX_PORT_SET_CURRENT=/}";
       export PRODUCTION_NGINX_PORT_SET_PREVIOUS="${nginx_ports_set_previous/NGINX_PORT_SET_PREVIOUS=/}";
       export PRODUCTION_COMMIT_CURRENT="${commit_current/COMMIT_CURRENT=/}";
-      export PRODUCTION_COMMIT_CURRENT="${commit_previous/COMMIT_PREVIOUS=/}";
+      export PRODUCTION_COMMIT_PREVIOUS="${commit_previous/COMMIT_PREVIOUS=/}";
     else
       export PRODUCTION_NGINX_PORT_SET_CURRENT='A';
       export PRODUCTION_NGINX_PORT_SET_PREVIOUS='B';
