@@ -133,14 +133,13 @@ before_install:
 
   - # Production Postgres
 
-  - export PRODUCTION_POSTGRES_CONTAINER="${PRODUCTION_COMMIT_CURRENT}_postgres_1"
   - export PRODUCTION_POSTGRES_USERNAME='vash'
   - export PRODUCTION_POSTGRES_DATABASE='vash'
   - export PRODUCTION_POSTGRES_BACKUP_NAME=`date +%d-%m-%y__%H-%M.sql`
   - export PRODUCTION_POSTGRES_BACKUP_PATH="${PRODUCTION_BACKUPS_POSTGRES_DIRECTORY}/${PRODUCTION_POSTGRES_BACKUP_NAME}"
   - export PRODUCTION_POSTGRES_ARTEFACT_NAME=${POSTGRES_ARTEFACT_NAME}
   - export PRODUCTION_POSTGRES_ARTEFACT_PATH="${PRODUCTION_ARTEFACTS_POSTGRES_DIRECTORY}/${PRODUCTION_POSTGRES_ARTEFACT_NAME}"
-
+  - export PRODUCTION_POSTGRES_CONTAINER_NAME="${PROJECT_NAME}${COMMIT}_postgres_1"
 
   - # Create directory structure on production
 
@@ -179,7 +178,7 @@ before_install:
     if [ -n "${PRODUCTION_COMMIT_CURRENT}" ];
     then
       run_on_production "
-        docker exec ${PRODUCTION_POSTGRES_CONTAINER} \
+        docker exec ${PROJECT_NAME}${PRODUCTION_COMMIT_CURRENT}_postgres_1 \
           pg_dump \
             -U ${PRODUCTION_POSTGRES_USERNAME} \
             ${PRODUCTION_POSTGRES_DATABASE} \
@@ -318,6 +317,7 @@ install:
         -f compose/production.yml \
         -f compose/nginx_ports_${PRODUCTION_NGINX_PORT_SET_PREVIOUS}.yml \
         --project-directory . \
+        -p ${PROJECT_NAME}${COMMIT} \
         up \
         -d
     "
@@ -329,20 +329,20 @@ install:
     run_on_production "
       sleep 5s  # Give Postgres some time to boot
 
-      while [ \"\$( docker exec ${COMMIT}_postgres_1 psql -U ${PRODUCTION_POSTGRES_USERNAME} -tAc \"SELECT 1 FROM pg_database WHERE datname='${PRODUCTION_POSTGRES_DATABASE}'\" )\" != '1' ]; do
+      while [ \"\$( docker exec ${PRODUCTION_POSTGRES_CONTAINER_NAME} psql -U ${PRODUCTION_POSTGRES_USERNAME} -tAc \"SELECT 1 FROM pg_database WHERE datname='${PRODUCTION_POSTGRES_DATABASE}'\" )\" != '1' ]; do
         echo 'Waiting for Postgres to create a database.';
         sleep 5s;
       done
 
       sleep 5s  # Give Postgres some time to restart after creating a database
 
-      until [[ \"\$( docker exec ${COMMIT}_postgres_1 pg_isready )\" ]]; do
+      until [[ \"\$( docker exec ${PRODUCTION_POSTGRES_CONTAINER_NAME} pg_isready )\" ]]; do
         echo 'Waiting for Postgres to get ready.';
         sleep 5s;
       done
 
-      docker cp ${PRODUCTION_POSTGRES_ARTEFACT_PATH} ${COMMIT}_postgres_1:/tmp
-      docker exec ${COMMIT}_postgres_1 bash -c 'psql -U ${PRODUCTION_POSTGRES_USER} ${PRODUCTION_POSTGRES_DATABASE} < /tmp/${PRODUCTION_POSTGRES_ARTEFACT_NAME}' > /dev/null
+      docker cp ${PRODUCTION_POSTGRES_ARTEFACT_PATH} ${PRODUCTION_POSTGRES_CONTAINER_NAME}:/tmp
+      docker exec ${PRODUCTION_POSTGRES_CONTAINER_NAME} bash -c 'psql -U ${PRODUCTION_POSTGRES_USER} ${PRODUCTION_POSTGRES_DATABASE} < /tmp/${PRODUCTION_POSTGRES_ARTEFACT_NAME}' > /dev/null
     "
 
 
@@ -373,9 +373,9 @@ install:
   - >
     if [ -n "${PRODUCTION_COMMIT_CURRENT}" ]; then
       run_on_production "
-        docker stop ${PRODUCTION_COMMIT_CURRENT}_nginx_1 \
-                    ${PRODUCTION_COMMIT_CURRENT}_django_1 \
-                    ${PRODUCTION_COMMIT_CURRENT}_postgres_1
+        docker stop ${PROJECT_NAME}${PRODUCTION_COMMIT_CURRENT}_nginx_1 \
+                    ${PROJECT_NAME}${PRODUCTION_COMMIT_CURRENT}_django_1 \
+                    ${PROJECT_NAME}${PRODUCTION_COMMIT_CURRENT}_postgres_1
       "
     else
       echo 'No current commit'
@@ -387,9 +387,9 @@ install:
   - >
     if [ -n "${PRODUCTION_COMMIT_PREVIOUS}" ]; then
       run_on_production "
-        docker stop ${PRODUCTION_COMMIT_PREVIOUS}_nginx_1 \
-                    ${PRODUCTION_COMMIT_PREVIOUS}_django_1 \
-                    ${PRODUCTION_COMMIT_PREVIOUS}_postgres_1
+        docker stop ${PROJECT_NAME}${PRODUCTION_COMMIT_PREVIOUS}_nginx_1 \
+                    ${PROJECT_NAME}${PRODUCTION_COMMIT_PREVIOUS}_django_1 \
+                    ${PROJECT_NAME}${PRODUCTION_COMMIT_PREVIOUS}_postgres_1
       "
     else
       echo 'No previous commit'
