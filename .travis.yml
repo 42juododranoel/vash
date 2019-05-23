@@ -17,22 +17,22 @@ before_install:
 
   - >
     function send_to_production {
-      path_source=$1
-      path_destination=$2
+      source=$1
+      destination=$2
       sshpass \
         -e scp \
-        ${path_source} \
-        ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:${path_destination}
+        ${source} \
+        ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:${destination}
     }
 
   - >
     function download_from_production {
-      path_source=$1
-      path_destination=$2
+      source=$1
+      destination=$2
       sshpass \
         -e scp \
-        ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:${path_source} \
-        ${path_destination}
+        ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:${source} \
+        ${destination}
     }
 
 
@@ -54,11 +54,6 @@ before_install:
   - export POSTGRES_USERNAME='vash'
   - export POSTGRES_DATABASE='vash'
   - export POSTGRES_CONTAINER_NAME='vash_postgres_1'
-
-  - export NGINX_PORT_HTTP_ONE=10080
-  - export NGINX_PORT_HTTP_TWO=20080
-  - export NGINX_PORT_HTTPS_ONE=10443
-  - export NGINX_PORT_HTTPS_TWO=20443
 
   - export STATIC_TARBALL_NAME=${COMMIT}.tar.gz
 
@@ -111,17 +106,6 @@ before_install:
   - export PRODUCTION_ENVIRONMENT_ROOT='~/environment'
 
 
-  - # Production Postgres
-
-  - export PRODUCTION_POSTGRES_CONTAINER='vash_postgres_1'
-  - export PRODUCTION_POSTGRES_USERNAME='vash'
-  - export PRODUCTION_POSTGRES_DATABASE='vash'
-  - export PRODUCTION_POSTGRES_BACKUP_NAME=`date +%d-%m-%y__%H-%M.sql`
-  - export PRODUCTION_POSTGRES_BACKUP_PATH="${PRODUCTION_BACKUPS_POSTGRES_DIRECTORY}/${PRODUCTION_POSTGRES_BACKUP_NAME}"
-  - export PRODUCTION_POSTGRES_ARTEFACT_NAME=${POSTGRES_ARTEFACT_NAME}
-  - export PRODUCTION_POSTGRES_ARTEFACT_PATH="${PRODUCTION_ARTEFACTS_POSTGRES_DIRECTORY}/${PRODUCTION_POSTGRES_ARTEFACT_NAME}"
-
-
   - # Production environment to run project
 
   - export PRODUCTION_STATIC_DIRECTORY=${PRODUCTION_ARTEFACTS_STATIC_DIRECTORY}/${COMMIT}
@@ -131,14 +115,31 @@ before_install:
   - >
     if run_on_production "stat ${PRODUCTION_ENVIRONMENT_FILE} > /dev/null 2>&1";
     then
-      nginx_ports_set_current=`run_on_production "cat ${PRODUCTION_ENVIRONMENT_FILE}" | grep NGINX_PORTS_SET_CURRENT`;
-      nginx_ports_set_previous=`run_on_production "cat ${PRODUCTION_ENVIRONMENT_FILE}" | grep NGINX_PORTS_SET_PREVIOUS`;
-      export NGINX_PORTS_SET_CURRENT="${nginx_ports_set_current/NGINX_PORTS_SET_CURRENT=/}";
-      export NGINX_PORTS_SET_PREVIOUS="${nginx_ports_set_previous/NGINX_PORTS_SET_PREVIOUS=/}";
+      nginx_ports_set_current=`run_on_production "cat ${PRODUCTION_ENVIRONMENT_FILE}" | grep NGINX_PORT_SET_CURRENT`;
+      nginx_ports_set_previous=`run_on_production "cat ${PRODUCTION_ENVIRONMENT_FILE}" | grep NGINX_PORT_SET_PREVIOUS`;
+      commit_current=`run_on_production "cat ${PRODUCTION_ENVIRONMENT_FILE}" | grep COMMIT_CURRENT`;
+      commit_previous=`run_on_production "cat ${PRODUCTION_ENVIRONMENT_FILE}" | grep COMMIT_PREVIOUS`;
+      export PRODUCTION_NGINX_PORT_SET_CURRENT="${nginx_ports_set_current/NGINX_PORT_SET_CURRENT=/}";
+      export PRODUCTION_NGINX_PORT_SET_PREVIOUS="${nginx_ports_set_previous/NGINX_PORT_SET_PREVIOUS=/}";
+      export PRODUCTION_COMMIT_CURRENT="${commit_current/COMMIT_CURRENT=/}";
+      export PRODUCTION_COMMIT_CURRENT="${commit_previous/COMMIT_PREVIOUS=/}";
     else
-      export NGINX_PORTS_SET_CURRENT='A';
-      export NGINX_PORTS_SET_PREVIOUS='B';
+      export PRODUCTION_NGINX_PORT_SET_CURRENT='A';
+      export PRODUCTION_NGINX_PORT_SET_PREVIOUS='B';
+      export PRODUCTION_COMMIT_CURRENT=;
+      export PRODUCTION_COMMIT_PREVIOUS=;
     fi
+
+
+  - # Production Postgres
+
+  - export PRODUCTION_POSTGRES_CONTAINER="${PRODUCTION_COMMIT_CURRENT}_postgres_1"
+  - export PRODUCTION_POSTGRES_USERNAME='vash'
+  - export PRODUCTION_POSTGRES_DATABASE='vash'
+  - export PRODUCTION_POSTGRES_BACKUP_NAME=`date +%d-%m-%y__%H-%M.sql`
+  - export PRODUCTION_POSTGRES_BACKUP_PATH="${PRODUCTION_BACKUPS_POSTGRES_DIRECTORY}/${PRODUCTION_POSTGRES_BACKUP_NAME}"
+  - export PRODUCTION_POSTGRES_ARTEFACT_NAME=${POSTGRES_ARTEFACT_NAME}
+  - export PRODUCTION_POSTGRES_ARTEFACT_PATH="${PRODUCTION_ARTEFACTS_POSTGRES_DIRECTORY}/${PRODUCTION_POSTGRES_ARTEFACT_NAME}"
 
 
   - # Create directory structure on production
@@ -175,13 +176,17 @@ before_install:
   - # Download database backup from production
 
   - >
-    run_on_production "
-      docker exec ${PRODUCTION_POSTGRES_CONTAINER} \
-        pg_dump \
-          -U ${PRODUCTION_POSTGRES_USERNAME} \
-          ${PRODUCTION_POSTGRES_DATABASE} \
-      > ${PRODUCTION_POSTGRES_BACKUP_PATH}
-    "
+    if [ -n "${PRODUCTION_COMMIT_CURRENT}" ]; do
+      run_on_production "
+        docker exec ${PRODUCTION_POSTGRES_CONTAINER} \
+          pg_dump \
+            -U ${PRODUCTION_POSTGRES_USERNAME} \
+            ${PRODUCTION_POSTGRES_DATABASE} \
+        > ${PRODUCTION_POSTGRES_BACKUP_PATH}
+      "
+    else
+      echo 'Can\'t load Postgres backup because production commit is missing'
+    fi
 
   - download_from_production ${PRODUCTION_POSTGRES_BACKUP_PATH} ${POSTGRES_BACKUP_PATH}
 
@@ -309,14 +314,14 @@ install:
         -f compose/django.yml \
         -f compose/postgres.yml \
         -f compose/production.yml \
-        -f compose/nginx_ports_${NGINX_PORTS_SET_PREVIOUS}.yml \
+        -f compose/nginx_ports_${PRODUCTION_NGINX_PORT_SET_PREVIOUS}.yml \
         --project-directory . \
         up \
         -d
     "
 
 
-  - # Wait for Postgres and load artefact into it
+  - # On production wait for Postgres and load artefact into it
 
   - >
     run_on_production "
@@ -339,19 +344,51 @@ install:
     "
 
 
-  - # Save current deployment settings to file. Variables are inversed
+  - # On production save current deployment settings to file.
+  - # Variables are inversed and shifted
 
   - >
     run_on_production "
-      echo \"NGINX_PORTS_SET_CURRENT=${NGINX_PORTS_SET_PREVIOUS}\" > ${PRODUCTION_ENVIRONMENT_FILE}
-      echo \"NGINX_PORTS_SET_PREVIOUS=${NGINX_PORTS_SET_CURRENT}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
+      echo \"NGINX_PORT_SET_CURRENT=${PRODUCTION_NGINX_PORT_SET_PREVIOUS}\" > ${PRODUCTION_ENVIRONMENT_FILE}
+      echo \"NGINX_PORT_SET_PREVIOUS=${PRODUCTION_NGINX_PORT_SET_CURRENT}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
+      echo \"COMMIT_CURRENT=${COMMIT}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
+      echo \"COMMIT_PREVIOUS=${PRODUCTION_COMMIT_CURRENT}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
     "
 
 
-  - # Forward 80 and 443 ports to the current deployment ports
+  - # On production forward 80 and 443 ports to the fresh deployment ports
 
   - >
     run_on_production "
       sudo bash /root/scripts/remove_port_forwarding.sh
-      sudo bash /root/scripts/forward_ports_${NGINX_PORTS_SET_PREVIOUS}.sh
+      sudo bash /root/scripts/forward_ports_${PRODUCTION_NGINX_PORT_SET_PREVIOUS}.sh
     "
+
+
+  - # Stop current production containers on production.
+  - # Requests will start hitting fresh installation
+
+  - >
+    if [ -n "${PRODUCTION_COMMIT_CURRENT}" ]; do
+      run_on_production "
+        docker stop ${PRODUCTION_COMMIT_CURRENT}_nginx_1 \
+                    ${PRODUCTION_COMMIT_CURRENT}_django_1 \
+                    ${PRODUCTION_COMMIT_CURRENT}_postgres_1
+      "
+    else
+      echo 'No current commit'
+    fi
+
+
+  - # Remove previous production containers
+
+  - >
+    if [ -n "${PRODUCTION_COMMIT_PREVIOUS}" ]; do
+      run_on_production "
+        docker stop ${PRODUCTION_COMMIT_PREVIOUS}_nginx_1 \
+                    ${PRODUCTION_COMMIT_PREVIOUS}_django_1 \
+                    ${PRODUCTION_COMMIT_PREVIOUS}_postgres_1
+      "
+    else
+      echo 'No previous commit'
+    fi
