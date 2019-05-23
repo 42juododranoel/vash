@@ -185,11 +185,10 @@ before_install:
             ${PRODUCTION_POSTGRES_DATABASE} \
         > ${PRODUCTION_POSTGRES_BACKUP_PATH}
       "
+      download_from_production ${PRODUCTION_POSTGRES_BACKUP_PATH} ${POSTGRES_BACKUP_PATH}
     else
       echo "Can't load Postgres backup because production commit is missing"
     fi
-
-  - download_from_production ${PRODUCTION_POSTGRES_BACKUP_PATH} ${POSTGRES_BACKUP_PATH}
 
 
   - # Manage permissions
