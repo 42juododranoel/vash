@@ -1,0 +1,7 @@
+version: '3.4'
+
+services:
+  nginx:
+    ports:
+      - 10080:80
+      - 10443:443

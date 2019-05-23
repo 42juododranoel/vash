@@ -8,8 +8,5 @@ services:
       - ${MEDIA_DIRECTORY}/:/resources/media/
       - ${STATIC_DIRECTORY}/:/resources/static/
       - ${CERTBOT_DIRECTORY}/etc/letsencrypt:/etc/letsencrypt
-    ports:
-      - ${HOST_NGINX_PORT_HTTP}:80
-      - ${HOST_NGINX_PORT_HTTPS}:443
     depends_on:
       - django
