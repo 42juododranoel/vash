@@ -371,7 +371,7 @@ install:
   - # Requests will start hitting fresh installation
 
   - >
-    if [ -n "${PRODUCTION_COMMIT_CURRENT}" ]; do
+    if [ -n "${PRODUCTION_COMMIT_CURRENT}" ]; then
       run_on_production "
         docker stop ${PRODUCTION_COMMIT_CURRENT}_nginx_1 \
                     ${PRODUCTION_COMMIT_CURRENT}_django_1 \
@@ -385,7 +385,7 @@ install:
   - # Remove previous production containers
 
   - >
-    if [ -n "${PRODUCTION_COMMIT_PREVIOUS}" ]; do
+    if [ -n "${PRODUCTION_COMMIT_PREVIOUS}" ]; then
       run_on_production "
         docker stop ${PRODUCTION_COMMIT_PREVIOUS}_nginx_1 \
                     ${PRODUCTION_COMMIT_PREVIOUS}_django_1 \
