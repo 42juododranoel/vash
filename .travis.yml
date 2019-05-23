@@ -317,7 +317,7 @@ install:
         -f compose/production.yml \
         -f compose/nginx_ports_${PRODUCTION_NGINX_PORT_SET_PREVIOUS}.yml \
         --project-directory . \
-        -p ${PROJECT_NAME}${COMMIT} \
+        --project-name ${PROJECT_NAME}${COMMIT} \
         up \
         -d
     "
