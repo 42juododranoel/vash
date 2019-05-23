@@ -2,8 +2,6 @@ version: '3.4'
 
 services:
   django:
-    environment:
-      - GUNICORN_WORKERS_NUMBER
     volumes:
       - ${MEDIA_DIRECTORY}/:/resources/media/
       - ${STATIC_DIRECTORY}/:/resources/static/

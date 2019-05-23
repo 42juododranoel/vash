@@ -1,7 +1,6 @@
 FROM python:3.6
 
 ARG HOST_USER_ID
-ARG DJANGO_SECRET_KEY
 
 RUN apt -y update && \
     apt -y install gettext && \
@@ -23,5 +22,3 @@ RUN pip3 install --user -r /tmp/requirements.txt
 
 COPY application /application
 WORKDIR /application
-
-RUN python manage.py collectstatic --noinput

@@ -7,7 +7,6 @@ services:
       context: ./django/
       args:
         - HOST_USER_ID
-        - DJANGO_SECRET_KEY
     environment:
       - DJANGO_DEBUG
       - DJANGO_SECRET_KEY
@@ -16,5 +15,6 @@ services:
       - DATABASE_PORT
       - DATABASE_USER
       - DATABASE_PASSWORD
+      - GUNICORN_WORKERS_NUMBER
     depends_on:
       - postgres
