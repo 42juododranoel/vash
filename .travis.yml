@@ -4,8 +4,8 @@ language: bash
 addons:
   apt:
     packages:
-    - sshpass
-    - docker-ce
+      - sshpass
+      - docker-ce
 
 
 before_install:
@@ -17,22 +17,22 @@ before_install:
 
   - >
     function send_to_production {
-      from_path=$1
-      to_path=$2
+      path_source=$1
+      path_destination=$2
       sshpass \
         -e scp \
-        ${from_path} \
-        ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:${to_path}
+        ${path_source} \
+        ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:${path_destination}
     }
 
   - >
     function download_from_production {
-      from_path=$1
-      to_path=$2
+      path_source=$1
+      path_destination=$2
       sshpass \
         -e scp \
-        ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:${from_path} \
-        ${to_path}
+        ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}:${path_source} \
+        ${path_destination}
     }
 
 
@@ -191,7 +191,6 @@ before_install:
   - sudo chown -R ${PRODUCTION_USER}:${USER} .  # Stage and production user ids differ
 
 
-install:
   - # Build and run
 
   - >
@@ -230,3 +229,59 @@ install:
 
   - sudo chown -R ${PRODUCTION_USER}:${USER} ${STATIC_DIRECTORY}
   - docker exec vash_django_1 python manage.py collectstatic --noinput
+
+
+  - # Upload Docker images to production
+
+  - docker_nginx_image_path="/tmp/${DOCKER_NGINX_IMAGE_FILE}"
+  - docker save -o ${docker_nginx_image_path} ${DOCKER_NGINX_IMAGE}
+  - echo 'Sending Nginx image to production...'
+  - send_to_production ${docker_nginx_image_path} ${PRODUCTION_IMAGES_NGINX_DIRECTORY}
+  - run_on_production "docker load < ${PRODUCTION_IMAGES_NGINX_DIRECTORY}/${DOCKER_NGINX_IMAGE_FILE}"
+
+  - docker_django_image_path="/tmp/${DOCKER_DJANGO_IMAGE_FILE}"
+  - docker save -o ${docker_django_image_path} ${DOCKER_DJANGO_IMAGE}
+  - echo 'Sending Django image to production...'
+  - send_to_production ${docker_django_image_path} ${PRODUCTION_IMAGES_DJANGO_DIRECTORY}
+  - run_on_production "docker load < ${PRODUCTION_IMAGES_DJANGO_DIRECTORY}/${DOCKER_DJANGO_IMAGE_FILE}"
+
+  - docker_postgres_image_path="/tmp/${DOCKER_POSTGRES_IMAGE_FILE}"
+  - docker save -o ${docker_postgres_image_path} ${DOCKER_POSTGRES_IMAGE}
+  - echo 'Sending Postgres image to production...'
+  - send_to_production ${docker_postgres_image_path} ${PRODUCTION_IMAGES_POSTGRES_DIRECTORY}
+  - run_on_production "docker load < ${PRODUCTION_IMAGES_POSTGRES_DIRECTORY}/${DOCKER_POSTGRES_IMAGE_FILE}"
+
+
+  - # Send static to production
+
+  - cd ${STATIC_DIRECTORY}
+  - tar -zcf /tmp/${STATIC_TARBALL_NAME} .
+  - cd -
+  - send_to_production /tmp/${STATIC_TARBALL_NAME} /tmp/
+  - >
+    run_on_production "
+      mkdir -p ${PRODUCTION_STATIC_DIRECTORY}
+      tar -zxf /tmp/${STATIC_TARBALL_NAME} -C ${PRODUCTION_STATIC_DIRECTORY}
+    "
+
+
+  - # Send database to production
+
+  - docker exec ${POSTGRES_CONTAINER_NAME} pg_dump -U ${POSTGRES_USERNAME} ${POSTGRES_DATABASE} > ${POSTGRES_ARTEFACT_PATH}
+  - send_to_production ${POSTGRES_ARTEFACT_PATH} ${PRODUCTION_ARTEFACTS_POSTGRES_DIRECTORY}
+
+
+  - # Clone project to another place to run second compose on production
+
+  - >
+    run_on_production "
+      cd ${PRODUCTION_REPOSITORIES_DIRECTORY}
+      git clone ${PROJECT_URL} ${COMMIT}
+      cd ${PRODUCTION_REPOSITORY_DIRECTORY}
+      git checkout ${COMMIT}
+      git reset --hard
+    "
+
+
+install:
+  - whoami
