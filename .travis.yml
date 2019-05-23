@@ -225,8 +225,12 @@ before_install:
 
   - # Load backup into database and migrate
 
-  - docker cp ${POSTGRES_BACKUP_PATH} vash_postgres_1:/tmp
-  - docker exec vash_postgres_1 bash -c "psql -U ${POSTGRES_USER} ${POSTGRES_DATABASE} < /tmp/${POSTGRES_BACKUP_NAME}" > /dev/null
+  - >
+    if [ -n "${PRODUCTION_COMMIT_CURRENT}" ];
+    then
+      docker cp ${POSTGRES_BACKUP_PATH} vash_postgres_1:/tmp;
+      docker exec vash_postgres_1 bash -c "psql -U ${POSTGRES_USER} ${POSTGRES_DATABASE} < /tmp/${POSTGRES_BACKUP_NAME}" > /dev/null
+    fi
   - docker exec vash_django_1 python manage.py migrate --noinput
 
 
@@ -293,8 +297,6 @@ install:
 
   - >
     run_on_production "
-      # Run new images
-
       export DOCKER_NGINX_IMAGE=${DOCKER_NGINX_IMAGE}
       export DOCKER_DJANGO_IMAGE=${DOCKER_DJANGO_IMAGE}
       export DOCKER_POSTGRES_IMAGE=${DOCKER_POSTGRES_IMAGE}
