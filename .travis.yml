@@ -176,7 +176,7 @@ before_install:
   - # Download database backup from production
 
   - >
-    if [ -n "${PRODUCTION_COMMIT_CURRENT}" ]; do
+    if [ -n "${PRODUCTION_COMMIT_CURRENT}" ]; then
       run_on_production "
         docker exec ${PRODUCTION_POSTGRES_CONTAINER} \
           pg_dump \
