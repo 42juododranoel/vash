@@ -1,15 +1,18 @@
-FROM python:3.6
+FROM python:3.6-alpine
 
 ARG HOST_USER_ID
 
-RUN apt -y update && \
-    apt -y install gettext && \
+RUN apk add gcc \
+            zlib-dev \
+            musl-dev \
+            jpeg-dev \
+            postgresql-dev && \
     \
     mkdir -p /application \
              /resources/media \
              /resources/static && \
     \
-    useradd -u ${HOST_USER_ID} -ms /bin/bash user && \
+    adduser -u ${HOST_USER_ID} -D user && \
     \
     chown -R user: /application \
                    /resources/media \
