@@ -412,7 +412,7 @@ install:
       for directory in \${DIRECTORIES}
       do
         cd ${directory};
-        pwd;
+        echo 'current working directory:' `pwd`;
         # ls -1tr | head -n -10 | xargs -d '\n' rm -f --;
       done
     "
