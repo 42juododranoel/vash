@@ -382,7 +382,6 @@ install:
     fi
 
 
-after_install:
   - # Remove previous production containers
 
   - >
