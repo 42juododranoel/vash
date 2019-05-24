@@ -395,3 +395,25 @@ after_install:
     else
       echo 'No previous commit'
     fi
+
+
+  - # Rotate things on production
+
+  - >
+    run_on_production "
+      DIRECTORIES='
+        ${PRODUCTION_ARTEFACTS_STATIC_DIRECTORY}
+        ${PRODUCTION_ARTEFACTS_POSTGRES_DIRECTORY}
+        ${PRODUCTION_BACKUPS_POSTGRES_DIRECTORY}
+        ${PRODUCTION_IMAGES_NGINX_DIRECTORY}
+        ${PRODUCTION_IMAGES_DJANGO_DIRECTORY}
+        ${PRODUCTION_IMAGES_POSTGRES_DIRECTORY}
+        ${PRODUCTION_REPOSITORIES_DIRECTORY}
+      '
+      for directory in \${DIRECTORIES}
+      do
+        cd ${directory};
+        pwd;
+        # ls -1tr | head -n -10 | xargs -d '\n' rm -f --;
+      done
+    "
