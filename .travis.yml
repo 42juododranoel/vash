@@ -422,8 +422,6 @@ install:
       for directory in \${DIRECTORIES}
       do
         cd \${directory};
-        echo "directory: \${directory}";
-        echo 'current working directory:' \$( pwd );
-        # ls -1tr | head -n -10 | xargs -d '\n' rm -f --;
+        ls -1tr | head -n -10 | xargs -d '\n' echo ;
       done
     "
