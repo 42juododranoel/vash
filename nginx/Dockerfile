@@ -1,2 +1,2 @@
 FROM nginx:1.15-alpine
-COPY configuration /etc/nginx/conf.d/
+COPY vash.conf /etc/nginx/conf.d/

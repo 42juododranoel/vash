@@ -1,5 +1,5 @@
 __pycache__
-resources/certbot/
+resources/certificates/
 resources/media/
 resources/static/
 scripts/

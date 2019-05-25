@@ -7,6 +7,6 @@ services:
     volumes:
       - ${MEDIA_DIRECTORY}/:/resources/media/
       - ${STATIC_DIRECTORY}/:/resources/static/
-      - ${CERTBOT_DIRECTORY}/etc/letsencrypt:/etc/letsencrypt
+      - ${CERTIFICATES_DIRECTORY}/:/resources/certificates/
     depends_on:
       - django
