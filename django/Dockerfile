@@ -8,6 +8,8 @@ RUN apk add gcc \
             jpeg-dev \
             postgresql-dev && \
     \
+    rm -rf /var/cache/apk/* && \
+    \
     mkdir -p /application \
              /resources/media \
              /resources/static && \
