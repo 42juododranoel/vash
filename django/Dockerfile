@@ -23,7 +23,7 @@ RUN apk add gcc \
 USER user
 COPY requirements.txt /tmp
 ENV PATH=/home/user/.local/bin:$PATH
-RUN pip3 install --user -r /tmp/requirements.txt
+RUN pip3 --no-cache-dir install --user -r /tmp/requirements.txt
 
 COPY application /application
 WORKDIR /application
