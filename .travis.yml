@@ -406,22 +406,28 @@ install:
     fi
 
 
-  - # Rotate files in directories on production
+  - # Leave only ten latest files and directories in different directories on production
 
   - >
     run_on_production "
-      DIRECTORIES='
-        ${PRODUCTION_ARTEFACTS_STATIC_DIRECTORY}
-        ${PRODUCTION_ARTEFACTS_POSTGRES_DIRECTORY}
-        ${PRODUCTION_BACKUPS_POSTGRES_DIRECTORY}
-        ${PRODUCTION_IMAGES_NGINX_DIRECTORY}
-        ${PRODUCTION_IMAGES_DJANGO_DIRECTORY}
-        ${PRODUCTION_IMAGES_POSTGRES_DIRECTORY}
-        ${PRODUCTION_REPOSITORIES_DIRECTORY}
-      '
-      for directory in \${DIRECTORIES}
-      do
-        cd \${directory};
-        ls -1tr | head -n -10 | xargs -d '\n' echo ;
-      done
+      cd ${PRODUCTION_ARTEFACTS_STATIC_DIRECTORY}
+      ls -1tr | head -n -10 | xargs -d '\n' echo
+
+      cd ${PRODUCTION_ARTEFACTS_POSTGRES_DIRECTORY}
+      ls -1tr | head -n -10 | xargs -d '\n' echo
+
+      cd ${PRODUCTION_BACKUPS_POSTGRES_DIRECTORY}
+      ls -1tr | head -n -10 | xargs -d '\n' echo
+
+      cd ${PRODUCTION_IMAGES_NGINX_DIRECTORY}
+      ls -1tr | head -n -10 | xargs -d '\n' echo
+
+      cd ${PRODUCTION_IMAGES_DJANGO_DIRECTORY}
+      ls -1tr | head -n -10 | xargs -d '\n' echo
+
+      cd ${PRODUCTION_IMAGES_POSTGRES_DIRECTORY}
+      ls -1tr | head -n -10 | xargs -d '\n' echo
+
+      cd ${PRODUCTION_REPOSITORIES_DIRECTORY}
+      ls -1tr | head -n -10 | xargs -d '\n' echo
     "
