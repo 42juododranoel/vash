@@ -387,10 +387,6 @@ install:
   - >
     if [ -n "${PRODUCTION_COMMIT_PREVIOUS}" ]; then
       run_on_production "
-        docker ps -a
-        docker ps -a | grep "${PROJECT_NAME}${PRODUCTION_COMMIT_PREVIOUS}_nginx_1"
-        docker ps -a | grep "${PROJECT_NAME}${PRODUCTION_COMMIT_PREVIOUS}_nginx_1" | awk '{print $2}'
-
         previous_nginx_image=\$( docker ps -a | grep "${PROJECT_NAME}${PRODUCTION_COMMIT_PREVIOUS}_nginx_1" | awk '{print $2}' )
         previous_django_image=\$( docker ps -a | grep "${PROJECT_NAME}${PRODUCTION_COMMIT_PREVIOUS}_django_1" | awk '{print $2}' )
         previous_postgres_image=\$( docker ps -a | grep "${PROJECT_NAME}${PRODUCTION_COMMIT_PREVIOUS}_postgres_1" | awk '{print $2}' )
@@ -399,9 +395,9 @@ install:
                   ${PROJECT_NAME}${PRODUCTION_COMMIT_PREVIOUS}_django_1 \
                   ${PROJECT_NAME}${PRODUCTION_COMMIT_PREVIOUS}_postgres_1
 
-        docker rmi ${previous_nginx_image} \
-                   ${previous_django_image} \
-                   ${previous_postgres_image}
+        docker rmi \${previous_nginx_image} \
+                   \${previous_django_image} \
+                   \${previous_postgres_image}
 
         docker network prune -f
       "
@@ -425,8 +421,8 @@ install:
       '
       for directory in \${DIRECTORIES}
       do
-        cd ${directory};
-        echo "directory: ${directory}";
+        cd \${directory};
+        echo "directory: \${directory}";
         echo 'current working directory:' `pwd`;
         # ls -1tr | head -n -10 | xargs -d '\n' rm -f --;
       done
