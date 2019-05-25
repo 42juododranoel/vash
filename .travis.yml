@@ -399,6 +399,11 @@ install:
                    \${previous_django_image} \
                    \${previous_postgres_image}
 
+        echo '#############'
+        echo \${previous_nginx_image} \
+             \${previous_django_image} \
+             \${previous_postgres_image}
+
         docker network prune -f
       "
     else
@@ -411,23 +416,23 @@ install:
   - >
     run_on_production "
       cd ${PRODUCTION_ARTEFACTS_STATIC_DIRECTORY}
-      ls -1tr | head -n -10 | xargs -d '\n' echo
+      ls -1tr | head -n -10 | xargs -d '\n' rm -rf
 
       cd ${PRODUCTION_ARTEFACTS_POSTGRES_DIRECTORY}
-      ls -1tr | head -n -10 | xargs -d '\n' echo
+      ls -1tr | head -n -10 | xargs -d '\n' rm -rf
 
       cd ${PRODUCTION_BACKUPS_POSTGRES_DIRECTORY}
-      ls -1tr | head -n -10 | xargs -d '\n' echo
+      ls -1tr | head -n -10 | xargs -d '\n' rm -rf
 
       cd ${PRODUCTION_IMAGES_NGINX_DIRECTORY}
-      ls -1tr | head -n -10 | xargs -d '\n' echo
+      ls -1tr | head -n -10 | xargs -d '\n' rm -rf
 
       cd ${PRODUCTION_IMAGES_DJANGO_DIRECTORY}
-      ls -1tr | head -n -10 | xargs -d '\n' echo
+      ls -1tr | head -n -10 | xargs -d '\n' rm -rf
 
       cd ${PRODUCTION_IMAGES_POSTGRES_DIRECTORY}
-      ls -1tr | head -n -10 | xargs -d '\n' echo
+      ls -1tr | head -n -10 | xargs -d '\n' rm -rf
 
       cd ${PRODUCTION_REPOSITORIES_DIRECTORY}
-      ls -1tr | head -n -10 | xargs -d '\n' echo
+      ls -1tr | head -n -10 | xargs -d '\n' rm -rf
     "
