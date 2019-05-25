@@ -398,13 +398,15 @@ install:
         docker rmi ${previous_nginx_image} \
                    ${previous_django_image} \
                    ${previous_postgres_image}
+
+        docker network prune
       "
     else
-      echo 'No container and image rotation because previous commit is unknown'
+      echo 'No Docker rotation because previous commit is unknown'
     fi
 
 
-  - # Rotate things on production
+  - # Rotate files in directories on production
 
   - >
     run_on_production "
