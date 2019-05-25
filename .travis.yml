@@ -270,6 +270,7 @@ before_install:
     run_on_production "
       mkdir -p ${PRODUCTION_STATIC_DIRECTORY}
       tar -zxf /tmp/${STATIC_TARBALL_NAME} -C ${PRODUCTION_STATIC_DIRECTORY}
+      rm -rf /tmp/${STATIC_TARBALL_NAME}
     "
 
 
