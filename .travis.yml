@@ -204,7 +204,7 @@ before_install:
       -f compose/django.yml \
       -f compose/postgres.yml \
       -f compose/production.yml \
-      -f compose/nginx_ports_default.yml \
+      -f compose/nginx_ports_A.yml \
       --project-directory . \
       up \
       -d \
@@ -359,7 +359,7 @@ install:
       if [ ${PRODUCTION_NGINX_PORT_SET_PREVIOUS} == 'A' ];
       then
         # Remove 80 to 8080 forwarding
-        sudo bash /root/scripts/remove_port_forwarding.sh;
+        sudo bash /root/scripts/delete_port_forwarding.sh;
       else
         # Forward 80 to 8080
         sudo bash /root/scripts/create_port_forwarding.sh;
