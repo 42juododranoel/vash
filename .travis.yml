@@ -487,3 +487,5 @@ install:
       cd ${PRODUCTION_REPOSITORIES_DIRECTORY}
       ls -1tr | head -n -10 | xargs -d '\n' rm -rf
     "
+
+  - whoami
