@@ -399,9 +399,7 @@ install:
   - # Restore previous working version if website is broken
 
   - >
-    response=$( curl --write-out %{http_code} --silent --output /dev/null ${WEBSITE_URL} )
-
-    if [ ${response} != 200 ];
+    if [ "$( curl --write-out %{http_code} --silent --output /dev/null ${WEBSITE_URL} )" != '200' ];
     then
 
       if [ -n "${PRODUCTION_COMMIT_CURRENT}" ]; then
