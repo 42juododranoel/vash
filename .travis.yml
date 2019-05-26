@@ -348,25 +348,23 @@ install:
     "
 
 
-  - # On production forward or unforward 80 and 443 ports
+  - # On production:
+  - #
+  - #   If not first launch
+  - #     If new version has been launched on port 80
+  - #       stop forwarding 80 to 8080
+  - #     else (new version on 8080)
+  - #       forward 80 to 8080
 
   - >
-    # If not first launch
     if [ -n "${PRODUCTION_COMMIT_CURRENT}" ];
     then
-
-      # If new version has been created on A
       if [ ${PRODUCTION_NGINX_PORT_SET_PREVIOUS} == 'A' ];
-      then
-        # Remove 80 to 8080 forwarding
-        sudo bash /root/scripts/delete_port_forwarding.sh;
-      else
-        # Forward 80 to 8080
-        sudo bash /root/scripts/create_port_forwarding.sh;
+      then run_on_production "sudo bash /root/scripts/delete_port_forwarding.sh";
+      else run_on_production "sudo bash /root/scripts/create_port_forwarding.sh";
       fi
-
     else
-      echo 'Not forwarding ports because previous commit is unknown.'
+      echo 'Not forwarding ports because previous commit is unknown.';
     fi
 
 
