@@ -187,7 +187,7 @@ before_install:
       "
       download_from_production ${PRODUCTION_POSTGRES_BACKUP_PATH} ${POSTGRES_BACKUP_PATH}
     else
-      echo "Can't load Postgres backup because production commit is missing"
+      echo "Can't load Postgres backup because production commit is missing."
     fi
 
 
@@ -332,14 +332,14 @@ install:
       sleep 5s  # Give Postgres some time to boot
 
       while [ \"\$( docker exec ${PRODUCTION_POSTGRES_CONTAINER_NAME} psql -U ${PRODUCTION_POSTGRES_USERNAME} -tAc \"SELECT 1 FROM pg_database WHERE datname='${PRODUCTION_POSTGRES_DATABASE}'\" )\" != '1' ]; do
-        echo 'Waiting for Postgres to create a database.';
+        echo 'Waiting for Postgres to create a database...';
         sleep 5s;
       done
 
       sleep 5s  # Give Postgres some time to restart after creating a database
 
       until [[ \"\$( docker exec ${PRODUCTION_POSTGRES_CONTAINER_NAME} pg_isready )\" ]]; do
-        echo 'Waiting for Postgres to get ready.';
+        echo 'Waiting for Postgres to get ready...';
         sleep 5s;
       done
 
@@ -380,7 +380,7 @@ install:
                     ${PROJECT_NAME}${PRODUCTION_COMMIT_CURRENT}_postgres_1
       "
     else
-      echo 'No current commit'
+      echo 'No current commit.'
     fi
 
 
@@ -391,17 +391,30 @@ install:
 
     if [ ${response} != 200 ];
     then
+
       if [ -n "${PRODUCTION_COMMIT_CURRENT}" ]; then
-        whoami
-        # - restore previous version
-        # - switch network interfaces to previous state
-        # - save state to vash.env
-        # travis_terminate 1;
+        echo "Website seems broken; restoring previous commit state.";
+
+        run_on_production "
+          docker start ${PROJECT_NAME}${PRODUCTION_COMMIT_CURRENT}_postgres_1 \
+                       ${PROJECT_NAME}${PRODUCTION_COMMIT_CURRENT}_django_1 \
+                       ${PROJECT_NAME}${PRODUCTION_COMMIT_CURRENT}_nginx_1
+
+          sudo bash /root/scripts/remove_port_forwarding.sh
+          sudo bash /root/scripts/forward_ports_${PRODUCTION_NGINX_PORT_SET_CURRENT}.sh
+
+          echo \"NGINX_PORT_SET_CURRENT=${PRODUCTION_NGINX_PORT_SET_CURRENT}\" > ${PRODUCTION_ENVIRONMENT_FILE}
+          echo \"NGINX_PORT_SET_PREVIOUS=${PRODUCTION_NGINX_PORT_SET_PPEVIOUS}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
+          echo \"COMMIT_CURRENT=${PRODUCTION_COMMIT_CURRENT}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
+          echo \"COMMIT_PREVIOUS=${PRODUCTION_COMMIT_PREVIOUS}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
+        ";
+        travis_terminate 1;
       else
-        echo "Can't restore previous version because previous commit is unknown"
+        echo "Can't restore previous version because previous commit is unknown."
       fi
+
     else
-      echo 'Website running fine'
+      echo 'Website seems running fine.'
     fi
 
 
@@ -425,7 +438,7 @@ install:
         docker network rm ${PROJECT_NAME}${PRODUCTION_COMMIT_PREVIOUS}_default
       "
     else
-      echo 'No Docker rotation because previous commit is unknown'
+      echo 'No Docker rotation because previous commit is unknown.'
     fi
 
 
