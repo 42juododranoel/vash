@@ -324,7 +324,7 @@ install:
         -d
     "
 
-  - sleep 120s
+  - sleep 60s
 
   - # On production wait for Postgres and load artefact into it
 
@@ -355,7 +355,7 @@ install:
     if [ -n "${PRODUCTION_COMMIT_CURRENT}" ];
     then
       run_on_production "sudo bash /root/scripts/create_port_forwarding_${PRODUCTION_NGINX_PORT_SET_PREVIOUS}.sh";
-      sleep 120s;
+      sleep 60s;
       run_on_production "sudo bash /root/scripts/delete_port_forwarding_${PRODUCTION_NGINX_PORT_SET_CURRENT}.sh";
     else
       echo 'Not forwarding ports because previous commit is unknown.';
@@ -405,6 +405,7 @@ install:
                        ${PROJECT_NAME}${PRODUCTION_COMMIT_CURRENT}_nginx_1
 
           sudo bash /root/scripts/create_port_forwarding_${PRODUCTION_NGINX_PORT_SET_PREVIOUS}.sh;
+          sleep 60s;
           sudo bash /root/scripts/delete_port_forwarding_${PRODUCTION_NGINX_PORT_SET_CURRENT}.sh;
 
           echo \"NGINX_PORT_SET_CURRENT=${PRODUCTION_NGINX_PORT_SET_CURRENT}\" > ${PRODUCTION_ENVIRONMENT_FILE}
