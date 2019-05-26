@@ -324,7 +324,7 @@ install:
         -d
     "
 
-  - sleep 30s
+  - sleep 120s
 
   - # On production wait for Postgres and load artefact into it
 
