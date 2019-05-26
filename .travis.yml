@@ -387,21 +387,23 @@ install:
   - # Check if main page returns HTTP 200 OK
 
   - >
-    if [ -n "${PRODUCTION_COMMIT_CURRENT}" ]; then
-      response=$(curl --write-out %{http_code} --silent --output /dev/null ${WEBSITE_URL});
+    response=$( curl --write-out %{http_code} --silent --output /dev/null ${WEBSITE_URL} )
 
-      if [ \${response} != 200 ];
-      then
-        echo 'Failure';
+    if [ ${response} != 200 ];
+    then
+      if [ -n "${PRODUCTION_COMMIT_CURRENT}" ]; then
+        whoami
         # - restore previous version
         # - switch network interfaces to previous state
         # - save state to vash.env
         # travis_terminate 1;
       else
-        echo 'Website running fine'
+        echo "Can't restore previous version because previous commit is unknown"
       fi
-
+    else
+      echo 'Website running fine'
     fi
+
 
   - # Remove previous containers, images, and network on production
 
