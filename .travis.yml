@@ -355,7 +355,7 @@ install:
     if [ -n "${PRODUCTION_COMMIT_CURRENT}" ];
     then
       run_on_production "sudo bash /root/scripts/create_port_forwarding_${PRODUCTION_NGINX_PORT_SET_PREVIOUS}.sh";
-      sleep 60s;
+      sleep 30s;
       run_on_production "sudo bash /root/scripts/delete_port_forwarding_${PRODUCTION_NGINX_PORT_SET_CURRENT}.sh";
     else
       echo 'Not forwarding ports because previous commit is unknown.';
@@ -404,9 +404,9 @@ install:
                        ${PROJECT_NAME}${PRODUCTION_COMMIT_CURRENT}_django_1 \
                        ${PROJECT_NAME}${PRODUCTION_COMMIT_CURRENT}_nginx_1
 
-          sudo bash /root/scripts/create_port_forwarding_${PRODUCTION_NGINX_PORT_SET_PREVIOUS}.sh;
-          sleep 60s;
-          sudo bash /root/scripts/delete_port_forwarding_${PRODUCTION_NGINX_PORT_SET_CURRENT}.sh;
+          sudo bash /root/scripts/create_port_forwarding_${PRODUCTION_NGINX_PORT_SET_CURRENT}.sh;
+          sleep 30s;
+          sudo bash /root/scripts/delete_port_forwarding_${PRODUCTION_NGINX_PORT_SET_PREVIOUS}.sh;
 
           echo \"NGINX_PORT_SET_CURRENT=${PRODUCTION_NGINX_PORT_SET_CURRENT}\" > ${PRODUCTION_ENVIRONMENT_FILE}
           echo \"NGINX_PORT_SET_PREVIOUS=${PRODUCTION_NGINX_PORT_SET_PREVIOUS}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
