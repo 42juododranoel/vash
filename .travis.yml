@@ -349,23 +349,14 @@ install:
     "
 
 
-  - # On production:
-  - #
-  - #   If not first launch
-  - #     If new version has been launched on port 80
-  - #       stop forwarding 80 to 8080
-  - #     else (new version on 8080)
-  - #       forward 80 to 8080
+  - # Forward ports on production
 
   - >
     if [ -n "${PRODUCTION_COMMIT_CURRENT}" ];
     then
-      if [ ${PRODUCTION_NGINX_PORT_SET_PREVIOUS} == 'A' ];
-      then
-        run_on_production "sudo bash /root/scripts/delete_port_forwarding.sh";
-      else
-        run_on_production "sudo bash /root/scripts/create_port_forwarding.sh";
-      fi
+      run_on_production "sudo bash /root/scripts/create_port_forwarding_${PRODUCTION_NGINX_PORT_SET_PREVIOUS}.sh";
+      sleep 60s;
+      run_on_production "sudo bash /root/scripts/delete_port_forwarding_${PRODUCTION_NGINX_PORT_SET_CURRENT}.sh";
     else
       echo 'Not forwarding ports because previous commit is unknown.';
     fi
@@ -413,12 +404,8 @@ install:
                        ${PROJECT_NAME}${PRODUCTION_COMMIT_CURRENT}_django_1 \
                        ${PROJECT_NAME}${PRODUCTION_COMMIT_CURRENT}_nginx_1
 
-          if [ ${PRODUCTION_NGINX_PORT_SET_PREVIOUS} == 'A' ];
-          then
-            sudo bash /root/scripts/create_port_forwarding.sh;
-          else
-            sudo bash /root/scripts/delete_port_forwarding.sh;
-          fi
+          sudo bash /root/scripts/create_port_forwarding_${PRODUCTION_NGINX_PORT_SET_PREVIOUS}.sh;
+          sudo bash /root/scripts/delete_port_forwarding_${PRODUCTION_NGINX_PORT_SET_CURRENT}.sh;
 
           echo \"NGINX_PORT_SET_CURRENT=${PRODUCTION_NGINX_PORT_SET_CURRENT}\" > ${PRODUCTION_ENVIRONMENT_FILE}
           echo \"NGINX_PORT_SET_PREVIOUS=${PRODUCTION_NGINX_PORT_SET_PREVIOUS}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
