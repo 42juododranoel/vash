@@ -40,6 +40,7 @@ before_install:
 
   - export PROJECT_NAME='vash'
   - export PROJECT_URL='https://github.com/vsevolod-skripnik/vash.git'
+  - export WEBSITE_URL='https://ru.vsevo.land/'
   - export USER=`whoami`
   - export COMMIT=`echo ${TRAVIS_COMMIT:0:7}`  # Shorten commit hash
 
@@ -386,18 +387,21 @@ install:
   - # Check if main page returns HTTP 200 OK
 
   - >
-    export PRODUCTION_URL='https://ru.vsevo.land/'
-    response=$(curl --write-out %{http_code} --silent --output /dev/null ${PRODUCTION_URL})
+    if [ -n "${PRODUCTION_COMMIT_CURRENT}" ]; then
+      response=$(curl --write-out %{http_code} --silent --output /dev/null ${WEBSITE_URL})
 
-    if [ ${response} != 200 ];
-    then
-      echo 'Failure';
-    else
-      echo 'Fine';
+      if [ \${response} != 200 ];
+      then
+        echo 'Failure';
+        # - restore previous version
+        # - switch network interfaces to previous state
+        # - save state to vash.env
+        travis_terminate 1;
+      fi
+
     fi
 
-
-  - # Remove previous containers on production
+  - # Remove previous containers, images, and network on production
 
   - >
     if [ -n "${PRODUCTION_COMMIT_PREVIOUS}" ]; then
@@ -414,7 +418,7 @@ install:
                    \${previous_django_image} \
                    \${previous_postgres_image}
 
-        docker network prune -f
+        docker network rm ${PROJECT_NAME}${PRODUCTION_COMMIT_PREVIOUS}_default
       "
     else
       echo 'No Docker rotation because previous commit is unknown'
