@@ -388,7 +388,7 @@ install:
 
   - >
     if [ -n "${PRODUCTION_COMMIT_CURRENT}" ]; then
-      response=$(curl --write-out %{http_code} --silent --output /dev/null ${WEBSITE_URL})
+      response=$(curl --write-out %{http_code} --silent --output /dev/null ${WEBSITE_URL});
 
       if [ \${response} != 200 ];
       then
@@ -396,7 +396,9 @@ install:
         # - restore previous version
         # - switch network interfaces to previous state
         # - save state to vash.env
-        travis_terminate 1;
+        # travis_terminate 1;
+      else
+        echo 'Website running fine'
       fi
 
     fi
