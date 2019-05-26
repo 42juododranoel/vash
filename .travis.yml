@@ -426,7 +426,7 @@ install:
 
           docker network rm ${PROJECT_NAME}${COMMIT}_default
 
-          echo "Inspect logs and delete containers and images yourself."
+          echo 'Inspect logs and delete containers and images yourself.'
         ";
         travis_terminate 1;
       else
