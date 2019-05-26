@@ -383,6 +383,20 @@ install:
     fi
 
 
+  - # Check if main page returns HTTP 200 OK
+
+  - >
+    export PRODUCTION_URL='https://ru.vsevo.land/'
+    response=$(curl --write-out %{http_code} --silent --output /dev/null ${PRODUCTION_URL})
+
+    if [ ${response} != 200 ];
+    then
+      echo 'Failure';
+    else
+      echo 'Fine';
+    fi
+
+
   - # Remove previous containers on production
 
   - >
