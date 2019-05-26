@@ -348,6 +348,28 @@ install:
     "
 
 
+  - # On production forward or unforward 80 and 443 ports
+
+  - >
+    # If not first launch
+    if [ -n "${PRODUCTION_COMMIT_CURRENT}" ];
+    then
+
+      # If new version has been created on A
+      if [ ${PRODUCTION_NGINX_PORT_SET_PREVIOUS} == 'A' ];
+      then
+        # Remove 80 to 8080 forwarding
+        sudo bash /root/scripts/remove_port_forwarding.sh;
+      else
+        # Forward 80 to 8080
+        sudo bash /root/scripts/create_port_forwarding.sh;
+      fi
+
+    else
+      echo 'Not forwarding ports because previous commit is unknown.'
+    fi
+
+
   - # On production save current deployment settings to file.
   - # Variables are inversed and shifted
 
@@ -357,15 +379,6 @@ install:
       echo \"NGINX_PORT_SET_PREVIOUS=${PRODUCTION_NGINX_PORT_SET_CURRENT}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
       echo \"COMMIT_CURRENT=${COMMIT}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
       echo \"COMMIT_PREVIOUS=${PRODUCTION_COMMIT_CURRENT}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
-    "
-
-
-  - # On production forward 80 and 443 ports to the fresh deployment ports
-
-  - >
-    run_on_production "
-      sudo bash /root/scripts/remove_port_forwarding.sh
-      sudo bash /root/scripts/forward_ports_${PRODUCTION_NGINX_PORT_SET_PREVIOUS}.sh
     "
 
 
@@ -384,7 +397,8 @@ install:
     fi
 
 
-  - # Check if main page returns HTTP 200 OK
+  - # Check if main page returns HTTP 200 OK.
+  - # Restore previous working version if website is broken
 
   - >
     response=$( curl --write-out %{http_code} --silent --output /dev/null ${WEBSITE_URL} )
@@ -407,6 +421,14 @@ install:
           echo \"NGINX_PORT_SET_PREVIOUS=${PRODUCTION_NGINX_PORT_SET_PPEVIOUS}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
           echo \"COMMIT_CURRENT=${PRODUCTION_COMMIT_CURRENT}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
           echo \"COMMIT_PREVIOUS=${PRODUCTION_COMMIT_PREVIOUS}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
+
+          docker stop ${PROJECT_NAME}${COMMIT}_nginx_1 \
+                      ${PROJECT_NAME}${COMMIT}_django_1 \
+                      ${PROJECT_NAME}${COMMIT}_postgres_1
+
+          docker network rm ${PROJECT_NAME}${COMMIT}_default
+
+          echo "Inspect logs and delete containers and images yourself."
         ";
         travis_terminate 1;
       else
