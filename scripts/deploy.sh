@@ -209,7 +209,7 @@ fi
 
 # Collect static
 
-sudo chown -R ${PRODUCTION_USER}:${USER} ${STATIC_DIRECTORY}
+sudo chown -R ${PRODUCTION_USER_ID}:${USER} ${STATIC_DIRECTORY}
 docker exec ${PROJECT_NAME}_django_1 python manage.py collectstatic --noinput
 
 
