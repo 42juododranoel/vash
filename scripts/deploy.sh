@@ -83,7 +83,7 @@ export DOCKER_NGINX_IMAGE_FILE="${COMMIT}.tar"
 export DOCKER_DJANGO_IMAGE="${PROJECT_NAME}_django:${COMMIT}"
 export DOCKER_DJANGO_IMAGE_FILE="${COMMIT}.tar"
 
-docker_postgres_image_line=`cat .env | grep DOCKER_POSTGRES_IMAGE`
+docker_postgres_image_line=$(cat .env | grep DOCKER_POSTGRES_IMAGE)
 export DOCKER_POSTGRES_IMAGE="${docker_postgres_image_line/DOCKER_POSTGRES_IMAGE=/}"
 export DOCKER_POSTGRES_IMAGE_FILE="${DOCKER_POSTGRES_IMAGE/:/_}.tar"
 
@@ -217,12 +217,13 @@ docker exec ${PROJECT_NAME}_django_1 python manage.py collectstatic --noinput
 
 function send_image_to_production {
   image_file=$1
-  image_name=$2
-  production_directory=$3
   image_path="/tmp/${image_file}"
-  docker save -o ${image_path} ${image_name}
-  send_to_production ${image_path} ${production_directory}
-  run_on_production "docker load < ${production_directory}/${image_name}"
+  echo docker save -o ${image_path} ${2}
+  docker save -o ${image_path} ${2}
+  echo send_to_production ${image_path} ${3}
+  send_to_production ${image_path} ${3}
+  echo run_on_production "docker load < ${3}/${2}" 
+  run_on_production "docker load < ${3}/${2}"
 }
 
 send_image_to_production ${DOCKER_POSTGRES_IMAGE_FILE} ${DOCKER_POSTGRES_IMAGE} ${PRODUCTION_IMAGES_POSTGRES_DIRECTORY}
