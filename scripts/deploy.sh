@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -ev
+
 ###
 export PROJECT_NAME='vash'
 export PROJECT_URL='https://github.com/vsevolod-skripnik/vash.git'
@@ -139,6 +141,7 @@ run_on_production "
 
 if run_on_production "stat ${PRODUCTION_ENVIRONMENT_FILE} > /dev/null 2>&1"
 then
+  export IS_FRESH_INSTALLATION=false
   nginx_ports_set_current=$(run_on_production "cat ${PRODUCTION_ENVIRONMENT_FILE}" | grep NGINX_PORT_SET_CURRENT)
   nginx_ports_set_previous=$(run_on_production "cat ${PRODUCTION_ENVIRONMENT_FILE}" | grep NGINX_PORT_SET_PREVIOUS)
   export PRODUCTION_NGINX_PORT_SET_CURRENT="${nginx_ports_set_current/NGINX_PORT_SET_CURRENT=/}"
@@ -148,6 +151,7 @@ then
   export PRODUCTION_COMMIT_CURRENT="${commit_current/COMMIT_CURRENT=/}"
   export PRODUCTION_COMMIT_PREVIOUS="${commit_previous/COMMIT_PREVIOUS=/}"
 else
+  export IS_FRESH_INSTALLATION=true
   export PRODUCTION_NGINX_PORT_SET_CURRENT=
   export PRODUCTION_NGINX_PORT_SET_PREVIOUS=
   export PRODUCTION_COMMIT_CURRENT=
@@ -174,33 +178,33 @@ docker-compose \
   --build
 
 
-# Download Postgres backup from production
+# Download Postgres backup from production, load backup, migrate
 
-run_on_production "
-  docker exec ${PROJECT_NAME}${PRODUCTION_COMMIT_CURRENT}_postgres_1 \
-    pg_dump \
-      -U ${PRODUCTION_POSTGRES_USERNAME} \
-      ${PRODUCTION_POSTGRES_DATABASE} \
-  > ${PRODUCTION_POSTGRES_BACKUP_PATH}
-"
-download_from_production ${PRODUCTION_POSTGRES_BACKUP_PATH} ${POSTGRES_BACKUP_PATH}
+if [ "${IS_FRESH_INSTALLATION}" = false ];
+then
+  run_on_production "
+    docker exec ${PROJECT_NAME}${PRODUCTION_COMMIT_CURRENT}_postgres_1 \
+      pg_dump \
+        -U ${PRODUCTION_POSTGRES_USERNAME} \
+        ${PRODUCTION_POSTGRES_DATABASE} \
+    > ${PRODUCTION_POSTGRES_BACKUP_PATH}
+  "
+  download_from_production ${PRODUCTION_POSTGRES_BACKUP_PATH} ${POSTGRES_BACKUP_PATH}
 
+  sleep 5s  # Give Postgres some time to boot
 
-# Wait for Postgres, load backup, and migrate
+  while [ "$( docker exec ${POSTGRES_CONTAINER} psql -U ${POSTGRES_USERNAME} -tAc "SELECT 1 FROM pg_database WHERE datname='${POSTGRES_DATABASE}'" )" != '1' ];
+  do echo 'Waiting for Postgres to create a database.'; sleep 5s; done
 
-sleep 5s  # Give Postgres some time to boot
+  sleep 5s  # Give Postgres some time to restart after creating a database
 
-while [ "$( docker exec ${POSTGRES_CONTAINER} psql -U ${POSTGRES_USERNAME} -tAc "SELECT 1 FROM pg_database WHERE datname='${POSTGRES_DATABASE}'" )" != '1' ];
-do echo 'Waiting for Postgres to create a database.'; sleep 5s; done
+  until [[ "$( docker exec ${POSTGRES_CONTAINER} pg_isready )" ]];
+  do echo 'Waiting for Postgres to get ready.'; sleep 5s; done
 
-sleep 5s  # Give Postgres some time to restart after creating a database
-
-until [[ "$( docker exec ${POSTGRES_CONTAINER} pg_isready )" ]];
-do echo 'Waiting for Postgres to get ready.'; sleep 5s; done
-
-docker cp ${POSTGRES_BACKUP_PATH} ${POSTGRES_CONTAINER}:/tmp
-docker exec ${POSTGRES_CONTAINER} bash -c "psql -U ${POSTGRES_USERNAME} ${POSTGRES_DATABASE} < /tmp/${POSTGRES_BACKUP_NAME}" > /dev/null
-docker exec ${PROJECT_NAME}_django_1 python manage.py migrate --noinput
+  docker cp ${POSTGRES_BACKUP_PATH} ${POSTGRES_CONTAINER}:/tmp
+  docker exec ${POSTGRES_CONTAINER} bash -c "psql -U ${POSTGRES_USERNAME} ${POSTGRES_DATABASE} < /tmp/${POSTGRES_BACKUP_NAME}" > /dev/null
+  docker exec ${PROJECT_NAME}_django_1 python manage.py migrate --noinput
+fi
 
 
 # Collect static
@@ -221,9 +225,9 @@ function send_image_to_production {
   run_on_production "docker load < ${production_directory}/${image_name}"
 }
 
-# send_image_to_production ${DOCKER_POSTGRES_IMAGE_FILE} ${DOCKER_POSTGRES_IMAGE} ${PRODUCTION_IMAGES_POSTGRES_DIRECTORY}
-# send_image_to_production ${DOCKER_DJANGO_IMAGE_FILE} ${DOCKER_DJANGO_IMAGE} ${PRODUCTION_IMAGES_DJANGO_DIRECTORY}
-# send_image_to_production ${DOCKER_NGINX_IMAGE_FILE} ${DOCKER_NGINX_IMAGE} ${PRODUCTION_IMAGES_NGINX_DIRECTORY}
+send_image_to_production ${DOCKER_POSTGRES_IMAGE_FILE} ${DOCKER_POSTGRES_IMAGE} ${PRODUCTION_IMAGES_POSTGRES_DIRECTORY}
+send_image_to_production ${DOCKER_DJANGO_IMAGE_FILE} ${DOCKER_DJANGO_IMAGE} ${PRODUCTION_IMAGES_DJANGO_DIRECTORY}
+send_image_to_production ${DOCKER_NGINX_IMAGE_FILE} ${DOCKER_NGINX_IMAGE} ${PRODUCTION_IMAGES_NGINX_DIRECTORY}
 
 
 # Send static to production
