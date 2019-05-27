@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 
 export PROJECT_NAME='vash'
-export SSHPASS=${PRODUCTION_SERVER_PASSWORD}
+export SSHPASS="${PRODUCTION_SERVER_PASSWORD}"
+
+
+# Production actions
+
+alias run_on_production='sshpass -e ssh ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}'
+shopt -s expand_aliases
+ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
 
 
 # Production directory structure
@@ -65,9 +72,5 @@ function create_directory_structure_on_production {
 
 
 # Main
-
-alias run_on_production='sshpass -e ssh ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}'
-shopt -s expand_aliases
-ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
 
 create_directory_structure_on_production
