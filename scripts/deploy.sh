@@ -216,14 +216,10 @@ docker exec ${PROJECT_NAME}_django_1 python manage.py collectstatic --noinput
 # Send images to production
 
 function send_image_to_production {
-  image_file=$1
-  image_path="/tmp/${image_file}"
-  echo docker save -o ${image_path} ${2}
+  image_path="/tmp/${1}"
   docker save -o ${image_path} ${2}
-  echo send_to_production ${image_path} ${3}
   send_to_production ${image_path} ${3}
-  echo run_on_production "docker load < ${3}/${2}" 
-  run_on_production "docker load < ${3}/${2}"
+  run_on_production "docker load < ${3}/${1}"
 }
 
 send_image_to_production ${DOCKER_POSTGRES_IMAGE_FILE} ${DOCKER_POSTGRES_IMAGE} ${PRODUCTION_IMAGES_POSTGRES_DIRECTORY}
