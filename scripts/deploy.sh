@@ -263,7 +263,7 @@ run_on_production "
 
 # Send Postgres artefact to production
 
-if run_on_production "stat ${POSTGRES_ARTEFACT_PATH} > /dev/null 2>&1"
+if run_on_production "stat ${PRODUCTION_POSTGRES_ARTEFACT_PATH} > /dev/null 2>&1"
 then
   echo 'Postgres artefact exists on production; not uploading from stage.'
 else
@@ -400,8 +400,6 @@ fi
 # Check if main page returns HTTP 200 OK.
 # Restore previous working version if website is broken
 
-sleep 60s
-
 if [ "$( curl --write-out %{http_code} --silent --output /dev/null ${WEBSITE_URL} )" != '200' ];
 then
   if [ -n "${PRODUCTION_COMMIT_CURRENT}" ];
@@ -422,7 +420,7 @@ then
       docker network rm ${PROJECT_NAME}_${COMMIT}_default
     "
     echo 'Inspect logs and delete containers and images yourself.'
-    travis_terminate 1
+    exit 1
   else
     echo "Website seems broken; can't restore previous version because previous commit is unknown."
   fi
