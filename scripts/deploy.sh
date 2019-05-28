@@ -154,6 +154,7 @@ then
   export PRODUCTION_COMMIT_PREVIOUS="${commit_previous/COMMIT_PREVIOUS=/}"
   export IS_FRESH_INSTALLATION=false
   export PRODUCTION_NGINX_PORT_SET_NEW="${PRODUCTION_NGINX_PORT_SET_PREVIOUS}"
+  export PRODUCTION_NGINX_PORT_SET_BEFORE="${PRODUCTION_NGINX_PORT_SET_CURRENT}"
 else
   export PRODUCTION_NGINX_PORT_SET_CURRENT=
   export PRODUCTION_NGINX_PORT_SET_PREVIOUS=
@@ -161,7 +162,21 @@ else
   export PRODUCTION_COMMIT_PREVIOUS=
   export IS_FRESH_INSTALLATION=true
   export PRODUCTION_NGINX_PORT_SET_NEW='A'
+  export PRODUCTION_NGINX_PORT_SET_BEFORE='B'
 fi
+
+
+# Production Docker
+
+export PRODUCTION_DOCKER_PREFIX_PREVIOUS="${PROJECT_NAME}_${PRODUCTION_COMMIT_PREVIOUS}"
+export PRODUCTION_NGINX_CONTAINER_PREVIOUS="${PRODUCTION_DOCKER_PREFIX_PREVIOUS}_nginx_1"
+export PRODUCTION_DJANGO_CONTAINER_PREVIOUS="${PRODUCTION_DOCKER_PREFIX_PREVIOUS}_django_1"
+export PRODUCTION_POSTGRES_CONTAINER_PREVIOUS="${PRODUCTION_DOCKER_PREFIX_PREVIOUS}_postgres_1"
+
+export PRODUCTION_DOCKER_PREFIX_CURRENT="${PROJECT_NAME}_${PRODUCTION_COMMIT_CURRENT}"
+export PRODUCTION_NGINX_CONTAINER_CURRENT="${PRODUCTION_DOCKER_PREFIX_CURRENT}_nginx_1"
+export PRODUCTION_DJANGO_CONTAINER_CURRENT="${PRODUCTION_DOCKER_PREFIX_CURRENT}_django_1"
+export PRODUCTION_POSTGRES_CONTAINER_CURRENT="${PRODUCTION_DOCKER_PREFIX_CURRENT}_postgres_1"
 
 
 # Set permissions
@@ -316,23 +331,58 @@ run_on_production "
 
 # Forward ports on production
 
-# if [ "${IS_FRESH_INSTALLATION}" = true ];
-# then
-#   run_on_production "sudo bash /root/scripts/create_port_forwarding_${PRODUCTION_NGINX_PORT_SET_NEW}.sh";
-# fi
+if [ "${IS_FRESH_INSTALLATION}" = true ];
+then
+  run_on_production "sudo bash /root/scripts/create_port_forwarding_${PRODUCTION_NGINX_PORT_SET_NEW}.sh"
+else
+  run_on_production "sudo bash /root/scripts/create_port_forwarding_${PRODUCTION_NGINX_PORT_SET_NEW}.sh"
+  run_on_production "sudo bash /root/scripts/delete_port_forwarding_${PRODUCTION_NGINX_PORT_SET_BEFORE}.sh"
+fi
 
 
-# On production save current deployment settings to file.
-# Variables are inversed and shifted
+# On production save current deployment settings to file
 
-# run_on_production "
-#   echo \"NGINX_PORT_SET_CURRENT=${PRODUCTION_NGINX_PORT_SET_NEW}\" > ${PRODUCTION_ENVIRONMENT_FILE}
-#   echo \"NGINX_PORT_SET_PREVIOUS=${PRODUCTION_NGINX_PORT_SET_CURRENT}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
-#   echo \"COMMIT_CURRENT=${COMMIT}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
-#   echo \"COMMIT_PREVIOUS=${PRODUCTION_COMMIT_CURRENT}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
-# "
-
+run_on_production "
+  echo \"NGINX_PORT_SET_CURRENT=${PRODUCTION_NGINX_PORT_SET_NEW}\" > ${PRODUCTION_ENVIRONMENT_FILE}
+  echo \"NGINX_PORT_SET_PREVIOUS=${PRODUCTION_NGINX_PORT_SET_BEFORE}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
+  echo \"COMMIT_CURRENT=${COMMIT}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
+  echo \"COMMIT_PREVIOUS=${PRODUCTION_COMMIT_CURRENT}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
+"
 
 
+# Stop current running containers on production
 
-# run_on_production "sudo bash /root/scripts/delete_port_forwarding_${PRODUCTION_NGINX_PORT_SET_CURRENT}.sh";
+if [ -n "${PRODUCTION_COMMIT_CURRENT}" ];
+then
+  run_on_production "
+    docker stop ${PRODUCTION_NGINX_CONTAINER_CURRENT} \
+                ${PRODUCTION_DJANGO_CONTAINER_CURRENT} \
+                ${PRODUCTION_POSTGRES_CONTAINER_CURRENT}
+  "
+else
+  echo 'Not stopping running containers because previous commit is unknown.'
+fi
+
+
+# On production remove previous containers, images, and network
+
+if [ -n "${PRODUCTION_COMMIT_PREVIOUS}" ];
+then
+  run_on_production "
+    previous_nginx_image=\$( docker ps -a | grep '${PRODUCTION_NGINX_CONTAINER_PREVIOUS}' | awk '{print \$2}' )
+    previous_django_image=\$( docker ps -a | grep '${PRODUCTION_DJANGO_CONTAINER_PREVIOUS}' | awk '{print \$2}' )
+    previous_postgres_image=\$( docker ps -a | grep '${PRODUCTION_POSTGRES_CONTAINER_PREVIOUS}' | awk '{print \$2}' )
+
+    docker rm ${PRODUCTION_NGINX_CONTAINER_PREVIOUS} \
+              ${PRODUCTION_DJANGO_CONTAINER_PREVIOUS} \
+              ${PRODUCTION_POSTGRES_CONTAINER_PREVIOUS}
+
+    docker rmi \${previous_nginx_image} \
+               \${previous_django_image} \
+               \${previous_postgres_image}
+
+    docker network rm ${PRODUCTION_DOCKER_PREFIX_PREVIOUS}_default
+  "
+else
+  echo 'Not rotating Docker things because previous commit is unknown.'
+fi
