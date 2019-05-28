@@ -369,7 +369,7 @@ then
                 ${PRODUCTION_POSTGRES_CONTAINER_CURRENT}
   "
 else
-  echo 'Not stopping running containers because previous commit is unknown.'
+  echo 'Not stopping running containers because current commit is unknown.'
 fi
 
 
@@ -386,9 +386,9 @@ then
               ${PRODUCTION_DJANGO_CONTAINER_PREVIOUS} \
               ${PRODUCTION_POSTGRES_CONTAINER_PREVIOUS}
 
-    #docker rmi \${previous_nginx_image} \
-    #           \${previous_django_image} \
-    #           \${previous_postgres_image}
+    docker rmi \${previous_nginx_image} \
+               \${previous_django_image} \
+               \${previous_postgres_image}
 
     docker network rm ${PRODUCTION_DOCKER_PREFIX_PREVIOUS}_default
   "
@@ -399,6 +399,8 @@ fi
 
 # Check if main page returns HTTP 200 OK.
 # Restore previous working version if website is broken
+
+sleep 60s
 
 if [ "$( curl --write-out %{http_code} --silent --output /dev/null ${WEBSITE_URL} )" != '200' ];
 then
