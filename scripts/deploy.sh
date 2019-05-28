@@ -292,6 +292,7 @@ run_on_production "
             ${PRODUCTION_POSTGRES_CONTAINER_NEW}
 
   docker network rm ${PRODUCTION_DOCKER_PREFIX_NEW}_default
+  echo 'Dangling containers cleaned.'
 "
 
 
