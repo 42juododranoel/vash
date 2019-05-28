@@ -2,13 +2,6 @@
 
 set -ev
 
-###
-export PROJECT_NAME='vash'
-export PROJECT_URL='https://github.com/vsevolod-skripnik/vash.git'
-export USER="$(whoami)"
-export SSHPASS="${PRODUCTION_SERVER_PASSWORD}"
-###
-
 
 # Shortcuts to interact with production
 
@@ -53,11 +46,12 @@ export PRODUCTION_RESOURCES_CERTIFICATES_DIRECTORY="${PRODUCTION_RESOURCES_DIREC
 export PRODUCTION_ENVIRONMENT_ROOT='~/environment'
 
 
-# Different variables
+# Unsorted variables
 
 export PRODUCTION_ENVIRONMENT_FILE="${PRODUCTION_ENVIRONMENT_ROOT}/${PROJECT_NAME}.env"
 export COMMIT=$(echo ${TRAVIS_COMMIT:0:7})  # Shorten commit hash
 export STATIC_TARBALL_NAME="${COMMIT}.tar.gz"
+export USER="$(whoami)"
 
 
 # Variables to run local project
@@ -107,7 +101,6 @@ export PRODUCTION_POSTGRES_BACKUP_NAME="$(date +%d-%m-%y__%H-%M.sql)"
 export PRODUCTION_POSTGRES_BACKUP_PATH="${PRODUCTION_BACKUPS_POSTGRES_DIRECTORY}/${PRODUCTION_POSTGRES_BACKUP_NAME}"
 export PRODUCTION_POSTGRES_ARTEFACT_NAME="${POSTGRES_ARTEFACT_NAME}"
 export PRODUCTION_POSTGRES_ARTEFACT_PATH="${PRODUCTION_ARTEFACTS_POSTGRES_DIRECTORY}/${PRODUCTION_POSTGRES_ARTEFACT_NAME}"
-export PRODUCTION_POSTGRES_CONTAINER="${PROJECT_NAME}_${COMMIT}_postgres_1"
 
 
 # Create directory structure on production
@@ -152,17 +145,20 @@ then
   commit_previous=$(run_on_production "cat ${PRODUCTION_ENVIRONMENT_FILE}" | grep COMMIT_PREVIOUS)
   export PRODUCTION_COMMIT_CURRENT="${commit_current/COMMIT_CURRENT=/}"
   export PRODUCTION_COMMIT_PREVIOUS="${commit_previous/COMMIT_PREVIOUS=/}"
-  export IS_FRESH_INSTALLATION=false
-  export PRODUCTION_NGINX_PORT_SET_NEW="${PRODUCTION_NGINX_PORT_SET_PREVIOUS}"
+
+  if [ -z "${PRODUCTION_NGINX_PORT_SET_PREVIOUS}" ];
+  then export PRODUCTION_NGINX_PORT_SET_NEW='B'
+  else export PRODUCTION_NGINX_PORT_SET_NEW="${PRODUCTION_NGINX_PORT_SET_PREVIOUS}"
+  fi
   export PRODUCTION_NGINX_PORT_SET_BEFORE="${PRODUCTION_NGINX_PORT_SET_CURRENT}"
+
 else
   export PRODUCTION_NGINX_PORT_SET_CURRENT=
   export PRODUCTION_NGINX_PORT_SET_PREVIOUS=
   export PRODUCTION_COMMIT_CURRENT=
   export PRODUCTION_COMMIT_PREVIOUS=
-  export IS_FRESH_INSTALLATION=true
   export PRODUCTION_NGINX_PORT_SET_NEW='A'
-  export PRODUCTION_NGINX_PORT_SET_BEFORE='B'
+  export PRODUCTION_NGINX_PORT_SET_BEFORE=
 fi
 
 
@@ -177,6 +173,11 @@ export PRODUCTION_DOCKER_PREFIX_CURRENT="${PROJECT_NAME}_${PRODUCTION_COMMIT_CUR
 export PRODUCTION_NGINX_CONTAINER_CURRENT="${PRODUCTION_DOCKER_PREFIX_CURRENT}_nginx_1"
 export PRODUCTION_DJANGO_CONTAINER_CURRENT="${PRODUCTION_DOCKER_PREFIX_CURRENT}_django_1"
 export PRODUCTION_POSTGRES_CONTAINER_CURRENT="${PRODUCTION_DOCKER_PREFIX_CURRENT}_postgres_1"
+
+export PRODUCTION_DOCKER_PREFIX_NEW="${PROJECT_NAME}_${COMMIT}"
+export PRODUCTION_NGINX_CONTAINER_NEW="${PRODUCTION_DOCKER_PREFIX_NEW}_nginx_1"
+export PRODUCTION_DJANGO_CONTAINER_NEW="${PRODUCTION_DOCKER_PREFIX_NEW}_django_1"
+export PRODUCTION_POSTGRES_CONTAINER_NEW="${PRODUCTION_DOCKER_PREFIX_NEW}_postgres_1"
 
 
 # Set permissions
@@ -200,10 +201,10 @@ docker-compose \
 
 # Download Postgres backup from production, load backup, migrate
 
-if [ "${IS_FRESH_INSTALLATION}" = false ];
+if [ -n "${PRODUCTION_COMMIT_CURRENT}" ];
 then
   run_on_production "
-    docker exec ${PROJECT_NAME}_${PRODUCTION_COMMIT_CURRENT}_postgres_1 \
+    docker exec ${PRODUCTION_POSTGRES_CONTAINER_CURRENT} \
       pg_dump \
         -U ${PRODUCTION_POSTGRES_USERNAME} \
         ${PRODUCTION_POSTGRES_DATABASE} \
@@ -260,10 +261,15 @@ run_on_production "
 "
 
 
-# Send database to production
+# Send Postgres artefact to production
 
-docker exec ${POSTGRES_CONTAINER} pg_dump -U ${POSTGRES_USERNAME} ${POSTGRES_DATABASE} > ${POSTGRES_ARTEFACT_PATH}
-send_to_production ${POSTGRES_ARTEFACT_PATH} ${PRODUCTION_ARTEFACTS_POSTGRES_DIRECTORY}
+if run_on_production "stat ${POSTGRES_ARTEFACT_PATH} > /dev/null 2>&1"
+then
+  echo 'Postgres artefact exists on production; not uploading from stage.'
+else
+  docker exec ${POSTGRES_CONTAINER} pg_dump -U ${POSTGRES_USERNAME} ${POSTGRES_DATABASE} > ${POSTGRES_ARTEFACT_PATH}
+  send_to_production ${POSTGRES_ARTEFACT_PATH} ${PRODUCTION_ARTEFACTS_POSTGRES_DIRECTORY}
+fi
 
 
 # Clone project to another place to run second compose on production
@@ -274,6 +280,18 @@ run_on_production "
   cd ${PRODUCTION_REPOSITORY_DIRECTORY}
   git checkout ${COMMIT}
   git reset --hard
+"
+
+
+# Remove containers and network.
+# Otherwise compose will fail if this build is running for the second time after failure
+
+run_on_production "
+  docker rm ${PRODUCTION_NGINX_CONTAINER_NEW} \
+            ${PRODUCTION_DJANGO_CONTAINER_NEW} \
+            ${PRODUCTION_POSTGRES_CONTAINER_NEW}
+
+  docker network rm ${PRODUCTION_DOCKER_PREFIX_NEW}_default
 "
 
 
@@ -312,42 +330,32 @@ run_on_production "
 run_on_production "
   sleep 5s  # Give Postgres some time to boot
 
-  while [ \"\$( docker exec ${PRODUCTION_POSTGRES_CONTAINER} psql -U ${PRODUCTION_POSTGRES_USERNAME} -tAc \"SELECT 1 FROM pg_database WHERE datname='${PRODUCTION_POSTGRES_DATABASE}'\" )\" != '1' ]; do
+  while [ \"\$( docker exec ${PRODUCTION_POSTGRES_CONTAINER_NEW} psql -U ${PRODUCTION_POSTGRES_USERNAME} -tAc \"SELECT 1 FROM pg_database WHERE datname='${PRODUCTION_POSTGRES_DATABASE}'\" )\" != '1' ]; do
     echo 'Waiting for Postgres to create a database...';
     sleep 5s;
   done
 
   sleep 5s  # Give Postgres some time to restart after creating a database
 
-  until [[ \"\$( docker exec ${PRODUCTION_POSTGRES_CONTAINER} pg_isready )\" ]]; do
+  until [[ \"\$( docker exec ${PRODUCTION_POSTGRES_CONTAINER_NEW} pg_isready )\" ]]; do
     echo 'Waiting for Postgres to get ready...';
     sleep 5s;
   done
 
-  docker cp ${PRODUCTION_POSTGRES_ARTEFACT_PATH} ${PRODUCTION_POSTGRES_CONTAINER}:/tmp
-  docker exec ${PRODUCTION_POSTGRES_CONTAINER} bash -c 'psql -U ${PRODUCTION_POSTGRES_USER} ${PRODUCTION_POSTGRES_DATABASE} < /tmp/${PRODUCTION_POSTGRES_ARTEFACT_NAME}' > /dev/null
+  docker cp ${PRODUCTION_POSTGRES_ARTEFACT_PATH} ${PRODUCTION_POSTGRES_CONTAINER_NEW}:/tmp
+  docker exec ${PRODUCTION_POSTGRES_CONTAINER_NEW} bash -c 'psql -U ${PRODUCTION_POSTGRES_USER} ${PRODUCTION_POSTGRES_DATABASE} < /tmp/${PRODUCTION_POSTGRES_ARTEFACT_NAME}' > /dev/null
 "
 
 
 # Forward ports on production
 
-if [ "${IS_FRESH_INSTALLATION}" = true ];
+if [ -z "${PRODUCTION_NGINX_PORT_SET_BEFORE}" ];
 then
   run_on_production "sudo bash /root/scripts/create_port_forwarding_${PRODUCTION_NGINX_PORT_SET_NEW}.sh"
 else
   run_on_production "sudo bash /root/scripts/create_port_forwarding_${PRODUCTION_NGINX_PORT_SET_NEW}.sh"
   run_on_production "sudo bash /root/scripts/delete_port_forwarding_${PRODUCTION_NGINX_PORT_SET_BEFORE}.sh"
 fi
-
-
-# On production save current deployment settings to file
-
-run_on_production "
-  echo \"NGINX_PORT_SET_CURRENT=${PRODUCTION_NGINX_PORT_SET_NEW}\" > ${PRODUCTION_ENVIRONMENT_FILE}
-  echo \"NGINX_PORT_SET_PREVIOUS=${PRODUCTION_NGINX_PORT_SET_BEFORE}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
-  echo \"COMMIT_CURRENT=${COMMIT}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
-  echo \"COMMIT_PREVIOUS=${PRODUCTION_COMMIT_CURRENT}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
-"
 
 
 # Stop current running containers on production
@@ -377,12 +385,71 @@ then
               ${PRODUCTION_DJANGO_CONTAINER_PREVIOUS} \
               ${PRODUCTION_POSTGRES_CONTAINER_PREVIOUS}
 
-    docker rmi \${previous_nginx_image} \
-               \${previous_django_image} \
-               \${previous_postgres_image}
+    #docker rmi \${previous_nginx_image} \
+    #           \${previous_django_image} \
+    #           \${previous_postgres_image}
 
     docker network rm ${PRODUCTION_DOCKER_PREFIX_PREVIOUS}_default
   "
 else
   echo 'Not rotating Docker things because previous commit is unknown.'
 fi
+
+
+# Check if main page returns HTTP 200 OK.
+# Restore previous working version if website is broken
+
+if [ "$( curl --write-out %{http_code} --silent --output /dev/null ${WEBSITE_URL} )" != '200' ];
+then
+  if [ -n "${PRODUCTION_COMMIT_CURRENT}" ];
+  then
+    echo "Website seems broken; restarting running containers."
+    run_on_production "
+      docker start ${PRODUCTION_POSTGRES_CONTAINER_CURRENT} \
+                   ${PRODUCTION_DJANGO_CONTAINER_CURRENT} \
+                   ${PRODUCTION_NGINX_CONTAINER_CURRENT}
+
+      sudo bash /root/scripts/create_port_forwarding_${PRODUCTION_NGINX_PORT_SET_BEFORE}.sh
+      sudo bash /root/scripts/delete_port_forwarding_${PRODUCTION_NGINX_PORT_SET_NEW}.sh
+
+      docker stop ${PROJECT_NAME}_${COMMIT}_nginx_1 \
+                  ${PROJECT_NAME}_${COMMIT}_django_1 \
+                  ${PROJECT_NAME}_${COMMIT}_postgres_1
+
+      docker network rm ${PROJECT_NAME}_${COMMIT}_default
+    "
+    echo 'Inspect logs and delete containers and images yourself.'
+    travis_terminate 1
+  else
+    echo "Website seems broken; can't restore previous version because previous commit is unknown."
+  fi
+
+else
+  echo 'Website seems running fine.'
+fi
+
+
+# On production save current deployment settings to file
+
+run_on_production "
+  echo \"NGINX_PORT_SET_CURRENT=${PRODUCTION_NGINX_PORT_SET_NEW}\" > ${PRODUCTION_ENVIRONMENT_FILE}
+  echo \"NGINX_PORT_SET_PREVIOUS=${PRODUCTION_NGINX_PORT_SET_BEFORE}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
+  echo \"COMMIT_CURRENT=${COMMIT}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
+  echo \"COMMIT_PREVIOUS=${PRODUCTION_COMMIT_CURRENT}\" >> ${PRODUCTION_ENVIRONMENT_FILE}
+"
+
+
+# Leave only ten latest files and directories in different directories on production
+
+run_on_production "
+  function rotate {
+    ls -1tr | head -n -10 | xargs -d \"\n\" rm -rf
+  }
+  cd ${PRODUCTION_ARTEFACTS_STATIC_DIRECTORY} && rotate
+  cd ${PRODUCTION_ARTEFACTS_POSTGRES_DIRECTORY} && rotate
+  cd ${PRODUCTION_BACKUPS_POSTGRES_DIRECTORY} && rotate
+  cd ${PRODUCTION_IMAGES_NGINX_DIRECTORY} && rotate
+  cd ${PRODUCTION_IMAGES_DJANGO_DIRECTORY} && rotate
+  cd ${PRODUCTION_IMAGES_POSTGRES_DIRECTORY} && rotate
+  cd ${PRODUCTION_REPOSITORIES_DIRECTORY} && rotate
+"
