@@ -1,8 +1,18 @@
+// Colors
+
+.c-white { color: $white }
+.c-light { color: $gray-100 }
+.c-dark { color: $gray-900 }
+.c-black { color: $black }
+
+
 // Font
 
-.ff-sans    { font-family: $font-family-sans }
-.ff-serif   { font-family: $font-family-serif }
-.ff-mono    { font-family: $font-family-mono }
+.ff-sans          { font-family: $font-family-sans }
+.ff-sans-narrow   { font-family: $font-family-sans-narrow }
+.ff-sans-caption  { font-family: $font-family-sans-caption }
+.ff-serif         { font-family: $font-family-serif }
+.ff-mono          { font-family: $font-family-mono }
 
 @each $viewport, $width in $viewport-widths {
   $infix: get-breakpoint-infix($viewport);
@@ -21,6 +31,12 @@
     .fs-3#{$infix}    { font-size: $font-size-current * 3 }
     .fs-4#{$infix}    { font-size: $font-size-current * 4 }
     .fs-5#{$infix}    { font-size: $font-size-current * 5 }
+
+    .lh-1#{$infix} { line-height: 1 }
+    .lh-11#{$infix} { line-height: 1.1 }
+    .lh-12#{$infix} { line-height: 1.2 }
+    .lh-13#{$infix} { line-height: 1.3 }
+    .lh-14#{$infix} { line-height: 1.4 }
   }
 }
 
@@ -59,33 +75,37 @@ body {
 
 h3 { font-size: $font-size-current }
 h2 { font-size: $font-size-current * 1.5 }
-h1 { font-size: $font-size-current * 2 }
+h1 { font-size: $font-size-current * 2.5 }
 
 h1, h2, h3 {
-  font-family: $font-family-sans;
+  hyphens: none;
+  font-family: $font-family-sans-caption;
   margin-bottom: $font-size-current / 1.5;
   p + &,
   ul + &,
-  ol + & { margin-top: $font-size-current * 2 }
+  ol + &,
+  figure + & { margin-top: $font-size-current * 2 }
 }
+
+h1:first-child,
+h2:first-child,
+h3:first-child { margin-top: $font-size-current * 1.25 }
 
 h3 { margin-bottom: $font-size-current / 3 }
 
 
-// Paragraph
+// Link
 
-p { margin-bottom: $paragraph-margin-bottom }
+.link         { border-bottom: 1px solid rgba(0,  100, 168, 0.2) }
+.link:hover   { border-bottom: 1px solid rgba(160, 48,   0, 0.2) }
 
 
-// Image
+// Image, figure, and figcaption
 
 img {
   max-width: 100%;
   height: auto;
 }
-
-
-// Figure
 
 figure {
   margin-top: $font-size-current * 0.5;
@@ -93,6 +113,8 @@ figure {
 }
 
 figcaption {
+  @include hyphens-none;
+  @include hanging-none;
   font-family: $font-family-sans;
   font-size: $font-size-current * 0.9;
   margin-top: $font-size-current *  0.25;
@@ -122,10 +144,21 @@ dl { margin-bottom: $font-size-current }
 dd p { margin-bottom: $font-size-current * 0.25 }
 
 
-// Indent and super
+// Paragraph, indent, superquote, reference
+
+p { margin-bottom: $paragraph-margin-bottom }
+
+p.indent,
+p.superquote,
+p.reference { font-family: $font-family-sans }
+
+p.superquote,
+p.reference {
+  @include hyphens-none;
+  @include hanging-none;
+}
 
 p.indent {
-  font-family: $font-family-sans;
   font-size: $font-size-current * 0.95;
   margin-left: $font-size-current * 2;
   margin-bottom: $paragraph-margin-bottom * 1.75;
@@ -135,47 +168,45 @@ p.indent {
 
 p.indent + p.indent { margin-top: -$paragraph-margin-bottom }
 
-p.super {
+p.superquote {
+  line-height: 1.4;
   font-style: italic;
   font-size: $font-size-current * 2;
-  font-family: $font-family-sans;
   margin-left: $font-size-current;
   margin-bottom: $paragraph-margin-bottom * 1.25;
 }
 
+p.reference { font-size: $font-size-current * 0.9 }
+
 
 // Hanging punctuation
 
-.laquo { margin-left: -$font-size-current / 2 }
-.laquo-whitespace { margin-right: $font-size-current / 2 }
-.parenthesis { margin-left: -$font-size-current / 3 }
-.parenthesis-whitespace { margin-right: $font-size-current / 3 }
+@each $viewport, $width in $viewport-widths {
+  $infix: get-breakpoint-infix($viewport);
 
-.no-hanging {
-  .laquo { margin-left: 0 }
-  .laquo-whitespace { margin-right: 0 }
-  .parenthesis { margin-left: 0 }
-  .parenthesis-whitespace { margin-right: 0}
+  @include media-breakpoint-up($width) {
+    .hanging-laquo#{$infix} { margin-left: -$font-size-current / 2 }
+    .hanging-laquo-whitespace#{$infix} { margin-right: $font-size-current / 2 }
+    .hanging-lpar#{$infix} { margin-left: -$font-size-current / 3 }
+    .hanging-lpar-whitespace#{$infix} { margin-right: $font-size-current / 3 }
+    .hanging-horbar#{$infix} { margin-left: -$font-size-current * 1.3 }
+  }
 }
 
 
 // Code highlight
 
-pre {
-  background-color: $gray-100;
+.highlight pre {
+  background: $gray-100;
+  font-size: 0.9 * $font-size-current;
   padding-top: $font-size-current * 0.75;
   padding-bottom: $font-size-current;
   margin-bottom: $font-size-current * 2;
-}
 
-.lineno {
-  padding-left: $font-size-current * 0.5;
-  padding-right: $font-size-current * 0.5;
-  color: $gray-300;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+  .lineno {
+    padding-left: $font-size-current * 0.5;
+    padding-right: $font-size-current * 0.5;
+    color: $gray-300;
+    @include select-none;
+  }
 }

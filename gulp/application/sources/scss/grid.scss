@@ -23,16 +23,20 @@ $field-size-sm: 20px;
 $field-size-md: calc((100vw - #{$content-max-width-md}) / 2);
 $field-size-lg: calc((100vw - #{$content-max-width-lg}) / 2);
 
-$grid-columns: 16;
-$columns-shortcut: repeat($grid-columns, 1fr);
+$grid-columns-count: 16;
+$repeat-grid-columns: repeat($grid-columns-count, 1fr);
 
 
 // Dynamic fields. I <3 Bureau https://bureau.ru/soviet/20190221/
 
+.row { display: grid }
+
 // 960px in Bureau
 @include media-breakpoint-down($width-md - 1px) {
-  .grid {
-    grid-template-columns: $field-size-sm $columns-shortcut $field-size-sm
+  .row { grid-template-columns: $repeat-grid-columns }
+  .container {
+    margin-left: $field-size-sm;
+    margin-right: $field-size-sm;
   }
   .px-field {
     padding-left: $field-size-sm;
@@ -42,8 +46,10 @@ $columns-shortcut: repeat($grid-columns, 1fr);
 
 // 961px in Bureau. I've changed it to 960 to fit breakpoint `md`
 @include media-breakpoint-between($width-md, $width-centered-md) {
-  .grid {
-    grid-template-columns: $field-size-default $columns-shortcut $field-size-default
+  .row { grid-template-columns: $repeat-grid-columns }
+  .container {
+    margin-left: $field-size-default;
+    margin-right: $field-size-default;
   }
   .px-field {
     padding-left: $field-size-default;
@@ -52,8 +58,10 @@ $columns-shortcut: repeat($grid-columns, 1fr);
 }
 
 @include media-breakpoint-between($width-centered-md + 1px, $width-lg - 1px) {
-  .grid {
-    grid-template-columns: $field-size-md $columns-shortcut $field-size-md
+  .row { grid-template-columns: $repeat-grid-columns }
+  .container {
+    margin-left: $field-size-md;
+    margin-right: $field-size-md;
   }
   .px-field {
     padding-left: $field-size-md;
@@ -62,8 +70,10 @@ $columns-shortcut: repeat($grid-columns, 1fr);
 }
 
 @include media-breakpoint-between($width-lg, $width-centered-lg) {
-  .grid {
-    grid-template-columns: $field-size-default $columns-shortcut $field-size-default
+  .row { grid-template-columns: $repeat-grid-columns }
+  .container {
+    margin-left: $field-size-default;
+    margin-right: $field-size-default;
   }
   .px-field {
     padding-left: $field-size-default;
@@ -72,8 +82,10 @@ $columns-shortcut: repeat($grid-columns, 1fr);
 }
 
 @include media-breakpoint-up($width-centered-lg + 1px) {
-  .grid {
-    grid-template-columns: $field-size-lg $columns-shortcut $field-size-lg
+  .row { grid-template-columns: $repeat-grid-columns }
+  .container {
+    margin-left: $field-size-lg;
+    margin-right: $field-size-lg;
   }
   .px-field {
     padding-left: $field-size-lg;
@@ -84,25 +96,20 @@ $columns-shortcut: repeat($grid-columns, 1fr);
 
 // Bootstrap stuff
 
-.grid { display: grid }
-
-// Classes:
-// col-full
-// col, col-md, col-lg
-// col-1...16, col-md-1...16, col-lg-1...16
-// off-1...16, off-md-1...16, off-lg-1...16
-
-.col-full { grid-column: 1 / -1 }
+@include media-breakpoint-sm {
+  [class^='col-'],
+  [class^='off-'] { grid-column: 1 / -1 }
+}
 
 @each $viewport, $width in $viewport-widths {
   $infix: get-breakpoint-infix($viewport);
 
   @include media-breakpoint-up($width) {
-    .col#{$infix} { grid-column: 2 / -2 }  // avoid side fields
+    .col#{$infix} { grid-column: 1 / -1 }
 
-    @for $span from 1 through $grid-columns {
-      .off#{$infix}-#{$span} { grid-column-start: $span + 2 } // +2 means left field
-      .col#{$infix}-#{$span} { grid-column-end: span $span }
+    @for $span from 1 through $grid-columns-count {
+      .off-#{$span}#{$infix} { grid-column-start: $span + 1 }
+      .col-#{$span}#{$infix} { grid-column-end: span $span }
     }
   }
 }
@@ -110,9 +117,10 @@ $columns-shortcut: repeat($grid-columns, 1fr);
 
 // Margin, padding
 
-$spacer: 1em;
+$spacer: 1rem;
 $spacers: (
   '0':     0,
+  '0125':  ($spacer * 0.125),
   '025':  ($spacer * 0.25),
   '05':   ($spacer * 0.5),
   '075':  ($spacer * 0.75),
@@ -130,20 +138,20 @@ $spacers: (
     @each $prop, $abbrev in (margin: m, padding: p) {
       @each $size, $length in $spacers {
         .#{$abbrev}#{$infix}-#{$size} { #{$prop}: $length !important; }
-        .#{$abbrev}t#{$infix}-#{$size},
-        .#{$abbrev}y#{$infix}-#{$size} {
+        .#{$abbrev}t-#{$size}#{$infix},
+        .#{$abbrev}y-#{$size}#{$infix} {
           #{$prop}-top: $length !important;
         }
-        .#{$abbrev}r#{$infix}-#{$size},
-        .#{$abbrev}x#{$infix}-#{$size} {
+        .#{$abbrev}r-#{$size}#{$infix},
+        .#{$abbrev}x-#{$size}#{$infix} {
           #{$prop}-right: $length !important;
         }
-        .#{$abbrev}b#{$infix}-#{$size},
-        .#{$abbrev}y#{$infix}-#{$size} {
+        .#{$abbrev}b-#{$size}#{$infix},
+        .#{$abbrev}y-#{$size}#{$infix} {
           #{$prop}-bottom: $length !important;
         }
-        .#{$abbrev}l#{$infix}-#{$size},
-        .#{$abbrev}x#{$infix}-#{$size} {
+        .#{$abbrev}l-#{$size}#{$infix},
+        .#{$abbrev}x-#{$size}#{$infix} {
           #{$prop}-left: $length !important;
         }
       }
@@ -152,42 +160,42 @@ $spacers: (
     // Negative margins (e.g., where `.mb-n1` is negative version of `.mb-1`)
     @each $size, $length in $spacers {
       @if $size != 0 {
-        .m#{$infix}-n#{$size} { margin: -$length !important; }
-        .mt#{$infix}-n#{$size},
-        .my#{$infix}-n#{$size} {
+        .m-n#{$size}#{$infix} { margin: -$length !important; }
+        .mt-n#{$size}#{$infix},
+        .my-n#{$size}#{$infix} {
           margin-top: -$length !important;
         }
-        .mr#{$infix}-n#{$size},
-        .mx#{$infix}-n#{$size} {
+        .mr-n#{$size}#{$infix},
+        .mx-n#{$size}#{$infix} {
           margin-right: -$length !important;
         }
-        .mb#{$infix}-n#{$size},
-        .my#{$infix}-n#{$size} {
+        .mb-n#{$size}#{$infix},
+        .my-n#{$size}#{$infix} {
           margin-bottom: -$length !important;
         }
-        .ml#{$infix}-n#{$size},
-        .mx#{$infix}-n#{$size} {
+        .ml-n#{$size}#{$infix},
+        .mx-n#{$size}#{$infix} {
           margin-left: -$length !important;
         }
       }
     }
 
     // Some special margin utils
-    .m#{$infix}-auto { margin: auto !important; }
-    .mt#{$infix}-auto,
-    .my#{$infix}-auto {
+    .m-auto#{$infix} { margin: auto !important; }
+    .mt-auto#{$infix},
+    .my-auto#{$infix} {
       margin-top: auto !important;
     }
-    .mr#{$infix}-auto,
-    .mx#{$infix}-auto {
+    .mr-auto#{$infix},
+    .mx-auto#{$infix} {
       margin-right: auto !important;
     }
-    .mb#{$infix}-auto,
-    .my#{$infix}-auto {
+    .mb-auto#{$infix},
+    .my-auto#{$infix} {
       margin-bottom: auto !important;
     }
-    .ml#{$infix}-auto,
-    .mx#{$infix}-auto {
+    .ml-auto#{$infix},
+    .mx-auto#{$infix} {
       margin-left: auto !important;
     }
   }

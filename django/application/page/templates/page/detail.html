@@ -1,23 +1,38 @@
-{% load i18n static %}
+{% load static %}
 <!doctype html>
 <html prefix='og: http://ogp.me/ns/website#' lang='{{ config.SITE_LANGUAGE }}'>
   <head>
     <meta charset='utf-8'/>
     <meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no' />
-    <link rel='stylesheet' href='{% static "vash/css/styles.min.css" %}' />
+    <!-- Meta -->
     <title>{{ page.title }}</title>
+    {% block head-meta %}{% endblock %}
+    <!-- Style before styles.min.css and fonts -->
+    {% block head-style-top %}{% endblock %}
+    <!-- styles.min.css and fonts -->
+    <link rel='stylesheet' href='{% static "vash/css/styles.min.css" %}' />
     {% include 'page/fonts.html' %}
-    {{ page.clean_meta|safe }}
+    <!-- Style after styles.min.css and fonts -->
+    {% block head-style-bottom %}{% endblock %}
   </head>
   <body>
-    <main>{{ page.clean_content|safe }}</main>
+    <!-- Top -->
+    {% block body-top %}{% endblock %}
+    <!-- Middle -->
+    {% block body-middle %}{% endblock %}
+    <!-- Bottom -->
+    {% block body-bottom %}{% endblock %}
+
+    <!-- Script before Lazyload, Jquery, and cache -->
+    {% block body-script-top %}{% endblock %}
+    <!-- Lazyload, Jquery, and cache -->
     {% include 'page/lazyload.html' %}
-    <script
-      src='https://code.jquery.com/jquery-3.4.0.min.js'
-      integrity='sha256-BJeo0qm959uMBGb65z40ejJYGSgR7REI4+CW1fNKwOg='
-      crossorigin='anonymous'
-    ></script>
-    {% include 'page/br.html' %}
+    {% include 'page/jquery.html' %}
     {% include 'page/cache.html' %}
+    <!-- Script after Lazyload, Jquery, and cache -->
+    {% block body-script-bottom %}{% endblock %}
+
+    <!-- Style -->
+    {% block body-style %}{% endblock %}
   </body>
 </html>

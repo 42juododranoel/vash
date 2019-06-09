@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.views.generic.detail import DetailView
 
 from page.models import Page
@@ -14,6 +13,9 @@ class BasePageDetailView(DetailView):
         serialized_page = PageSerializer(self.object)
         context['object'] = context['page'] = serialized_page.data
         return context
+
+    def get_template_names(self):
+        return [self.object.template.file.file.name]
 
 
 class VisiblePageDetailView(BasePageDetailView):

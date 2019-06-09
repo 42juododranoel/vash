@@ -5,21 +5,18 @@ from constance import config
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
-from django.template.response import SimpleTemplateResponse
 from django.contrib.postgres.fields import JSONField
-from django.template import (
-    Context,
-    Template as DjangoTemplate,
-)
 
+from snippet.models import Snippet
 from template.models import Template
-from page.cleaners import (
-    hyphenate_html,
-    typograph_html,
-    highlight_precode,
-    wrap_hanging_punctuation,
+from vash.utils import (
+    PatchedFilerImageField,
+    get_base_url,
 )
-from page.utils import get_base_url, PatchedFilerImageField
+from vash.mixins import (
+    CreatedUpdatedAtMixin,
+    clean_content,
+)
 
 
 def wrap_meta_property(tag, property, content):
@@ -40,13 +37,8 @@ class PageQuerySet(models.QuerySet):
         return self.filter(is_published=False)
 
 
-class Page(models.Model):
+class Page(CreatedUpdatedAtMixin):
     MAIN_PAGE_SLUG = 'main'
-
-    title = models.CharField(
-        verbose_name=_('Title'),
-        max_length=255,
-    )
 
     slug = models.CharField(
         verbose_name=_('Slug'),
@@ -65,14 +57,10 @@ class Page(models.Model):
         verbose_name=_('Template')
     )
 
-    open_graph_image = PatchedFilerImageField(
-        blank=True,
-        null=True,
-        related_name='open_graph_image_article',
-        on_delete=models.PROTECT,
-        verbose_name=_('Open Graph image'),
+    title = models.CharField(
+        verbose_name=_('Title'),
+        max_length=255,
     )
-
     keywords = models.CharField(
         verbose_name=_('Keywords'),
         help_text=_('Separate by comma and space'),
@@ -84,6 +72,14 @@ class Page(models.Model):
         verbose_name=_('Description'),
         blank=True,
         null=True,
+    )
+
+    open_graph_image = PatchedFilerImageField(
+        blank=True,
+        null=True,
+        related_name='open_graph_image_article',
+        on_delete=models.PROTECT,
+        verbose_name=_('Open Graph image'),
     )
 
     seo_keywords = models.CharField(
@@ -99,30 +95,21 @@ class Page(models.Model):
         null=True,
     )
 
-    meta = JSONField(
-        verbose_name=_('Meta'),
-        editable=False,
+    snippets = models.ManyToManyField(
+        Snippet,
+        verbose_name=_('Snippets'),
         blank=True,
-        null=True,
-    )
-    clean_meta = models.TextField(
-        verbose_name=_('Clean meta'),
-        editable=False,
-        blank=True,
-        null=True,
+        related_name='pages'
     )
 
-    content = models.TextField(
+    content = JSONField(
         verbose_name=_('Content'),
-    )
-    clean_content = models.TextField(
-        verbose_name=_('Clean content'),
         editable=False,
         blank=True,
         null=True,
     )
 
-    link = models.CharField(
+    detail_link = models.CharField(
         verbose_name=_('Link'),
         max_length=255,
         blank=True,
@@ -135,54 +122,37 @@ class Page(models.Model):
         null=True,
     )
 
-    created_at = models.DateTimeField(
-        verbose_name=_('Created at'),
-    )
-    updated_at = models.DateTimeField(
-        verbose_name=_('Updated at'),
-        auto_now=True,
-    )
-
     objects = PageQuerySet.as_manager()
 
     def __str__(self):
         return self.title
 
-    def full_clean(self, *args, **kwargs):
-        super().full_clean(*args, **kwargs)
-        self.meta = self.get_meta()
-        self.clean_meta = self.get_clean_meta()
-        self.clean_content = self.get_clean_content()
-        self.link = self.get_absolute_url()
-        self.cache_link = self.get_cache_link()
+    @property
+    def url_name(self):
+        return 'page:visible' if self.is_published else 'page:invisible'
 
     def get_absolute_url(self):
-        return reverse(
-            'page:visible' if self.is_published else 'page:invisible',
-            kwargs={'slug': self.slug}
-        )
+        return reverse(self.url_name, kwargs={'slug': self.slug})
 
-    def get_cache_link(self):
-        pattern = "{% url ['\"]page:visible['\"] ['\"]([\w+-]+)['\"] %}"
-        slugs = re.findall(pattern, self.content)
-        slugs.append(self.slug)  # for browser back button
-        slugs.append(self.MAIN_PAGE_SLUG)  # for `main` button on page
-        return reverse('page-list') + '?slug__in=' + ','.join(slugs)
+    def full_clean(self, *args, **kwargs):
+        super().full_clean(*args, **kwargs)
+        self.content = self.get_content()
+        self.cache_link = self.get_cache_link()
+        self.detail_link = self.get_absolute_url()
 
-    def get_base_meta(self):
-        base_meta_data = {
-            'keywords': self.seo_keywords,
-            'description': self.seo_description,
-        }
+    def _get_page_meta(self):
         return [
             wrap_meta_property('meta', property, content)
-            for property, content in base_meta_data.items()
+            for property, content in [
+                ['keywords', self.keywords],
+                ['description', self.description],
+            ]
             if content
         ]
 
-    def get_open_graph_meta(self):
+    def _get_open_graph_meta(self):
         base_url = get_base_url()
-        open_graph_data = {
+        data = {
             'url': base_url + self.get_absolute_url(),
             'type': 'website',
             'title': self.title,
@@ -192,40 +162,48 @@ class Page(models.Model):
             'determiner': '',
         }
         if self.open_graph_image:
-            open_graph_data['image'] = base_url + self.open_graph_image.url
-            open_graph_data['image:alt'] = self.open_graph_image.default_alt_text
-            open_graph_data['image:width'] = self.open_graph_image.width
-            open_graph_data['image:height'] = self.open_graph_image.height
-            open_graph_data['image:type'] = guess_type(self.open_graph_image.path)[0] or ''
-
+            data['image'] = base_url + self.open_graph_image.url
+            data['image:alt'] = self.open_graph_image.default_alt_text
+            data['image:width'] = self.open_graph_image.width
+            data['image:height'] = self.open_graph_image.height
+            data['image:type'] = guess_type(self.open_graph_image.path)[0] or ''
         return [
             wrap_meta_property('meta', 'og:' + property, content)
-            for property, content in open_graph_data.items()
+            for property, content in data.items()
             if content
         ]
 
     def get_meta(self):
-        base_meta = self.get_base_meta()
-        open_graph_meta = self.get_open_graph_meta()
-        return base_meta + open_graph_meta
-
-    def get_clean_meta(self):
-        html = '<meta property="meta-start" content="" />'
-        for property_data in self.meta:
+        all_meta = self._get_page_meta() + self._get_open_graph_meta()
+        html = ''
+        for property_data in all_meta:
             attributes = [
                 f'{key}="{value}"'
                 for key, value in property_data['attributes'].items()
             ]
             attributes_string = ' '.join(attributes)
             html += f'<{property_data["tag"]} {attributes_string} />'
-        html += '<meta property="meta-end" content="" />'
         return html
 
-    def get_clean_content(self):
-        template = DjangoTemplate(self.content)
-        clean_content = template.render(Context())
-        clean_content = highlight_precode(clean_content)
-        clean_content = wrap_hanging_punctuation(clean_content)
-        clean_content = hyphenate_html(clean_content)
-        clean_content = typograph_html(clean_content)
-        return clean_content
+    def get_content(self):
+        content = {'meta': self.get_meta()}
+        if self.id:
+            m2m_queryset = self.snippets.all()
+            fk_queryset = Snippet.objects.filter(page=self)
+            for queryset in [m2m_queryset, fk_queryset]:
+                for snippet in queryset:
+                    if snippet.name in content:
+                        content[snippet.name] += snippet.clean_content
+                    else:
+                        content[snippet.name] = snippet.clean_content
+        return content
+
+    def get_cache_link(self):
+        # Run after setting `self.content`
+        slugs = set()
+        if 'main' in self.content:
+            pattern = r'href=["\']/([\w\+-]+)["\']'
+            slugs.update(re.findall(pattern, self.content['main']))
+        slugs.add(self.slug)  # for browser back button
+        slugs.add(self.MAIN_PAGE_SLUG)  # for `main` button on page
+        return reverse('page-list') + '?slug__in=' + ','.join(slugs)

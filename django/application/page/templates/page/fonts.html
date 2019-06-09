@@ -1,192 +1,181 @@
 <style>
   @font-face {
-    font-family: 'PT Serif';
-    src: url('/static/page/fonts/ptserifweb/ptf55f_w.woff');
-    src:
-      local('PT Serif'),
-      url('/static/page/fonts/ptserifweb/ptf55f_w.eot?#iefix') format('embedded-opentype'),
-      url('/static/page/fonts/ptserifweb/ptf55f_w.woff') format('woff'),
-      url('/static/page/fonts/ptserifweb/ptf55f_w.ttf') format('truetype'),
-      url('/static/page/fonts/ptserifweb/ptf55f_w.svg#PTSerif-Regular') format('svg');
+  	font-family: 'PT Root UI';
+  	src:
+      url('/static/vash/font/pt/root/PT%20Root%20UI_Regular.woff2') format('woff2'),
+      url('/static/vash/font/pt/root/PT%20Root%20UI_Regular.woff') format('woff');
+  	font-weight: 400;
+  	font-style: normal;
   }
 
   @font-face {
-    font-family: 'PT Serif';
-    font-style: italic;
-    src: url('/static/page/fonts/ptserifweb/ptf56f_w.woff');
-    src:
-      local('PT Serif Italic'),
-      url('/static/page/fonts/ptserifweb/ptf56f_w.eot?#iefix') format('embedded-opentype'),
-      url('/static/page/fonts/ptserifweb/ptf56f_w.woff') format('woff'),
-      url('/static/page/fonts/ptserifweb/ptf56f_w.ttf') format('truetype'),
-      url('/static/page/fonts/ptserifweb/ptf56f_w.svg#PTSerif-Italic') format('svg');
+  	font-family: 'PT Root UI';
+  	src:
+      url('/static/vash/font/pt/root/PT%20Root%20UI_Medium.woff2') format('woff2'),
+      url('/static/vash/font/pt/root/PT%20Root%20UI_Medium.woff') format('woff');
+  	font-weight: 500;
+  	font-style: normal;
   }
 
   @font-face {
-    font-family: 'PT Serif';
-    src: url('/static/page/fonts/ptserifweb/ptf75f_w.woff');
-    font-style: normal;
-    font-weight: bold;
-    src:
-      local('PT Serif Bold'),
-      url('/static/page/fonts/ptserifweb/ptf75f_w.eot?#iefix') format('embedded-opentype'),
-      url('/static/page/fonts/ptserifweb/ptf75f_w.woff') format('woff'),
-      url('/static/page/fonts/ptserifweb/ptf75f_w.ttf') format('truetype'),
-      url('/static/page/fonts/ptserifweb/ptf75f_w.svg#PTSerif-Bold') format('svg');
+  	font-family: 'PT Root UI';
+  	src:
+      url('/static/vash/font/pt/root/PT%20Root%20UI_Light.woff2') format('woff2'),
+      url('/static/vash/font/pt/root/PT%20Root%20UI_Light.woff') format('woff');
+  	font-weight: 300;
+  	font-style: normal;
   }
 
   @font-face {
-    font-family: 'PT Serif';
-    font-style: italic;
-    font-weight: bold;
-    src: url('/static/page/fonts/ptserifweb/ptf76f_w.woff');
-    src:
-      local('PT Serif Bold Italic'),
-      url('/static/page/fonts/ptserifweb/ptf76f_w.eot?#iefix') format('embedded-opentype'),
-      url('/static/page/fonts/ptserifweb/ptf76f_w.woff') format('woff'),
-      url('/static/page/fonts/ptserifweb/ptf76f_w.ttf') format('truetype'),
-      url('/static/page/fonts/ptserifweb/ptf76f_w.svg#PTSerif-BoldItalic') format('svg');
+  	font-family: 'PT Root UI';
+  	src:
+      url('/static/vash/font/pt/root/PT%20Root%20UI_Bold.woff2') format('woff2'),
+      url('/static/vash/font/pt/root/PT%20Root%20UI_Bold.woff') format('woff');
+  	font-weight: 700;
+  	font-style: normal;
   }
 
   @font-face {
-    font-family: 'PT Serif Caption';
-    src: url('/static/page/fonts/ptserifweb/ptz55f_w.woff');
-    src:
-      local('PT Serif Caption'),
-      url('/static/page/fonts/ptserifweb/ptz55f_w.eot?#iefix') format('embedded-opentype'),
-      url('/static/page/fonts/ptserifweb/ptz55f_w.woff') format('woff'),
-      url('/static/page/fonts/ptserifweb/ptz55f_w.ttf') format('truetype'),
-      url('/static/page/fonts/ptserifweb/ptz55f_w.svg#PTSerif-Caption') format('svg');
+  	font-family: 'PT Mono';
+  	src:
+      url('/static/vash/font/pt/mono/PT%20Mono_Bold.woff2') format('woff2'),
+      url('/static/vash/font/pt/mono/PT%20Mono_Bold.woff') format('woff');
+  	font-weight: bold;
+  	font-style: normal;
   }
 
   @font-face {
-    font-family: 'PT Serif Caption';
-    font-style: italic;
-    src: url('/static/page/fonts/ptserifweb/ptz56f_w.woff');
-    src:
-      local('PT Serif Caption Italic'),
-      url('/static/page/fonts/ptserifweb/ptz56f_w.eot?#iefix') format('embedded-opentype'),
-      url('/static/page/fonts/ptserifweb/ptz56f_w.woff') format('woff'),
-      url('/static/page/fonts/ptserifweb/ptz56f_w.ttf') format('truetype'),
-      url('/static/page/fonts/ptserifweb/ptz56f_w.svg#PTSerif-CaptionItalic') format('svg');
+  	font-family: 'PT Mono';
+  	src:
+      url('/static/vash/font/pt/mono/PT%20Mono_Regular.woff2') format('woff2'),
+      url('/static/vash/font/pt/mono/PT%20Mono_Regular.woff') format('woff');
+  	font-weight: normal;
+  	font-style: normal;
   }
 
   @font-face {
-    font-family: 'PT Sans';
-    src: url('/static/page/fonts/ptsansweb/pts55f_w.woff');
-    src:
-      local('PT Sans'),
-      url('/static/page/fonts/ptsansweb/pts55f_w.eot?#iefix') format('embedded-opentype'),
-      url('/static/page/fonts/ptsansweb/pts55f_w.woff') format('woff'),
-      url('/static/page/fonts/ptsansweb/pts55f_w.ttf') format('truetype'),
-      url('/static/page/fonts/ptsansweb/pts55f_w.svg#PTSans-Regular') format('svg');
+  	font-family: 'PT Sans';
+  	src:
+      url('/static/vash/font/pt/sans/PT%20Sans_Bold%20Italic.woff2') format('woff2'),
+      url('/static/vash/font/pt/sans/PT%20Sans_Bold%20Italic.woff') format('woff');
+  	font-weight: bold;
+  	font-style: italic;
   }
 
   @font-face {
-    font-family: 'PT Sans';
-    font-style: italic;
-    src: url('/static/page/fonts/ptsansweb/pts56f_w.woff');
-    src:
-      local('PT Sans Italic'),
-      url('/static/page/fonts/ptsansweb/pts56f_w.eot?#iefix') format('embedded-opentype'),
-      url('/static/page/fonts/ptsansweb/pts56f_w.woff') format('woff'),
-      url('/static/page/fonts/ptsansweb/pts56f_w.ttf') format('truetype'),
-      url('/static/page/fonts/ptsansweb/pts56f_w.svg#PTSans-Italic') format('svg');
+  	font-family: 'PT Sans';
+  	src:
+      url('/static/vash/font/pt/sans/PT%20Sans_Bold.woff2') format('woff2'),
+      url('/static/vash/font/pt/sans/PT%20Sans_Bold.woff') format('woff');
+  	font-weight: bold;
+  	font-style: normal;
   }
 
   @font-face {
-    font-family: 'PT Sans';
-    src: url('/static/page/fonts/ptsansweb/pts75f_w.woff');
-    font-style: normal;
-    font-weight: bold;
-    src:
-      local('PT Sans Bold'),
-      url('/static/page/fonts/ptsansweb/pts75f_w.eot?#iefix') format('embedded-opentype'),
-      url('/static/page/fonts/ptsansweb/pts75f_w.woff') format('woff'),
-      url('/static/page/fonts/ptsansweb/pts75f_w.ttf') format('truetype'),
-      url('/static/page/fonts/ptsansweb/pts75f_w.svg#PTSans-Bold') format('svg');
+  	font-family: 'PT Sans Caption';
+  	src:
+      url('/static/vash/font/pt/sans/PT%20Sans_Caption%20Bold.woff2') format('woff2'),
+      url('/static/vash/font/pt/sans/PT%20Sans_Caption%20Bold.woff') format('woff');
+  	font-weight: bold;
+  	font-style: normal;
   }
 
   @font-face {
-    font-family: 'PT Sans';
-    font-style: italic;
-    font-weight: bold;
-    src: url('/static/page/fonts/ptsansweb/pts76f_w.woff');
-    src:
-      local('PT Sans Bold Italic'),
-      url('/static/page/fonts/ptsansweb/pts76f_w.eot?#iefix') format('embedded-opentype'),
-      url('/static/page/fonts/ptsansweb/pts76f_w.woff') format('woff'),
-      url('/static/page/fonts/ptsansweb/pts76f_w.ttf') format('truetype'),
-      url('/static/page/fonts/ptsansweb/pts76f_w.svg#PTSans-BoldItalic') format('svg');
+  	font-family: 'PT Sans Caption';
+  	src:
+      url('/static/vash/font/pt/sans/PT%20Sans_Caption%20Regular.woff2') format('woff2'),
+      url('/static/vash/font/pt/sans/PT%20Sans_Caption%20Regular.woff') format('woff');
+  	font-weight: normal;
+  	font-style: normal;
   }
 
   @font-face {
-    font-family: 'PT Sans Caption';
-    src: url('/static/page/fonts/ptsansweb/ptc55f_w.woff');
-    src:
-      local('PT Sans Caption'),
-      url('/static/page/fonts/ptsansweb/ptc55f_w.eot?#iefix') format('embedded-opentype'),
-      url('/static/page/fonts/ptsansweb/ptc55f_w.woff') format('woff'),
-      url('/static/page/fonts/ptsansweb/ptc55f_w.ttf') format('truetype'),
-      url('/static/page/fonts/ptsansweb/ptc55f_w.svg#PTSans-Caption') format('svg');
+  	font-family: 'PT Sans';
+  	src:
+      url('/static/vash/font/pt/sans/PT%20Sans_Italic.woff2') format('woff2'),
+      url('/static/vash/font/pt/sans/PT%20Sans_Italic.woff') format('woff');
+  	font-weight: normal;
+  	font-style: italic;
   }
 
   @font-face {
-    font-family: 'PT Sans Caption';
-    font-weight: bold;
-    src: url('/static/page/fonts/ptsansweb/ptc75f_w.woff');
-    src:
-      local('PT Sans Caption Bold'),
-      url('/static/page/fonts/ptsansweb/ptc75f_w.eot?#iefix') format('embedded-opentype'),
-      url('/static/page/fonts/ptsansweb/ptc75f_w.woff') format('woff'),
-      url('/static/page/fonts/ptsansweb/ptc75f_w.ttf') format('truetype'),
-      url('/static/page/fonts/ptsansweb/ptc75f_w.svg#PTSans-CaptionBold') format('svg');
+  	font-family: 'PT Sans Narrow';
+  	src:
+      url('/static/vash/font/pt/sans/PT%20Sans_Narrow%20Bold.woff2') format('woff2'),
+      url('/static/vash/font/pt/sans/PT%20Sans_Narrow%20Bold.woff') format('woff');
+  	font-weight: bold;
+  	font-style: normal;
   }
 
   @font-face {
-    font-family: 'PT Sans Narrow';
-    src: url('/static/page/fonts/ptsansweb/ptn57f_w.woff');
-    src:
-      local('PT Sans Narrow'),
-      url('/static/page/fonts/ptsansweb/ptn57f_w.eot?#iefix') format('embedded-opentype'),
-      url('/static/page/fonts/ptsansweb/ptn57f_w.woff') format('woff'),
-      url('/static/page/fonts/ptsansweb/ptn57f_w.ttf') format('truetype'),
-      url('/static/page/fonts/ptsansweb/ptn57f_w.svg#PTSans-Narrow') format('svg');
+  	font-family: 'PT Sans Narrow';
+  	src:
+      url('/static/vash/font/pt/sans/PT%20Sans_Narrow%20Regular.woff2') format('woff2'),
+      url('/static/vash/font/pt/sans/PT%20Sans_Narrow%20Regular.woff') format('woff');
+  	font-weight: normal;
+  	font-style: normal;
   }
 
   @font-face {
-    font-family: 'PT Sans Narrow';
-    font-weight: bold;
-    src: url('/static/page/fonts/ptsansweb/ptn77f_w.woff');
-    src:
-      local('PT Sans Narrow Bold'),
-      url('/static/page/fonts/ptsansweb/ptn77f_w.eot?#iefix') format('embedded-opentype'),
-      url('/static/page/fonts/ptsansweb/ptn77f_w.woff') format('woff'),
-      url('/static/page/fonts/ptsansweb/ptn77f_w.ttf') format('truetype'),
-      url('/static/page/fonts/ptsansweb/ptn77f_w.svg#PTSans-NarrowBold') format('svg');
+  	font-family: 'PT Sans';
+  	src:
+      url('/static/vash/font/pt/sans/PT%20Sans_Regular.woff2') format('woff2'),
+      url('/static/vash/font/pt/sans/PT%20Sans_Regular.woff') format('woff');
+  	font-weight: normal;
+  	font-style: normal;
   }
 
   @font-face {
-    font-family: 'PT Mono';
-    src: url('/static/page/fonts/ptmonoweb/ptm55f_w.woff');
-    src:
-      local('PT Mono'),
-      url('/static/page/fonts/ptmonoweb/ptm55f_w.eot?#iefix') format('embedded-opentype'),
-      url('/static/page/fonts/ptmonoweb/ptm55f_w.woff') format('woff'),
-      url('/static/page/fonts/ptmonoweb/ptf55m_w.ttf') format('truetype'),
-      url('/static/page/fonts/ptmonoweb/ptm55f_w.svg#PTMono-Regular') format('svg');
+  	font-family: 'PT Serif';
+  	src:
+      url('/static/vash/font/pt/serif/PT%20Serif_Bold%20Italic.woff2') format('woff2'),
+      url('/static/vash/font/pt/serif/PT%20Serif_Bold%20Italic.woff') format('woff');
+  	font-weight: bold;
+  	font-style: italic;
   }
 
   @font-face {
-    font-family: 'PT Mono';
-    src: url('/static/page/fonts/ptmonoweb/ptm75f_w.woff');
-    font-style: normal;
-    font-weight: bold;
-    src:
-      local('PT Mono Bold'),
-      url('/static/page/fonts/ptmonoweb/ptm75f_w.eot?#iefix') format('embedded-opentype'),
-      url('/static/page/fonts/ptmonoweb/ptm75f_w.woff') format('woff'),
-      url('/static/page/fonts/ptmonoweb/ptm75f_w.ttf') format('truetype'),
-      url('/static/page/fonts/ptmonoweb/ptm75f_w.svg#PTMono-Bold') format('svg');
+  	font-family: 'PT Serif';
+  	src:
+      url('/static/vash/font/pt/serif/PT%20Serif_Bold.woff2') format('woff2'),
+      url('/static/vash/font/pt/serif/PT%20Serif_Bold.woff') format('woff');
+  	font-weight: bold;
+  	font-style: normal;
+  }
+
+  @font-face {
+  	font-family: 'PT Serif Caption Italic';
+  	src:
+      url('/static/vash/font/pt/serif/PT%20Serif_Caption%20Italic.woff2') format('woff2'),
+      url('/static/vash/font/pt/serif/PT%20Serif_Caption%20Italic.woff') format('woff');
+  	font-weight: normal;
+  	font-style: italic;
+  }
+
+  @font-face {
+  	font-family: 'PT Serif Caption';
+  	src:
+      url('/static/vash/font/pt/serif/PT%20Serif_Caption%20Regular.woff2') format('woff2'),
+      url('/static/vash/font/pt/serif/PT%20Serif_Caption%20Regular.woff') format('woff');
+  	font-weight: normal;
+  	font-style: normal;
+  }
+
+  @font-face {
+  	font-family: 'PT Serif';
+  	src:
+      url('/static/vash/font/pt/serif/PT%20Serif_Italic.woff2') format('woff2'),
+      url('/static/vash/font/pt/serif/PT%20Serif_Italic.woff') format('woff');
+  	font-weight: normal;
+  	font-style: italic;
+  }
+
+  @font-face {
+  	font-family: 'PT Serif';
+  	src:
+      url('/static/vash/font/pt/serif/PT%20Serif_Regular.woff2') format('woff2'),
+      url('/static/vash/font/pt/serif/PT%20Serif_Regular.woff') format('woff');
+  	font-weight: normal;
+  	font-style: normal;
   }
 </style>

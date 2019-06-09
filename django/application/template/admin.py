@@ -1,8 +1,11 @@
-import tempfile
-
+"""
+This stuff was a mistake,
+but it has helped me to learn the right way.
+Hope I will rewrite it some day.
+"""
 from django import forms
 from django_ace import AceWidget
-from filer.models import File as FilerFile
+from django.conf import settings
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
@@ -11,13 +14,7 @@ from template.models import Template
 
 class TemplateForm(forms.ModelForm):
     content = forms.CharField(
-        widget=AceWidget(
-            mode='html',
-            width='100%',
-            theme='xcode',
-            wordwrap=False,
-            tabsize=2,
-        ),
+        widget=AceWidget(**settings.ACE_WIDGET_OPTIONS),
         required=False,
     )
 

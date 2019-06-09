@@ -3,7 +3,7 @@
 from django.conf import settings
 from django.db import migrations
 import django.db.models.deletion
-import page.utils.image_field
+import vash.utils.imagefield
 
 
 class Migration(migrations.Migration):
@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='page',
             name='open_graph_image',
-            field=page.utils.image_field.PatchedFilerImageField(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='open_graph_image_article', to=settings.FILER_IMAGE_MODEL, verbose_name='Open Graph image'),
+            field=vash.utils.imagefield.PatchedFilerImageField(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='open_graph_image_article', to=settings.FILER_IMAGE_MODEL, verbose_name='Open Graph image'),
         ),
     ]

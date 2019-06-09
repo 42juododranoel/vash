@@ -7,7 +7,7 @@ from page.models import Page
 class PageSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Page
-        fields = ('title', 'link', 'cache_link', 'clean_meta', 'clean_content')
+        fields = ('title', 'detail_link', 'cache_link', 'content')
 
 
 class PageViewSet(viewsets.ModelViewSet):

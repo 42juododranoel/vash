@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 
     'page',
     'template',
+    'snippet',
     'vash'
 ]
 
@@ -136,3 +137,11 @@ THUMBNAIL_PICTURE_SOURCES = ['sm', 'md']
 FILER_DEBUG = True
 FILER_ENABLE_LOGGING = True
 FILER_CANONICAL_URL = 'share/'
+
+ACE_WIDGET_OPTIONS = {
+    'mode': 'html',
+    'theme': 'xcode',
+    'width': '100%',
+    'wordwrap': True,
+    'tabsize': 2,
+}

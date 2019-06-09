@@ -212,8 +212,6 @@ then
   "
   download_from_production ${PRODUCTION_POSTGRES_BACKUP_PATH} ${POSTGRES_BACKUP_PATH}
 
-  sleep 5s  # Give Postgres some time to boot
-
   while [ "$( docker exec ${POSTGRES_CONTAINER} psql -U ${POSTGRES_USERNAME} -tAc "SELECT 1 FROM pg_database WHERE datname='${POSTGRES_DATABASE}'" )" != '1' ];
   do echo 'Waiting for Postgres to create a database.'; sleep 5s; done
 
@@ -237,10 +235,13 @@ docker exec ${PROJECT_NAME}_django_1 python manage.py collectstatic --noinput
 # Send images to production
 
 function send_image_to_production {
-  image_path="/tmp/${1}"
-  docker save -o ${image_path} ${2}
-  send_to_production ${image_path} ${3}
-  run_on_production "docker load < ${3}/${1}"
+  image_file=${1}
+  image_name=${2}
+  production_image_directory=${3}
+  image_path="/tmp/${image_file}"
+  docker save -o ${image_path} ${image_name}
+  send_to_production ${image_path} ${production_image_directory}
+  run_on_production "docker load < ${production_image_directory}/${image_file}"
 }
 
 send_image_to_production ${DOCKER_POSTGRES_IMAGE_FILE} ${DOCKER_POSTGRES_IMAGE} ${PRODUCTION_IMAGES_POSTGRES_DIRECTORY}
