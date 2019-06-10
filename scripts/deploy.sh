@@ -222,7 +222,7 @@ then
 
   docker cp ${POSTGRES_BACKUP_PATH} ${POSTGRES_CONTAINER}:/tmp
   docker exec ${POSTGRES_CONTAINER} bash -c "psql -U ${POSTGRES_USERNAME} ${POSTGRES_DATABASE} < /tmp/${POSTGRES_BACKUP_NAME}" > /dev/null
-  # docker exec ${PROJECT_NAME}_django_1 python manage.py migrate --noinput
+  docker exec ${PROJECT_NAME}_django_1 python manage.py migrate --noinput
 fi
 
 
