@@ -97,6 +97,7 @@
         update_content(new_page.content, action='render')
 
         document.body.scrollTop = document.documentElement.scrollTop = 0
+        lazy_load.update()
 
         if (update_history) {
             history.pushState({link: new_link}, document.title, new_link)

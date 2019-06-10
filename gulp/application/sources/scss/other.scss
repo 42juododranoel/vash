@@ -18,11 +18,12 @@
   --color-gray: #dee2e6;
 
   --color-hover: #a03000;
-  --color-frog: #00c832;  // TODO: Remove from here
 }
 
 
 // Navbar
+
+// Move from here
 
 nav {
   font-family: $font-family-sans;
@@ -80,6 +81,8 @@ nav {
 .ai-start   { align-items: start }
 .ai-center  { align-items: center }
 .ai-end     { align-items: end }
+
+.as-center { align-self: center }
 
 .ta-left    { text-align: left }
 .ta-center  { text-align: center }

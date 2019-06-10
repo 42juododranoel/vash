@@ -99,6 +99,7 @@ $repeat-grid-columns: repeat($grid-columns-count, 1fr);
 @include media-breakpoint-sm {
   [class^='col-'],
   [class^='off-'] { grid-column: 1 / -1 }
+  .row-break-sm { grid-row: 2 }
 }
 
 @each $viewport, $width in $viewport-widths {
