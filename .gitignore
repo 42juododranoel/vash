@@ -6,4 +6,5 @@ scripts/run.sh
 scripts/certbot.sh
 scripts/download_database.sh
 scripts/download_media.sh
+scripts/upload_media.sh
 gulp/application/node_modules/
