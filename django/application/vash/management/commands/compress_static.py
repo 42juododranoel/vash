@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+from subprocess import check_call
 
 from brotli import compress, MODE_GENERIC
 from django.conf import settings
@@ -50,7 +51,12 @@ class Command(BaseCommand):
         files_all = get_all_files(settings.STATIC_ROOT)
         files_filtered = filter_compressible_files(files_all)
         # steps_total = len(files_filtered)
+        files_compressed = []
         for step, file in enumerate(files_filtered):
             # self.stdout.write(f'{step}/{steps_total} Compressing file "{file}"')
-            compress_file(file)
+            files_compressed.append(compress_file(file))
+
+        # Set same modified time for .br and original files
+        check_call(['touch', *(files_filtered + files_compressed)])
+
         self.stdout.write(f'Compressed {len(files_filtered)} files')
