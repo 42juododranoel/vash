@@ -391,7 +391,8 @@ then
                \${previous_django_image} \
                \${previous_postgres_image}
 
-    docker network rm ${PRODUCTION_DOCKER_PREFIX_PREVIOUS}_default
+    if [ \$\(docker network ls | grep ${PRODUCTION_DOCKER_PREFIX_PREVIOUS}_default \) ];
+    then docker network rm ${PRODUCTION_DOCKER_PREFIX_PREVIOUS}_default; fi
   "
 else
   echo 'Not rotating Docker things because previous commit is unknown.'
@@ -441,7 +442,7 @@ run_on_production "
 "
 
 
-# Leave only ten latest files and directories in different directories on production
+# Leave only ten latest files and directories in directories on production
 
 run_on_production "
   function rotate {
