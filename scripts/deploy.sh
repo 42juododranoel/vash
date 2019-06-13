@@ -191,8 +191,8 @@ docker-compose \
   -f compose/nginx.yml \
   -f compose/django.yml \
   -f compose/postgres.yml \
-  -f compose/production.yml \
   -f compose/nginx_ports_A.yml \
+  -f compose/django_production.yml \
   --project-directory . \
   up \
   -d \
@@ -230,6 +230,7 @@ fi
 
 sudo chown -R ${PRODUCTION_USER_ID}:${USER} ${STATIC_DIRECTORY}
 docker exec ${PROJECT_NAME}_django_1 python manage.py collectstatic --noinput
+docker exec ${PROJECT_NAME}_django_1 python manage.py compress_static
 
 
 # Send images to production
@@ -318,7 +319,7 @@ run_on_production "
     -f compose/nginx.yml \
     -f compose/django.yml \
     -f compose/postgres.yml \
-    -f compose/production.yml \
+    -f compose/django_production.yml \
     -f compose/nginx_ports_${PRODUCTION_NGINX_PORT_SET_NEW}.yml \
     --project-directory . \
     --project-name ${PROJECT_NAME}_${COMMIT} \

@@ -2,19 +2,21 @@ FROM python:3.6-alpine
 
 ARG HOST_USER_ID
 
-RUN apk add gcc \
-            zlib-dev \
-            musl-dev \
-            jpeg-dev \
-            postgresql-dev && \
+# g++ for Brotli
+# postgresql-dev for Postgres
+# gcc, zlib-dev musl-dev, jpeg-dev for Filer
+RUN apk --no-cache add g++ \
+                       gcc \
+                       zlib-dev \
+                       musl-dev \
+                       jpeg-dev \
+                       postgresql-dev && \
     \
-    rm -rf /var/cache/apk/* && \
+    adduser -u ${HOST_USER_ID} -D user && \
     \
     mkdir -p /application \
              /resources/media \
              /resources/static && \
-    \
-    adduser -u ${HOST_USER_ID} -D user && \
     \
     chown -R user: /application \
                    /resources/media \
