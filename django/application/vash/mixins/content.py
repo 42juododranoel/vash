@@ -12,12 +12,12 @@ from vash.cleaners import (
 
 def clean_content(content):
     template = Template(content)
-    clean_content = template.render(Context())
-    clean_content = highlight_precode(clean_content)
-    clean_content = wrap_hanging_punctuation(clean_content)
-    clean_content = typograph_html(clean_content)
-    clean_content = hyphenate_html(clean_content)
-    return clean_content
+    content_cleaned = template.render(Context())
+    content_cleaned = highlight_precode(content_cleaned)
+    content_cleaned = wrap_hanging_punctuation(content_cleaned)
+    content_cleaned = typograph_html(content_cleaned)
+    content_cleaned = hyphenate_html(content_cleaned)
+    return content_cleaned
 
 
 class CleanContentMixin(models.Model):

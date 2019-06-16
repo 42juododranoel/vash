@@ -3,13 +3,18 @@ FROM python:3.6-alpine
 ARG HOST_USER_ID
 
 # g++ for Brotli
-# postgresql-dev for Postgres
 # gcc, zlib-dev musl-dev, jpeg-dev for Filer
+# gifsicle to resize GIF
+# libwebp-dev to convert JPEG and PNG to Webp
+# libwebp-tools to convert GIF to Webp
 RUN apk --no-cache add g++ \
                        gcc \
                        zlib-dev \
                        musl-dev \
                        jpeg-dev \
+                       gifsicle \
+                       libwebp-dev \
+                       libwebp-tools \
                        postgresql-dev && \
     \
     adduser -u ${HOST_USER_ID} -D user && \

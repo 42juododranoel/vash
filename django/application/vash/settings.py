@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'page',
     'template',
     'snippet',
-    'vash'
+    'vash.apps.VashConfig'
 ]
 
 CONSTANCE_ADDITIONAL_FIELDS = {
@@ -55,12 +55,17 @@ CONSTANCE_ADDITIONAL_FIELDS = {
         }
     ],
 }
+frontend_options_help_text = _('Used in picture tag to generate sizes attribute')
 CONSTANCE_CONFIG = {
     'SITE_NAME': ('', _('Displayed in og:site_name')),
     'SITE_DOMAIN': ('', _('Displayed in og:url, og:image, and og:image:secure_url')),
     'SITE_LOCALE': ('en_EN', _('Displayed in og:locale')),
     'SITE_LANGUAGE': ('en', _('Used for typographing and hyphenating'), 'select_language_field'),
     'IS_HTTPS_ENABLED': (False, _('Used in og:url, og:image, and og:image:secure_url'), bool),
+    'FRONTEND_COLUMNS_COUNT': (16, frontend_options_help_text, int),
+    'FRONTEND_BREAKPOINT_SM': (0, frontend_options_help_text, int),
+    'FRONTEND_BREAKPOINT_MD': (960, frontend_options_help_text, int),
+    'FRONTEND_BREAKPOINT_LG': (1400, frontend_options_help_text, int),
 }
 CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
 
@@ -119,18 +124,23 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 50,
 }
 
-THUMBNAIL_HIGH_RESOLUTION = True
+# THUMBNAIL_HIGH_RESOLUTION = True
 THUMBNAIL_PROCESSORS = (
     'easy_thumbnails.processors.colorspace',
     'easy_thumbnails.processors.autocrop',
     'filer.thumbnail_processors.scale_and_crop_with_subject_location',
     'easy_thumbnails.processors.filters',
 )
-THUMBNAIL_ALIASES = {
-    '': {
-        'sm': {'size': (960, 960), 'quality': 90},
-        'md': {'size': (1400, 1400), 'quality': 90},
-    },
+# THUMBNAIL_ALIASES = {
+#     '': {
+#         'sm': {'size': (960, 960), 'quality': 85},
+#         'md': {'size': (1400, 1400), 'quality': 85},
+#     },
+# }
+THUMBNAIL_OPTIMIZE_COMMAND = {
+    'png': 'optipng {filename}',
+    'gif': 'optipng {filename}',
+    'jpeg': 'jpegoptim {filename}'
 }
 THUMBNAIL_PICTURE_SOURCES = ['sm', 'md']
 
