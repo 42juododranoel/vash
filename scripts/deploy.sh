@@ -392,7 +392,8 @@ then
                \${previous_django_image} \
                \${previous_postgres_image}
 
-    # docker network rm ${PRODUCTION_DOCKER_PREFIX_PREVIOUS}_default
+    docker network rm ${PRODUCTION_DOCKER_PREFIX_PREVIOUS}_default
+    echo
   "
 else
   echo 'Not rotating Docker things because previous commit is unknown.'
