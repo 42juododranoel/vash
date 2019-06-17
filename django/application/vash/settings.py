@@ -20,6 +20,7 @@ STATIC_ROOT = '/resources/static'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = '/resources/media'
+MEDIA_FOLDER_TEMPORARY = f'{MEDIA_ROOT}/temporary'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -61,7 +62,7 @@ CONSTANCE_CONFIG = {
     'SITE_DOMAIN': ('', _('Displayed in og:url, og:image, and og:image:secure_url')),
     'SITE_LOCALE': ('en_EN', _('Displayed in og:locale')),
     'SITE_LANGUAGE': ('en', _('Used for typographing and hyphenating'), 'select_language_field'),
-    'IS_HTTPS_ENABLED': (False, _('Used in og:url, og:image, and og:image:secure_url'), bool),
+    'IS_HTTPS_ENABLED': (True, _('Used in og:url, og:image, and og:image:secure_url'), bool),
     'FRONTEND_COLUMNS_COUNT': (16, frontend_options_help_text, int),
     'FRONTEND_BREAKPOINT_SM': (0, frontend_options_help_text, int),
     'FRONTEND_BREAKPOINT_MD': (960, frontend_options_help_text, int),
@@ -124,27 +125,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 50,
 }
 
-# THUMBNAIL_HIGH_RESOLUTION = True
-THUMBNAIL_PROCESSORS = (
-    'easy_thumbnails.processors.colorspace',
-    'easy_thumbnails.processors.autocrop',
-    'filer.thumbnail_processors.scale_and_crop_with_subject_location',
-    'easy_thumbnails.processors.filters',
-)
-# THUMBNAIL_ALIASES = {
-#     '': {
-#         'sm': {'size': (960, 960), 'quality': 85},
-#         'md': {'size': (1400, 1400), 'quality': 85},
-#     },
-# }
-THUMBNAIL_OPTIMIZE_COMMAND = {
-    'png': 'optipng {filename}',
-    'gif': 'optipng {filename}',
-    'jpeg': 'jpegoptim {filename}'
-}
-THUMBNAIL_PICTURE_SOURCES = ['sm', 'md']
-
-FILER_DEBUG = True
+FILER_DEBUG = DEBUG
 FILER_ENABLE_LOGGING = True
 FILER_CANONICAL_URL = 'share/'
 
