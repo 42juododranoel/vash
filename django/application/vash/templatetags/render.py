@@ -37,7 +37,8 @@ def picture(file_id, classes='', col_sm=None, col_md=None, col_lg=None):
         [f'{media_path_to_url(src["path"])} {src["width"]}w' for src in srcs]
     )
 
-    html = '<picture>'
+    wrapper_style = f'padding-bottom: {round(image.height / image.width * 100, 2)}%'
+    html = f'<div class="picture-wrapper" style="{wrapper_style}"><picture>'
     for mimetype, srcs in picture_structure['sources'].items():
         html += '<source type="{}" srcset="{}" sizes="{}"/>'.format(
             mimetype, make_srcset(srcs), sizes
@@ -51,7 +52,7 @@ def picture(file_id, classes='', col_sm=None, col_md=None, col_lg=None):
         image.url,
         f' alt="{image.default_alt_text}"' if image.default_alt_text else '',
     )
-    html += '</picture>'
+    html += '</picture></div>'
     return mark_safe(html)
 
 
