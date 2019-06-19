@@ -1,5 +1,6 @@
 # I need to rewrite it using classes
 
+import os
 from mimetypes import guess_type
 from subprocess import check_call
 
@@ -93,6 +94,7 @@ class ImageProcessor:
 
     def __init__(self, image):
         self.image = image
+        self.postfix = round(image.modified_at.timestamp())
         self.mimetype = self.get_mimetype(image)
         self.thumbnailer = self.MIMETYPE_THUMBNAILERS[self.mimetype]
 
@@ -104,9 +106,16 @@ class ImageProcessor:
         return mimetype
 
     def create_thumbnails(self):
-        return self.get_picture_structure(can_create_thumbnails=True)
+        return self.get_thumbnails(can_create=True)
 
-    def get_picture_structure(self, can_create_thumbnails=False):
+    def delete_thumbnails(self):
+        directory, slash, original_file = self.image.path.rpartition('/')
+        files = os.listdir(directory)
+        for file in files:
+            if (file != original_file) and (f'{self.postfix}' not in file):
+                os.remove(directory + slash + file)
+
+    def get_thumbnails(self, can_create=False, can_delete=False):
         structure = {
             'image': [],
             'sources': {self.MIMETYPE_WEBP: []}
@@ -120,10 +129,10 @@ class ImageProcessor:
             breakpoints.append(self.image.width)
 
         for breakpoint in breakpoints:
-            path = add_path_suffix(self.image.path, breakpoint)
+            path = add_path_suffix(self.image.path, f'{self.postfix}_{breakpoint}')
             path_webp = change_path_extension(path, 'webp')
 
-            if can_create_thumbnails:
+            if can_create:
                 self.thumbnailer.resize(self.image.path, path, breakpoint)
                 self.thumbnailer.convert_to_webp(self.image.path, path_webp, breakpoint)
 
@@ -131,5 +140,8 @@ class ImageProcessor:
                 {'path': path_webp, 'width': breakpoint}
             )
             structure['image'].append({'path': path, 'width': breakpoint})
+
+        if can_delete:
+            self.delete_thumbnails()
 
         return structure

@@ -27,7 +27,7 @@ def picture(file_id, classes='', col_sm=None, col_md=None, col_lg=None):
 
     image = File.objects.get(id=file_id)
     image_processor = ImageProcessor(image)
-    picture_structure = image_processor.get_picture_structure()
+    thumbnails = image_processor.get_thumbnails(can_delete=True)
 
     sizes = f'(min-width: {config.FRONTEND_BREAKPOINT_LG}px) {size_lg}vw, '
     sizes += f'(min-width: {config.FRONTEND_BREAKPOINT_MD}px) {size_md}vw, '
@@ -39,14 +39,14 @@ def picture(file_id, classes='', col_sm=None, col_md=None, col_lg=None):
 
     wrapper_style = f'padding-bottom: {round(image.height / image.width * 100, 2)}%'
     html = f'<div class="picture-wrapper" style="{wrapper_style}"><picture>'
-    for mimetype, srcs in picture_structure['sources'].items():
+    for mimetype, srcs in thumbnails['sources'].items():
         html += '<source type="{}" srcset="{}" sizes="{}"/>'.format(
             mimetype, make_srcset(srcs), sizes
         )
 
     html += '<img width="{}" data-srcset="{}" data-sizes="{}" class="{}" data-src="{}"{}/>'.format(
         image.width,
-        make_srcset(picture_structure['image']),
+        make_srcset(thumbnails['image']),
         sizes,
         f'lazy {classes}' if classes else 'lazy',
         image.url,
