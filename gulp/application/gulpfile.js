@@ -1,4 +1,5 @@
 const { series, parallel, watch, src, dest } = require('gulp');
+const hash = require('gulp-hash');
 const sass = require('gulp-sass');
 const cleanCSS = require('gulp-clean-css');
 const uglify = require('gulp-uglify');
@@ -51,6 +52,7 @@ const compileSCSS = () => {
         .pipe(sass().on('error', err => handleError(err, 'SCSS Compile Error')))
         .pipe(autoprefixer())
         .pipe(cleanCSS({ compatibility: '*' }))
+        // .pipe(hash())
         .pipe(rename({ suffix: '.min' }))
         .pipe(dest(config.paths.dist.css))
 }
