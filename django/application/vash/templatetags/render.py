@@ -16,7 +16,7 @@ from vash.utils import (
 
 
 @register.simple_tag
-def picture(file_id, classes='', col_sm=None, col_md=None, col_lg=None):
+def picture(file_id, image_classes='', wrapper_classes='', col_sm=None, col_md=None, col_lg=None):
     col_sm = col_sm or config.FRONTEND_COLUMNS_COUNT
     col_md = col_md or col_sm
     col_lg = col_lg or col_md
@@ -38,7 +38,8 @@ def picture(file_id, classes='', col_sm=None, col_md=None, col_lg=None):
     )
 
     wrapper_style = f'padding-bottom: {round(image.height / image.width * 100, 2)}%'
-    html = f'<div class="picture-wrapper" style="{wrapper_style}"><picture>'
+    wrapper_clases = f'picture-wrapper {wrapper_classes}' if wrapper_classes else 'picture-wrapper'
+    html = f'<div class="{wrapper_clases}" style="{wrapper_style}"><picture>'
     for mimetype, srcs in thumbnails['sources'].items():
         html += '<source type="{}" srcset="{}" sizes="{}"/>'.format(
             mimetype, make_srcset(srcs), sizes
@@ -48,7 +49,7 @@ def picture(file_id, classes='', col_sm=None, col_md=None, col_lg=None):
         image.width,
         make_srcset(thumbnails['image']),
         sizes,
-        f'lazy {classes}' if classes else 'lazy',
+        f'lazy {image_classes}' if image_classes else 'lazy',
         image.url,
         f' alt="{image.default_alt_text}"' if image.default_alt_text else '',
     )

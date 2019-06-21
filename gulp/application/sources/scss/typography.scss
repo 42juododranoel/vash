@@ -107,6 +107,7 @@ img {
   height: auto;
 
   &:not([src]) { visibility: hidden }
+
   &.loading { border: none }
 }
 

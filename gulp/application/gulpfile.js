@@ -52,7 +52,7 @@ const compileSCSS = () => {
         .pipe(sass().on('error', err => handleError(err, 'SCSS Compile Error')))
         .pipe(autoprefixer())
         .pipe(cleanCSS({ compatibility: '*' }))
-        // .pipe(hash())
+        .pipe(hash())
         .pipe(rename({ suffix: '.min' }))
         .pipe(dest(config.paths.dist.css))
 }
