@@ -16,7 +16,7 @@ from vash.utils import (
 
 
 @register.simple_tag
-def picture(file_id, image_classes='', wrapper_classes='', col_sm=None, col_md=None, col_lg=None):
+def picture(file_id, image_classes='', image_id='', wrapper_classes='', col_sm=None, col_md=None, col_lg=None):
     col_sm = col_sm or config.FRONTEND_COLUMNS_COUNT
     col_md = col_md or col_sm
     col_lg = col_lg or col_md
@@ -37,13 +37,15 @@ def picture(file_id, image_classes='', wrapper_classes='', col_sm=None, col_md=N
         [f'{media_path_to_url(src["path"])} {src["width"]}w' for src in srcs]
     )
 
-    wrapper_style = f'padding-bottom: {round(image.height / image.width * 100, 2)}%'
     wrapper_clases = f'picture-wrapper {wrapper_classes}' if wrapper_classes else 'picture-wrapper'
-    html = f'<div class="{wrapper_clases}" style="{wrapper_style}"><picture>'
+    wrapper_outer_style = f'padding-bottom: {round(image.height / image.width * 100, 2)}%'
+    html = f'<div class="{wrapper_clases}" style="max-width: {image.width}px">'
+    html += f'<div class="picture-wrapper-outer" style="{wrapper_outer_style}">'
+    html += f'<div class="picture-wrapper-inner">'
+    html += '<picture>'
+
     for mimetype, srcs in thumbnails['sources'].items():
-        html += '<source type="{}" srcset="{}" sizes="{}"/>'.format(
-            mimetype, make_srcset(srcs), sizes
-        )
+        html += f'<source type="{mimetype}" srcset="{make_srcset(srcs)}" sizes="{sizes}"/>'
 
     html += '<img width="{}" data-srcset="{}" data-sizes="{}" class="{}" data-src="{}"{}/>'.format(
         image.width,
@@ -53,7 +55,7 @@ def picture(file_id, image_classes='', wrapper_classes='', col_sm=None, col_md=N
         image.url,
         f' alt="{image.default_alt_text}"' if image.default_alt_text else '',
     )
-    html += '</picture></div>'
+    html += '</picture></div></div></div>'
     return mark_safe(html)
 
 
