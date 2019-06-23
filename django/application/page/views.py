@@ -14,9 +14,6 @@ class BasePageDetailView(DetailView):
         context['object'] = context['page'] = serialized_page.data
         return context
 
-    def get_template_names(self):
-        return [self.object.template.file.file.name]
-
 
 class VisiblePageDetailView(BasePageDetailView):
     queryset = Page.objects.visible()

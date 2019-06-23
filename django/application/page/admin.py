@@ -19,7 +19,6 @@ class PageModelAdmin(admin.ModelAdmin):
             'fields': [
                 'title',
                 'slug',
-                'template',
                 'is_published',
                 'keywords',
                 'description',

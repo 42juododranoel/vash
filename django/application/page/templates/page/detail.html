@@ -1,4 +1,5 @@
 {% load static %}
+{% load get from helpers %}
 <!doctype html>
 <html prefix='og: http://ogp.me/ns/website#' lang='{{ config.SITE_LANGUAGE }}'>
   <head>
@@ -6,33 +7,64 @@
     <meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no' />
     <!-- Meta -->
     <title>{{ page.title }}</title>
-    {% block head-meta %}{% endblock %}
+    {% block head-meta %}
+      <meta id='content-start-meta' />
+      {{ page.content|get:'meta'|safe }}
+      <meta id='content-stop-meta' />
+    {% endblock %}
+
     <!-- Style before styles.min.css and fonts -->
     {% block head-style-top %}{% endblock %}
+
     <!-- Main styles and fonts -->
-    <link rel='stylesheet' href='{% static "vash/css/styles-4f3b5430.min.css" %}' />
+    <link rel='stylesheet' href='{% static "vash/css/styles-b84b2d98.min.css" %}' />
     {% include 'page/fonts.html' %}
+
     <!-- Style after styles.min.css and fonts -->
-    {% block head-style-bottom %}{% endblock %}
+    {% block head-style-bottom %}
+      <meta id='content-start-head-style-bottom' />
+      {{ page.content|get:'head-style-bottom'|safe }}
+      <meta id='content-stop-head-style-bottom' />
+    {% endblock %}
   </head>
   <body>
     <!-- Top -->
-    {% block body-top %}{% endblock %}
+    {% block body-top %}
+      <nav id='content-nav'>
+        {{ page.content|get:'nav'|safe }}
+      </nav>
+    {% endblock %}
+
     <!-- Middle -->
-    {% block body-middle %}{% endblock %}
+    {% block body-middle %}
+      <main id='content-main'>
+        {{ page.content|get:'main'|safe }}
+      </main>
+    {% endblock %}
+
     <!-- Bottom -->
     {% block body-bottom %}{% endblock %}
 
     <!-- Script before Lazyload, Jquery, and cache -->
     {% block body-script-top %}{% endblock %}
-    <!-- Lazyload, Jquery, and cache -->
+    <!-- Lazyload, Jquery, cache, line breaks -->
     {% include 'page/lazyload.html' %}
     {% include 'page/jquery.html' %}
     {% include 'page/cache.html' %}
+    {% include 'page/linebreaks.html' %}
+
     <!-- Script after Lazyload, Jquery, and cache -->
-    {% block body-script-bottom %}{% endblock %}
+    {% block body-script-bottom %}
+      <div id='content-start-body-script-bottom'></div>
+      {{ page.content|get:'body-script-bottom'|safe }}
+      <div id='content-stop-body-script-bottom'></div>
+    {% endblock body-script-bottom %}
 
     <!-- Style -->
-    {% block body-style %}{% endblock %}
+    {% block body-style %}
+      <div id='content-start-body-style'></div>
+      {{ page.content|get:'body-style'|safe }}
+      <div id='content-stop-body-style'></div>
+    {% endblock body-style %}
   </body>
 </html>

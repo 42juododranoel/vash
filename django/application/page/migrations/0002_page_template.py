@@ -7,15 +7,15 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('template', '0002_auto_20190430_1123'),
+        # ('template', '0002_auto_20190430_1123'),
         ('page', '0001_initial'),
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='page',
-            name='template',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.PROTECT, to='template.Template', verbose_name='Template'),
-            preserve_default=False,
-        ),
+        # migrations.AddField(
+        #     model_name='page',
+        #     name='template',
+        #     field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.PROTECT, to='template.Template', verbose_name='Template'),
+        #     preserve_default=False,
+        # ),
     ]

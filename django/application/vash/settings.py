@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'softhyphen',
 
     'page',
-    'template',
     'snippet',
     'vash.apps.VashConfig'
 ]

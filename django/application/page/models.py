@@ -8,7 +8,6 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib.postgres.fields import JSONField
 
 from snippet.models import Snippet
-from template.models import Template
 from vash.utils import (
     PatchedFilerImageField,
     get_base_url,
@@ -49,12 +48,6 @@ class Page(CreatedUpdatedAtMixin):
     is_published = models.BooleanField(
         verbose_name=_('Is published'),
         default=False,
-    )
-
-    template = models.ForeignKey(
-        Template,
-        on_delete=models.PROTECT,
-        verbose_name=_('Template')
     )
 
     title = models.CharField(

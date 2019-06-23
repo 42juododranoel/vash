@@ -12,10 +12,14 @@
 
 // Colors
 
+// TODO: Remove site-specific colors from here
+
 :root {
   --color-light: #f8f9fa;
   --color-dark: #212529;
   --color-gray: #dee2e6;
+  --color-darkgray: #989898;
+  --color-frog: #00c832;
 
   --color-hover: #a03000;
 }
@@ -23,7 +27,7 @@
 
 // Navbar
 
-// Move from here
+// TODO: Move from here
 
 nav {
   font-family: $font-family-sans;
