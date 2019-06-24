@@ -32,7 +32,7 @@
     .fs-4#{$infix}    { font-size: $font-size-current * 4 }
     .fs-5#{$infix}    { font-size: $font-size-current * 5 }
 
-    .lh-1#{$infix} { line-height: 1 }
+    .lh-1#{$infix}  { line-height: 1 }
     .lh-11#{$infix} { line-height: 1.1 }
     .lh-12#{$infix} { line-height: 1.2 }
     .lh-13#{$infix} { line-height: 1.3 }
@@ -209,7 +209,7 @@ p.reference { font-size: $font-size-current * 0.9 }
     .hanging-laquo-whitespace#{$infix} { margin-right: $font-size-current / 2 }
     .hanging-lpar#{$infix} { margin-left: -$font-size-current / 3 }
     .hanging-lpar-whitespace#{$infix} { margin-right: $font-size-current / 3 }
-    .hanging-horbar#{$infix} { margin-left: -$font-size-current * 1.3 }
+    .hanging-horbar#{$infix} { margin-left: -$font-size-current }
   }
 }
 
