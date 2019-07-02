@@ -86,7 +86,18 @@ nav {
 .ai-center  { align-items: center }
 .ai-end     { align-items: end }
 
-.as-center { align-self: center }
+.as-start   { align-self: start }
+.as-center  { align-self: center }
+.as-end     { align-self: end }
+
+.p-absolute   { position: absolute }
+.p-relative   { position: relative }
+.p-fixed      { position: fixed }
+.p-sticky     { position: sticky }
+
+.zi-0   { z-index: 0 }
+.zi-10  { z-index: 10 }
+.zi-20  { z-index: 20 }
 
 .ta-left    { text-align: left }
 .ta-center  { text-align: center }

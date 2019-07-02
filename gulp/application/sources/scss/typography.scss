@@ -28,10 +28,16 @@
     .fs-15#{$infix}   { font-size: $font-size-current * 1.5 }
     .fs-175#{$infix}  { font-size: $font-size-current * 1.75 }
     .fs-2#{$infix}    { font-size: $font-size-current * 2 }
+    .fs-25#{$infix}   { font-size: $font-size-current * 2.5 }
     .fs-3#{$infix}    { font-size: $font-size-current * 3 }
     .fs-4#{$infix}    { font-size: $font-size-current * 4 }
     .fs-5#{$infix}    { font-size: $font-size-current * 5 }
+    .fs-6#{$infix}    { font-size: $font-size-current * 6 }
+    .fs-7#{$infix}    { font-size: $font-size-current * 7 }
+    .fs-8#{$infix}    { font-size: $font-size-current * 8 }
 
+    .lh-08#{$infix} { line-height: 0.8 }
+    .lh-09#{$infix} { line-height: 0.9 }
     .lh-1#{$infix}  { line-height: 1 }
     .lh-11#{$infix} { line-height: 1.1 }
     .lh-12#{$infix} { line-height: 1.2 }
