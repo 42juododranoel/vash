@@ -419,10 +419,8 @@ then
       docker stop ${PROJECT_NAME}_${COMMIT}_nginx_1 \
                   ${PROJECT_NAME}_${COMMIT}_django_1 \
                   ${PROJECT_NAME}_${COMMIT}_postgres_1
-
-      docker network rm ${PROJECT_NAME}_${COMMIT}_default
     "
-    echo 'Inspect logs and delete containers and images yourself.'
+    echo 'Inspect logs, then delete containers, images, and network yourself.'
     exit 1
   else
     echo "Website seems broken; can't restore previous version because previous commit is unknown."
