@@ -1,9 +1,10 @@
 import os
 from subprocess import check_call
 
-from brotli import compress, MODE_GENERIC
 from django.conf import settings
 from django.core.management.base import BaseCommand
+
+from vash.utils import compress_file
 
 COMPRESSIBLE_FILE_EXTENSIONS = [
     'html', 'css', 'js', 'json',
@@ -27,21 +28,6 @@ def filter_compressible_files(files):
         file for file in files
         if file.rpartition('.')[2] in COMPRESSIBLE_FILE_EXTENSIONS
     ]
-
-
-def compress_file(path):
-    path_compressed = path + '.br'
-    with open(path_compressed, 'wb') as file_compressed:
-        with open(path, 'rb') as file:
-            compressed_content = compress(
-                file.read(),
-                mode=MODE_GENERIC,
-                quality=11,
-                lgwin=22,
-                lgblock=0,
-            )
-        file_compressed.write(compressed_content)
-    return path_compressed
 
 
 class Command(BaseCommand):

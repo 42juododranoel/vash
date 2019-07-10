@@ -4,6 +4,7 @@ from mimetypes import guess_type
 from constance import config
 from django.db import models
 from django.urls import reverse
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.postgres.fields import JSONField
 
@@ -132,6 +133,28 @@ class Page(CreatedUpdatedAtMixin):
         self.content = self.get_content()
         self.cache_link = self.get_cache_link()
         self.detail_link = self.get_absolute_url()
+
+        # This is intended.
+        # Slowly getting rid of Django.
+        import os
+        from page.rest import PageSerializer
+        from page.views import BasePageDetailView
+        from django.template.loader import render_to_string
+        from vash.utils import compress_file
+        context = {}
+        serialized_page = PageSerializer(self)
+        context['object'] = context['page'] = serialized_page.data
+        rendered_content = render_to_string(
+            BasePageDetailView.template_name,
+            context,
+        )
+        directory = settings.MEDIA_ROOT + '/html'
+        if not os.path.isdir(directory):
+            os.makedirs(directory)
+        path = directory + f'/{self.slug}.html'
+        with open(path, 'w') as file:
+            file.write(rendered_content)
+        compress_file(path)
 
     def _get_page_meta(self):
         return [
