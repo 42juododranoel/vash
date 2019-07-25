@@ -1,6 +1,7 @@
 <script>
     const STATE_LOADED = 0,  // current page loaded
-          STATE_CACHED = 1   // related pages cached
+          STATE_CACHED = 1,   // related pages cached
+          POPSTATE_HANDLER = 'cache'
 
     var cache = {},
         state = STATE_LOADED,
@@ -82,9 +83,11 @@
 
 
     function handle_popstate(event) {
-        var popstate_link = event.originalEvent.state.link
-        transition_cached_to_loaded(popstate_link, update_history=false)
-        transition_loaded_to_cached()
+        if (event.originalEvent.state['handler'] == POPSTATE_HANDLER) {
+            var popstate_link = event.originalEvent.state.link
+            transition_cached_to_loaded(popstate_link, update_history=false)
+            transition_loaded_to_cached()
+        }
     }
 
 
@@ -100,7 +103,7 @@
         lazy_load.update()
 
         if (update_history) {
-            history.pushState({link: new_link}, document.title, new_link)
+            history.pushState({link: new_link, handler: POPSTATE_HANDLER}, document.title, new_link)
         }
 
         cache_link = new_page.cache_link
@@ -119,7 +122,7 @@
     }
 
 
-    history.replaceState({link: detail_link}, title, detail_link)
+    history.replaceState({link: detail_link, handler: POPSTATE_HANDLER}, title, detail_link)
     $(window).on('load', transition_loaded_to_cached)
     $(window).on('popstate', handle_popstate)
 </script>
