@@ -8,30 +8,21 @@ var cleanCSS = require('gulp-clean-css');
 
 sass.compiler = require('node-sass');
  
-gulp.task('compile-main-scss', function () {
-  return gulp.src('styles/main/main.scss')
+gulp.task('compile-scss', function () {
+  return gulp.src(['resources/styles/*.scss', '!resources/styles/_*.scss'])
     .pipe(sass.sync().on('error', sass.logError))
     .pipe(cleanCSS())
     .pipe(rename({ suffix: '.min' }))
-    .pipe(gulp.dest('assets/styles'));
-});
-
-gulp.task('compile-other-scss', function () {
-  return gulp.src('styles/other/*.scss')
-    .pipe(sass.sync().on('error', sass.logError))
-    .pipe(cleanCSS())
-    .pipe(rename({ suffix: '.min' }))
-    .pipe(gulp.dest('assets/styles'));
+    .pipe(gulp.dest('resources/assets/styles'));
 });
 
 gulp.task('compile-js', function() {
-  return gulp.src('scripts/*.js')
+  return gulp.src(['resources/scripts/*.js', '!resources/scripts/_*.js'])
     .pipe(minify({noSource: true, ext: {min: '.min.js'}}))
-    .pipe(gulp.dest('assets/scripts'));
+    .pipe(gulp.dest('resources/assets/scripts'));
 });
 
 gulp.task('watch-compile', function () {
-  gulp.watch('styles/main/*.scss', gulp.series('compile-main-scss'));
-  gulp.watch('styles/other/*.scss', gulp.series('compile-other-scss'));
-  gulp.watch('scripts/**/*.js', gulp.series('compile-js'));
+  gulp.watch(['resources/styles/*.scss', '!resources/styles/_*.scss'], gulp.series('compile-scss'));
+  gulp.watch(['resources/scripts/*.js', '!resources/scripts/_*.js'], gulp.series('compile-js'));
 });

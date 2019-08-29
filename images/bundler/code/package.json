@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "compile-js": "gulp compile-js",
-    "compile-main-scss": "gulp compile-main-scss",
-    "compile-other-scss": "gulp compile-other-scss",
+    "compile-scss": "gulp compile-scss",
     "watch-compile": "gulp watch-compile"
   },
   "author": "",
