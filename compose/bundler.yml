@@ -2,6 +2,7 @@ version: '3.4'
 
 services:
   bundler:
+    image: ${DOCKER_BUNDLER_IMAGE}
     build:
       context: ./images/bundler/
       args:
@@ -11,4 +12,10 @@ services:
       - ${ASSETS_FOLDER}/:/resources/assets/
       - ${STYLES_FOLDER}/:/resources/styles/
       - ${SCRIPTS_FOLDER}/:/resources/scripts/
-    command: bash -c 'npm install && npm run watch-compile'
+    command: > 
+      bash -c '
+          sh prepare.sh &&
+          npm run compile-js &&
+          npm run compile-scss &&
+          npm run watch-compile
+      '
