@@ -1,9 +1,0 @@
-version: '3.4'
-
-services:
-  postgres:
-    image: ${DOCKER_POSTGRES_IMAGE}
-    environment:
-      - POSTGRES_DB=${DATABASE_NAME}
-      - POSTGRES_USER=${DATABASE_USER}
-      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
