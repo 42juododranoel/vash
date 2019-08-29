@@ -1,0 +1,21 @@
+{
+  "name": "bundler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "compile-js": "gulp compile-js",
+    "compile-main-scss": "gulp compile-main-scss",
+    "compile-other-scss": "gulp compile-other-scss",
+    "watch-compile": "gulp watch-compile"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "gulp": "^4.0.2",
+    "gulp-clean-css": "^4.2.0",
+    "gulp-minify": "^3.1.0",
+    "gulp-rename": "^1.4.0",
+    "gulp-sass": "^4.0.2"
+  }
+}

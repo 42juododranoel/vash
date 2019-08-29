@@ -1,0 +1,9 @@
+pillow==6.1.0  # Manage images
+brotli==1.0.7  # Compress files
+Jinja2==2.10.1  # Render templates
+htmlmin==0.1.12  # Minify HTML
+richtypo==0.2.3  # Typograph text
+pygments==2.3.1  # Highlight code
+MarkupSafe==1.1.1  # Jinja requirement
+beautifulsoup4==4.8.0  # HTML processing
+django-softhyphen==1.1.0  # Hyphenate HTML code

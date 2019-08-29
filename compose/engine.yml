@@ -1,0 +1,16 @@
+version: '3.4'
+
+services:
+  engine:
+    image: ${DOCKER_ENGINE_IMAGE}
+    build:
+      context: ./images/engine/
+      args:
+        - USER_ID
+    volumes:
+      - ${PROJECT_FOLDER}/images/engine/code/:/code/
+      - ${PAGES_FOLDER}/:/resources/pages/
+      - ${FILES_FOLDER}/:/resources/files/
+      - ${ASSETS_FOLDER}/:/resources/assets/
+      - ${TEMPLATES_FOLDER}/:/resources/templates/
+    command: sleep 1d

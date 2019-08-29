@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  bundler:
+    build:
+      context: ./images/bundler/
+      args:
+        - USER_ID
+    volumes:
+      - ${PROJECT_FOLDER}/images/bundler/code/:/code/
+      - ${ASSETS_FOLDER}/:/resources/assets/
+      - ${STYLES_FOLDER}/:/resources/styles/
+      - ${SCRIPTS_FOLDER}/:/resources/scripts/
+    command: bash -c 'npm install && npm run watch-compile'

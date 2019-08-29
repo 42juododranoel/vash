@@ -1,0 +1,15 @@
+version: '3.4'
+
+services:
+  proxy:
+    image: ${DOCKER_PROXY_IMAGE}
+    build:
+      context: ./images/proxy/
+    volumes:
+      - ${PAGES_FOLDER}/:/resources/pages/
+      - ${FILES_FOLDER}/:/resources/files/
+      - ${ASSETS_FOLDER}/:/resources/assets/
+      - ${CERTIFICATES_FOLDER}/:/resources/certificates/
+    ports:
+      - 80:80
+      - 443:443

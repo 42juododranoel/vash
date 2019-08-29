@@ -9,3 +9,6 @@ scripts/upload_media.sh
 scripts/upload_image.sh
 scripts/upload_certificates.sh
 gulp/application/node_modules/
+.idea/
+venv/
+resources-new/
