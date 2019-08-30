@@ -1,11 +1,9 @@
 language: bash
 
-
 addons:
   apt:
     packages:
       - sshpass
       - docker-ce
 
-
-script: ./scripts/deploy.sh
+script: ./manage.py
