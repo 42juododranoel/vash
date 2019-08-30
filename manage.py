@@ -58,7 +58,7 @@ class Project:
         self.version_folder_path = f'{self.versions_folder_path}/{version}'
 
     def set_environment(self):
-        print('Creating environment...')
+        print(_('Creating environment...'))
 
         environment_variables = {
             'USER_ID': f'{os.getuid()}',
@@ -77,25 +77,25 @@ class Project:
         
         self.environment = environment_variables 
         for variable_name, variable_value in self.environment.items():
-            print(f'  “{variable_name}” = “{variable_value}”')
+            print(_(f'  “{variable_name}” = “{variable_value}”'))
             os.environ[variable_name] = variable_value
         print()
 
     def initialize(self):
-        print(f'Initializing project “{self.name}”...')
+        print(_(f'Initializing project “{self.name}”...'))
         self.create_folders()
         self.create_rolling()
         print()
     
     def run(self, version, as_daemon=False):
-        print(f'Running project “{self.name}”...')
+        print(_(f'Running project “{self.name}”...'))
         self.set_version(version)
         self.set_environment()
         self.run_project(as_daemon)
         print()
     
     def create_folders(self):
-        print('Creating folders...')
+        print(_('Creating folders...'))
 
         folder_paths = [
             self.project_folder_path,
@@ -103,29 +103,29 @@ class Project:
             self.resources_folder_path,
         ]
         for folder_path in folder_paths:
-            print(f'  “{folder_path}”')
+            print(_(f'  “{folder_path}”'))
             if not os.path.isdir(folder_path):
                 os.makedirs(folder_path)
 
         for resource_name, resource_folder_path in self.resource_folder_paths.items():
-            print(f'  “{resource_folder_path}”')
+            print(_(f'  “{resource_folder_path}”'))
             if not os.path.isdir(resource_folder_path):
                 os.makedirs(resource_folder_path)
         else:
             print()
 
     def create_rolling(self):
-        print('Creating rolling version folder...')
+        print(_('Creating rolling version folder...'))
         if not os.path.islink(self.rolling_version_path):
-            print(f'  “{self.rolling_version_path}”')
-            print(f'   -> “{self.repository_folder_path}”')
+            print(_(f'  “{self.rolling_version_path}”'))
+            print(_(f'   -> “{self.repository_folder_path}”'))
             os.symlink(self.repository_folder_path, self.rolling_version_path, target_is_directory=True)
         else:
-            print('  Exists.')
+            print(_('  Exists.'))
         print()
     
     def run_project(self, as_daemon=False):
-        print(f'Running project...')
+        print(_(f'Running project...'))
     
         command = [
             'docker-compose',
@@ -143,7 +143,7 @@ class Project:
         print()
 
     def create_index_page(self):
-        print('Creating index page...')
+        print(_('Creating index page...'))
         
         if not os.path.isdir(self.html_pages_folder_path):
             os.makedirs(self.html_pages_folder_path)
@@ -163,9 +163,9 @@ class Project:
             )
             with open(page_path, 'w') as file:
                 file.write(page_content)
-            print('  Done.')
+            print(_('  Done.'))
         else:
-            print('  Exists.')
+            print(_('  Exists.'))
         print()
 
 
