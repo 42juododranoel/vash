@@ -133,6 +133,9 @@ class Project:
 
         self.environment: dict
 
+        self.proxy_port_80 = '80'
+        self.proxy_port_443 = '443'
+
     def read_registry(self):
         with open(self.registry_path, 'r') as file:
             registry_entries = json.load(file)
@@ -215,8 +218,12 @@ class Project:
         else:
             if current_proxy_port_80 == PROXY_PORTS[0]['PROXY_PORT_80']:
                 environment_variables.update(PROXY_PORTS[1])
+                self.proxy_port_80 = PROXY_PORTS[1]['PROXY_PORT_80']
+                self.proxy_port_443 = PROXY_PORTS[1]['PROXY_PORT_443']
             else:
                 environment_variables.update(PROXY_PORTS[0])
+                self.proxy_port_80 = PROXY_PORTS[0]['PROXY_PORT_80']
+                self.proxy_port_443 = PROXY_PORTS[0]['PROXY_PORT_443']
 
         for service_name in self.SERVICE_NAMES:
             variable_name = f'DOCKER_{service_name.upper()}_IMAGE'
@@ -298,14 +305,13 @@ class Project:
             print(_('  Exists.'))
         print()
 
-    @staticmethod
-    def test_index_page():
+    def test_index_page(self):
         print(_(f'Testing index page...'))
 
         import requests
         requests.packages.urllib3.disable_warnings()
 
-        url = 'https://127.0.0.1/'
+        url = f'https://127.0.0.1:{self.proxy_port_443}/'
         max_tries = 3
         for try_ in range(max_tries):
             try:
