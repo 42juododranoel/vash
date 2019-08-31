@@ -197,7 +197,8 @@ class Project:
             print(_('  Exists.'))
         print()
 
-    def test_index_page(self):
+    @staticmethod
+    def test_index_page():
         print(_(f'Testing index page...'))
 
         import requests
@@ -241,7 +242,8 @@ class Project:
         print()
         return image_path
 
-    def send_image(self, image_path):
+    @staticmethod
+    def send_image(image_path):
         print(_('Sending image...'))
 
         credentials = get_production_credentials()
@@ -254,7 +256,8 @@ class Project:
         check_call(command)
         return f'{production_folder}/{file_name}'
 
-    def load_image(self, image_path):
+    @staticmethod
+    def load_image(image_path):
         print('Loading image...')
         command = ['docker', 'load']
         with open(image_path) as file:
