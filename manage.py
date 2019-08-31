@@ -275,13 +275,13 @@ def run_project(name, version, as_daemon):
     return project
 
 
-def stage_project(name, version):
+def deploy_project(name, version):
     project = run_project(name, version, as_daemon=True)
     image_path = project.save_image('proxy')
     project.send_image(image_path)
 
 
-def run_production(name, version):
+def update_running_project(name, version):
     pass
 
 
@@ -296,7 +296,7 @@ def get_command(argv):
     if namespace.category == 'initialize':
         command_function = initialize_project
 
-    elif namespace.category in ('run', 'stage'):
+    elif namespace.category in ('run', 'deploy'):
         argument_parser.add_argument(
             '-v', '--version', default='latest', help=_('Project version.')
         )
@@ -308,7 +308,7 @@ def get_command(argv):
             )
             command_function = run_project
         else:
-            command_function = stage_project
+            command_function = deploy_project
 
     else:
         raise SystemExit(_(f'Unknown command category {namespace.category}.'))
