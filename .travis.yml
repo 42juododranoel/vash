@@ -1,9 +1,17 @@
 language: bash
 
+python:
+  - '3.7'
+
 addons:
   apt:
     packages:
       - sshpass
       - docker-ce
 
-script: ./manage.py
+before_install:
+  - alias run_on_production='sshpass -e ssh ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}'
+  - shopt -s expand_aliases
+  - ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
+  
+  - python3 manage.py
