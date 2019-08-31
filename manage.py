@@ -1,16 +1,18 @@
 import os
 import sys
-import gettext
+import json
 from time import sleep
 from getpass import getpass
+from gettext import gettext as _
 from argparse import ArgumentParser
 from functools import partial
 from subprocess import check_call
 
-_ = gettext.gettext
-
-REPOSITORY_URL = os.environ.get('REPOSITORY_URL', 'https://github.com/vsevolod-skripnik/vash.git')
-PRODUCTION_HOST = os.environ.get('PRODUCTION_HOST')
+PROXY_PORTS = [
+    {'PROXY_PORT_80': '10080', 'PROXY_PORT_443': '10443'},
+    {'PROXY_PORT_80': '20080', 'PROXY_PORT_443': '20443'},
+]
+REPOSITORY_URL = 'https://github.com/vsevolod-skripnik/vash.git'
 
 
 def get_production_credentials():
@@ -21,6 +23,56 @@ def get_production_credentials():
     if not os.environ.get('SSHPASS'):
         os.environ['SSHPASS'] = getpass('  Password: ')
     return credentials
+
+
+def send_image(image_path):
+    print(_('Sending image...'))
+
+    credentials = get_production_credentials()
+    file_name = image_path.split(os.path.sep)[-1]
+    production_folder = '/tmp'
+    command = [
+        'sshpass', '-e',
+        'scp', f'{image_path}', f'{credentials["username"]}@{credentials["host"]}:{production_folder}'
+    ]
+    check_call(command)
+    return f'{production_folder}/{file_name}'
+
+
+def load_image(image_path):
+    print('Loading image...')
+    command = ['docker', 'load']
+    with open(image_path) as file:
+        check_call(command, stdin=file)
+    print()
+
+
+def create_port_forwarding(port_80, port_443):
+    command = ['sudo', 'iptables', '-A', 'PREROUTING', '-t', 'nat', '-i', 'eth0', '-p', 'tcp', '--dport', '80', '-j', 'REDIRECT', '--to-port', port_80]
+    check_call(command)
+
+    command = ['sudo', 'iptables', '-A', 'PREROUTING', '-t', 'nat', '-i', 'eth0', '-p', 'tcp', '--dport', '443', '-j', 'REDIRECT', '--to-port', port_443]
+    check_call(command)
+
+
+def delete_port_forwarding(port_80, port_443):
+    command = ['sudo', 'iptables', '-D', 'PREROUTING', '-t', 'nat', '-i', 'eth0', '-p', 'tcp', '--dport', '80', '-j', 'REDIRECT', '--to-port', port_80]
+    check_call(command)
+
+    command = ['sudo', 'iptables', '-D', 'PREROUTING', '-t', 'nat', '-i', 'eth0', '-p', 'tcp', '--dport', '443', '-j', 'REDIRECT', '--to-port', port_443]
+    check_call(command)
+
+
+def switch_ports(current_80, current_443):
+    if current_80 == PROXY_PORTS[0]['PROXY_PORT_80']:
+        previous_80 = PROXY_PORTS[1]['PROXY_PORT_80']
+        previous_443 = PROXY_PORTS[1]['PROXY_PORT_443']
+    else:
+        previous_80 = PROXY_PORTS[0]['PROXY_PORT_80']
+        previous_443 = PROXY_PORTS[0]['PROXY_PORT_443']
+
+    create_port_forwarding(current_80, current_443)
+    delete_port_forwarding(previous_80, previous_443)
 
 
 class Project:
@@ -42,12 +94,12 @@ class Project:
         )
         # ~/projects/{name}
         self.project_folder_path = f'{self.projects_folder_path}/{name}'
-        
+
         # ~/projects/{name}/versions
         self.versions_folder_path = f'{self.project_folder_path}/versions'
         # ~/projects/{name}/versions/latest -> ~/projects/vash
         self.latest_version_path = f'{self.versions_folder_path}/latest'
-        
+
         # ~/projects/{name}/resources
         self.resources_folder_path = f'{self.project_folder_path}/resources'
         # ~/projects/{name}/resources/{resource}
@@ -64,7 +116,7 @@ class Project:
         # ~/projects/{name}/resources/pages/_html
         self.html_pages_folder_path = f'{self.resource_folder_paths["pages"]}/_html'
 
-        self.create_folders()
+        self.prepare_folders()
 
         self.version = 'latest'
         self.version_folder_path = f'{self.versions_folder_path}/{self.version}'
@@ -74,10 +126,32 @@ class Project:
             os.symlink(self.repository_folder_path, self.latest_version_path, target_is_directory=True)
         self.installed_versions = os.listdir(self.versions_folder_path)
 
-        self.environment = self.get_environment()
+        self.registry_path = f'{self.project_folder_path}/registry.json'
+        if not os.path.isfile(self.registry_path):
+            with open(self.registry_path, 'w') as file:
+                file.write('[]')
 
-    def create_folders(self):
-        print(_('Creating folders...'))
+        self.environment: dict
+
+    def read_registry(self):
+        with open(self.registry_path, 'r') as file:
+            registry_entries = json.load(file)
+        return registry_entries
+
+    def update_registry(self, version, environment):
+        entry = {'version': version, 'environment': environment}
+
+        registry_entries_max_count = 10
+        registry_entries = self.read_registry()
+        registry_entries.insert(0, entry)
+        if len(registry_entries) > registry_entries_max_count:
+            del registry_entries[registry_entries_max_count - 1:]
+
+        with open(self.registry_path, 'w') as file:
+            json.dump(registry_entries, file)
+
+    def prepare_folders(self):
+        print(_('Preparing folders...'))
 
         folder_paths = [
             self.project_folder_path,
@@ -85,45 +159,64 @@ class Project:
             self.resources_folder_path,
         ]
         for folder_path in folder_paths:
-            print(_(f'  “{folder_path}”'))
             if not os.path.isdir(folder_path):
+                print(_(f'  “{folder_path}”'))
                 os.makedirs(folder_path)
 
         for resource_name, resource_folder_path in self.resource_folder_paths.items():
-            print(_(f'  “{resource_folder_path}”'))
             if not os.path.isdir(resource_folder_path):
+                print(_(f'  “{resource_folder_path}”'))
                 os.makedirs(resource_folder_path)
         else:
             print()
 
-    def install(self, version):
-        print(_(f'Installing version “{version}”'))
+    def prepare_version(self, version):
+        print(_(f'Preparing version “{version}”'))
 
-        working_folder_before_install = os.getcwd()
+        if version not in self.installed_versions:
+            print('  Installing...')
+            working_folder_before_install = os.getcwd()
 
-        version_folder_path = f'{self.versions_folder_path}/{version}'
+            version_folder_path = f'{self.versions_folder_path}/{version}'
 
-        os.chdir(self.versions_folder_path)
-        command = ['git', 'clone', f'{REPOSITORY_URL}', f'{version}']
-        check_call(command)
+            os.chdir(self.versions_folder_path)
+            command = ['git', 'clone', f'{REPOSITORY_URL}', f'{version}']
+            check_call(command)
 
-        os.chdir(version_folder_path)
-        command = ['git', 'checkout', f'{version_folder_path}']
-        check_call(command)
+            os.chdir(version_folder_path)
+            command = ['git', 'checkout', f'{version_folder_path}']
+            check_call(command)
 
-        command = ['git', 'reset', '--hard']
-        check_call(command)
+            command = ['git', 'reset', '--hard']
+            check_call(command)
 
-        os.chdir(working_folder_before_install)
+            os.chdir(working_folder_before_install)
 
-        self.installed_versions.append(version)
+            self.installed_versions.append(version)
+
+        self.version = version
+        self.version_folder_path = f'{self.versions_folder_path}/{version}'
+
         print()
 
-    def get_environment(self):
+    def prepare_environment(self):
+        print('Preparing environment...')
+
         environment_variables = {
             'USER_ID': f'{os.getuid()}',
             'RESOURCES_FOLDER': f'{self.resources_folder_path}',
         }
+
+        registry_entries = self.read_registry()
+        try:
+            current_proxy_port_80 = registry_entries[0]['environment']['PROXY_PORT_80']
+        except (KeyError, IndexError):
+            environment_variables.update(PROXY_PORTS[0])
+        else:
+            if current_proxy_port_80 == PROXY_PORTS[0]['PROXY_PORT_80']:
+                environment_variables.update(PROXY_PORTS[1])
+            else:
+                environment_variables.update(PROXY_PORTS[0])
 
         for service_name in self.SERVICE_NAMES:
             variable_name = f'DOCKER_{service_name.upper()}_IMAGE'
@@ -134,39 +227,47 @@ class Project:
             variable_name = f'{resource_name.upper()}_FOLDER'
             environment_variables[variable_name] = f'{resource_folder_path}'
 
-        return environment_variables
-
-    def set_environment(self):
-        print('Setting environment...')
-        self.environment = self.get_environment()
+        self.environment = environment_variables
         for variable_name, variable_value in self.environment.items():
             print(_(f'  “{variable_name}” = “{variable_value}”'))
             os.environ[variable_name] = variable_value
         print()
 
-    def run(self, version, as_daemon=False):
-        if version not in self.installed_versions:
-            self.install(version)
-
-        self.version = version
-        self.version_folder_path = f'{self.versions_folder_path}/{version}'
+    def run(self, version, with_engine=True, with_proxy=True, with_bundler=True, as_daemon=False, no_build=False):
+        self.prepare_version(version)
+        self.prepare_environment()
 
         print(_(f'Running “{self.name}” version “{version}”...'))
-        self.set_environment()
+        command = ['docker-compose']
 
-        command = [
-            'docker-compose',
-                '-f', f'{self.version_folder_path}/compose/engine.yml',
-                '-f', f'{self.version_folder_path}/compose/proxy.yml',
-                '-f', f'{self.version_folder_path}/compose/bundler.yml',
+        if with_engine:
+            command.extend(['-f', f'{self.version_folder_path}/compose/engine.yml'])
+        if with_proxy:
+            command.extend(['-f', f'{self.version_folder_path}/compose/proxy.yml'])
+        if with_bundler:
+            command.extend(['-f', f'{self.version_folder_path}/compose/bundler.yml'])
+
+        command.extend(
+            [
                 '--project-directory', f'{self.version_folder_path}',
                 '--project-name', f'{self.name}',
                 'up',
-                '--build',
-        ]
+            ]
+        )
+
+        if not no_build:
+            command.append('--build')
         if as_daemon:
             command.append('--detach')
+
         check_call(command)
+
+        if as_daemon:
+            registry_environment = {
+                'PROXY_PORT_80': self.environment['PROXY_PORT_80'],
+                'PROXY_PORT_443': self.environment['PROXY_PORT_443'],
+            }
+            self.update_registry(version=version, environment=registry_environment)
 
         print()
 
@@ -242,28 +343,6 @@ class Project:
         print()
         return image_path
 
-    @staticmethod
-    def send_image(image_path):
-        print(_('Sending image...'))
-
-        credentials = get_production_credentials()
-        file_name = image_path.split(os.path.sep)[-1]
-        production_folder = '/tmp'
-        command = [
-            'sshpass', '-e',
-            'scp', f'{image_path}', f'{credentials["username"]}@{credentials["host"]}:{production_folder}'
-        ]
-        check_call(command)
-        return f'{production_folder}/{file_name}'
-
-    @staticmethod
-    def load_image(image_path):
-        print('Loading image...')
-        command = ['docker', 'load']
-        with open(image_path) as file:
-            check_call(command, stdin=file)
-        print()
-
 
 def initialize_project(name):
     return Project(name)
@@ -271,18 +350,39 @@ def initialize_project(name):
 
 def run_project(name, version, as_daemon):
     project = initialize_project(name)
-    project.run(version, as_daemon)
+    project.run(version, as_daemon=as_daemon)
     return project
 
 
 def deploy_project(name, version):
     project = run_project(name, version, as_daemon=True)
-    image_path = project.save_image('proxy')
-    project.send_image(image_path)
+
+    project.create_index_page()
+    if project.test_index_page():
+        image_path = project.save_image('proxy')
+        send_image(image_path)
+    else:
+        raise SystemExit(_('Go check stuff.'))
 
 
-def update_running_project(name, version):
-    pass
+def update_project(name, version):
+    project = initialize_project(name)
+    production_image_path = f'/tmp/{version}.tar'
+    load_image(production_image_path)
+    project.run(version, with_bundler=False, with_engine=False, no_build=True, as_daemon=True)
+
+    if project.test_index_page():
+        switch_ports(
+            project.environment['PROXY_PORT_80'],
+            project.environment['PROXY_PORT_443'],
+        )
+        if project.test_index_page():
+            pass
+        else:
+            pass
+
+    else:
+        raise SystemExit(_('Go check stuff.'))
 
 
 def get_command(argv):
@@ -296,7 +396,7 @@ def get_command(argv):
     if namespace.category == 'initialize':
         command_function = initialize_project
 
-    elif namespace.category in ('run', 'deploy'):
+    elif namespace.category in ('run', 'deploy', 'update'):
         argument_parser.add_argument(
             '-v', '--version', default='latest', help=_('Project version.')
         )
@@ -307,6 +407,8 @@ def get_command(argv):
                 action='store_true', help=_('Enter daemon mode after start.')
             )
             command_function = run_project
+        elif namespace.category == 'update':
+            command_function = update_project
         else:
             command_function = deploy_project
 
@@ -320,3 +422,6 @@ def get_command(argv):
 if __name__ == '__main__':
     command = get_command(sys.argv)
     command()
+
+
+# vsevoland vsevoland = (root) NOPASSWD: /bin/bash /root/scripts/delete_port_forwarding_B.sh

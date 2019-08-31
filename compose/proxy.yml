@@ -11,5 +11,5 @@ services:
       - ${ASSETS_FOLDER}/:/resources/assets/
       - ${CERTIFICATES_FOLDER}/:/resources/certificates/
     ports:
-      - 80:80
-      - 443:443
+      - ${PROXY_PORT_80}:80
+      - ${PROXY_PORT_443}:443
