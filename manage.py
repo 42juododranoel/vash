@@ -2,13 +2,25 @@ import os
 import sys
 import gettext
 from time import sleep
+from getpass import getpass
 from argparse import ArgumentParser
 from functools import partial
 from subprocess import check_call
 
 _ = gettext.gettext
 
-REPOSITORY_URL = 'https://github.com/vsevolod-skripnik/vash.git'
+REPOSITORY_URL = os.environ.get('REPOSITORY_URL', 'https://github.com/vsevolod-skripnik/vash.git')
+PRODUCTION_HOST = os.environ.get('PRODUCTION_HOST')
+
+
+def get_production_credentials():
+    credentials = {
+        'host': os.environ.get('PRODUCTION_HOST', input('  Production host: ')),
+        'username': os.environ.get('PRODUCTION_USERNAME', input('  Production username: ')),
+    }
+    if not os.environ.get('SSHPASS'):
+        os.environ['SSHPASS'] = getpass('  Password: ')
+    return credentials
 
 
 class Project:
@@ -17,8 +29,6 @@ class Project:
     def __init__(self, name):
         print(_(f'Initializing project “{name}”...'))
         self.name = name
-
-        # Folders
 
         # ~/projects/vash/manage.py
         self.manage_file_path = os.path.abspath(__file__)
@@ -53,10 +63,8 @@ class Project:
         }
         # ~/projects/{name}/resources/pages/_html
         self.html_pages_folder_path = f'{self.resource_folder_paths["pages"]}/_html'
-        
-        self.create_folders()
 
-        # Versions
+        self.create_folders()
 
         self.version = 'latest'
         self.version_folder_path = f'{self.versions_folder_path}/{self.version}'
@@ -64,10 +72,7 @@ class Project:
             print(_(f'  “{self.latest_version_path}”'))
             print(_(f'   -> “{self.repository_folder_path}”'))
             os.symlink(self.repository_folder_path, self.latest_version_path, target_is_directory=True)
-        #
         self.installed_versions = os.listdir(self.versions_folder_path)
-
-        # Environment
 
         self.environment = self.get_environment()
 
@@ -191,13 +196,16 @@ class Project:
         else:
             print(_('  Exists.'))
         print()
-    
+
     def test_index_page(self):
-        print(_('Testing index page...'))
+        print(_(f'Testing index page...'))
+
         import requests
+        requests.packages.urllib3.disable_warnings()
+
         url = 'https://127.0.0.1/'
         max_tries = 3
-        for _ in range(max_tries):
+        for try_ in range(max_tries):
             try:
                 response = requests.get(url, verify=False)
             except requests.exceptions.ConnectionError:
@@ -220,21 +228,62 @@ class Project:
         print()
         return is_fine
 
+    def save_image(self, service_name):
+        print(_('Saving image...'))
+
+        image_name = f'{self.name}_{service_name}:{self.version}'
+        image_file = f'{self.version}.tar'
+        image_path = f'/tmp/{image_file}'
+
+        command = ['docker', 'save', '-o', f'{image_path}', f'{image_name}']
+        check_call(command)
+        print('  Done.')
+        print()
+        return image_path
+
+    def send_image(self, image_path):
+        print(_('Sending image...'))
+
+        credentials = get_production_credentials()
+        file_name = image_path.split(os.path.sep)[-1]
+        production_folder = '/tmp'
+        command = [
+            'sshpass', '-e',
+            'scp', f'{image_path}', f'{credentials["username"]}@{credentials["host"]}:{production_folder}'
+        ]
+        check_call(command)
+        return f'{production_folder}/{file_name}'
+
+    def load_image(self, image_path):
+        print('Loading image...')
+        command = ['docker', 'load']
+        with open(image_path) as file:
+            check_call(command, stdin=file)
+        print()
+
 
 def initialize_project(name):
-    Project(name)
+    return Project(name)
 
 
 def run_project(name, version, as_daemon):
-    project = Project(name)
+    project = initialize_project(name)
     project.run(version, as_daemon)
+    return project
 
 
-def deploy_project(name, version):
-    project = Project(name)
-    project.run(version, as_daemon=True)
+def stage_project(name, version):
+    project = run_project(name, version, as_daemon=True)
     project.create_index_page()
-    print(project.test_index_page())
+    if project.test_index_page():
+        image_path = project.save_image('proxy')
+        production_image_path = project.send_image(image_path)
+    else:
+        raise SystemExit(_('Go check stuff.'))
+
+
+def run_production(name, version):
+    pass
 
 
 def get_command(argv):
@@ -242,22 +291,25 @@ def get_command(argv):
     category_parser.add_argument('category')
     namespace, arguments = category_parser.parse_known_args(argv[1:])
 
+    argument_parser = ArgumentParser()
+    argument_parser.add_argument('name', help=_('Project name.'))
+
     if namespace.category == 'initialize':
-        argument_parser = ArgumentParser()
-        argument_parser.add_argument('name', help=_('Project name.'))
         command_function = initialize_project
 
-    elif namespace.category == 'run':
-        argument_parser = ArgumentParser()
-        argument_parser.add_argument('name', help=_('Project name.'))
+    elif namespace.category in ('run', 'stage'):
         argument_parser.add_argument(
             '-v', '--version', default='latest', help=_('Project version.')
         )
-        argument_parser.add_argument(
-            '-d', '--daemon', dest='as_daemon', 
-            action='store_true', help=_('Enter daemon mode after start.')
-        )
-        command_function = run_project
+
+        if namespace.category == 'run':
+            argument_parser.add_argument(
+                '-d', '--daemon', dest='as_daemon',
+                action='store_true', help=_('Enter daemon mode after start.')
+            )
+            command_function = run_project
+        else:
+            command_function = stage_project
 
     else:
         raise SystemExit(_(f'Unknown command category {namespace.category}.'))
