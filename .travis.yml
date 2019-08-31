@@ -13,9 +13,11 @@ script:
   - export COMMIT=`echo ${TRAVIS_COMMIT:0:7}`
   - >
     bash -c "
-        alias run_on_production='sshpass -e ssh ${PRODUCTION_USERNAME}@${PRODUCTION_HOST}' &&
-        shopt -s expand_aliases &&
-        ssh-keyscan -t rsa ${PRODUCTION_HOST} > ~/.ssh/known_hosts &&
+      alias run_on_production='sshpass -e ssh ${PRODUCTION_USERNAME}@${PRODUCTION_HOST}' &&
+      shopt -s expand_aliases &&
+      ssh-keyscan -t rsa ${PRODUCTION_HOST} > ~/.ssh/known_hosts &&
   
-        python3 manage.py stage ${NAME} -v ${COMMIT}
+      env &&
+  
+      python3 manage.py stage ${NAME} -v ${COMMIT}
     "
