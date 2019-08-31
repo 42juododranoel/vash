@@ -14,4 +14,4 @@ before_install:
   - shopt -s expand_aliases
   - ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
   
-  - python3 manage.py
+  - python3 --version
