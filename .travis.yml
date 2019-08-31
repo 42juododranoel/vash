@@ -10,10 +10,9 @@ addons:
       - docker-ce
 
 script:
+  - export COMMIT=`echo ${TRAVIS_COMMIT:0:7}`
   - >
     bash -c "
-        export COMMIT=`echo ${TRAVIS_COMMIT:0:7}` &&
-
         alias run_on_production='sshpass -e ssh ${PRODUCTION_USERNAME}@${PRODUCTION_HOST}' &&
         shopt -s expand_aliases &&
         ssh-keyscan -t rsa ${PRODUCTION_HOST} > ~/.ssh/known_hosts &&
