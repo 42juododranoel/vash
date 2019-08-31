@@ -9,9 +9,10 @@ addons:
       - sshpass
       - docker-ce
 
-before_install:
+script:
+  - export COMMIT=`echo ${TRAVIS_COMMIT:0:7}`
   - alias run_on_production='sshpass -e ssh ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}'
   - shopt -s expand_aliases
   - ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
   
-  - python3 --version
+  - python3 manage.py stage vsevoland -v ${COMMIT}
