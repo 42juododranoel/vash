@@ -277,12 +277,8 @@ def run_project(name, version, as_daemon):
 
 def stage_project(name, version):
     project = run_project(name, version, as_daemon=True)
-    project.create_index_page()
-    if project.test_index_page():
-        image_path = project.save_image('proxy')
-        production_image_path = project.send_image(image_path)
-    else:
-        raise SystemExit(_('Go check stuff.'))
+    image_path = project.save_image('proxy')
+    project.send_image(image_path)
 
 
 def run_production(name, version):
