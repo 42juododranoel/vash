@@ -6,23 +6,13 @@ from getpass import getpass
 from gettext import gettext as _
 from argparse import ArgumentParser
 from functools import partial
-from subprocess import check_call, CalledProcessError
+from subprocess import check_call
 
 PORT_FORWARDING = [
     ['80', '443'],
     ['10080', '10443'],
     ['20080', '20443'],
 ]
-
-# Project — это ~/projects/vsevoland
-# - Создаёт изначальную структуру
-# - Инициализирует версии
-# - Управляет версиями
-# 
-# Способы запустить версию:
-# - От руки
-# - Из регистри
-#   -> В регистри должна быть вся информация, чтобы запустить версию
 
 
 def create_port_forwarding(source, destination):
@@ -361,7 +351,6 @@ class Release:
         self.environment.update(runtime_environment)
 
         for variable_name, variable_value in self.environment.items():
-            print(_(f'“{variable_name}” = “{variable_value}”'))
             os.environ[variable_name] = variable_value
 
         print(_(f'Running release “{self.version}”...'))
@@ -387,8 +376,8 @@ class Release:
 
 def command_initialize_project(name):
     project = Project(name)
-    project.prepare_registry()
     project.prepare_folders()
+    project.prepare_registry()
     return project
 
 
@@ -407,16 +396,24 @@ def command_deploy_release(name, version):
         image_path = project.save_image(version, service_name='proxy')
         production_path = project.send_image(image_path)
         print(_('Дальше мы вызываем на удалённом хосте python manage.py vsevoland update {version}'))
+        # Написать этот SSH
+        # После деплоя удалять мою висящую версию
+        """
+        set -ev
+        alias run_on_production='sshpass -e ssh ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}'
+        shopt -s expand_aliases
+        ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
+        # vsevoland vsevoland = (root) NOPASSWD: /bin/bash /root/scripts/delete_port_forwarding_B.sh
+        """
     else:
         raise SystemError(_('Go check stuff.'))
 
 
 def command_update_project(name, version):
-    image_path = '/tmp/vsevoland_proxy_ec45d12.tar'
-    Project.load_image(image_path)
+    # Перед апдейтом удалять, если уже висит такая версия, её имейдж и нетворк
 
-    # после деплоя следует удалять мою висящую версию
-    # первое время без смены портов, забудь о них вообще
+    image_path = f'/tmp/{name}_proxy_{version}.tar'
+    Project.load_image(image_path)
 
     project, release, options = command_run_release(name, version)
 
@@ -428,11 +425,22 @@ def command_update_project(name, version):
         delete_port_forwarding('80', get_opposite_port(options["runtime_environment"]["PROXY_PORT_80"]))
         delete_port_forwarding('443', get_opposite_port(options["runtime_environment"]["PROXY_PORT_443"]))
 
+        # убедиться, что сейчас заработал нужный, без всякого докер-стопа
+
         url = f'https://127.0.0.1/'
         if project.test_page(url):
+            # стопануть предыдушую версию
+            # удалить пред предыдущую версию
+            # И её имейдж previous_nginx_image =\$(docker ps -a | grep '${PRODUCTION_NGINX_CONTAINER_PREVIOUS}' | awk '{print \$2}')
+            # и её нетворкdocker network rm ${PRODUCTION_DOCKER_PREFIX_PREVIOUS}_default
+            # удалить из темпа деплоевский тарник
+
             print(_('Done.'))
             print(_(':-)'))
         else:
+            print(_('Restoring previous version...'))
+
+            # это по-хорошему надо сделать стартом, а не раном
             project, release, options = command_run_release(name, version='previous')
 
             create_port_forwarding('80', options["runtime_environment"]["PROXY_PORT_80"])
