@@ -2,7 +2,6 @@ import os
 import sys
 import json
 from time import sleep
-from getpass import getpass
 from gettext import gettext as _
 from argparse import ArgumentParser
 from functools import partial
@@ -21,6 +20,7 @@ def create_port_forwarding(source, destination):
         '-p', 'tcp', '--dport', source, '-j', 'REDIRECT', '--to-port', destination
     ]
     # check_call(command)
+    """# vsevoland vsevoland = (root) NOPASSWD: /bin/bash /root/scripts/delete_port_forwarding_B.sh"""
     print(command)
 
 
@@ -30,6 +30,7 @@ def delete_port_forwarding(source, destination):
         '-p', 'tcp', '--dport', source, '-j', 'REDIRECT', '--to-port', destination
     ]
     # check_call(command)
+    """# vsevoland vsevoland = (root) NOPASSWD: /bin/bash /root/scripts/delete_port_forwarding_B.sh"""
     print(command)
 
 
@@ -282,11 +283,9 @@ class Project:
     @staticmethod
     def get_production_credentials():
         credentials = {
-            'host': os.environ.get('PRODUCTION_HOST', input('  Production host: ')),
-            'username': os.environ.get('PRODUCTION_USERNAME', input('  Production username: ')),
+            'host': os.environ.get('PRODUCTION_HOST') or input(_('Production host: ')),
+            'username': os.environ.get('PRODUCTION_USERNAME') or input(_('Production username: ')),
         }
-        if not os.environ.get('SSHPASS'):
-            os.environ['SSHPASS'] = getpass('  Production password: ')
         return credentials
 
     def save_image(self, version, service_name):
@@ -306,10 +305,7 @@ class Project:
         credentials = self.get_production_credentials()
         file_name = image_path.split(os.path.sep)[-1]
         production_folder_path = '/tmp'
-        command = [
-            'sshpass', '-e',
-            'scp', f'{image_path}', f'{credentials["username"]}@{credentials["host"]}:{production_folder_path}'
-        ]
+        command = ['scp', f'{image_path}', f'{credentials["username"]}@{credentials["host"]}:{production_folder_path}']
         check_call(command)
         return f'{production_folder_path}/{file_name}'
 
@@ -319,6 +315,18 @@ class Project:
         command = ['docker', 'load']
         with open(image_path) as file:
             check_call(command, stdin=file)
+
+    def update_production(self, version):
+        print(_('Updating production...'))
+        credentials = self.get_production_credentials()
+        production_manage_file_path = os.environ.get('PRODUCTION_MANAGE_FILE_PATH') \
+            or input('Path to `manage.py` on production: ')
+
+        command = [
+            'ssh', f'{credentials["username"]}@{credentials["host"]}',
+            'python3', production_manage_file_path, 'update', self.name, version
+        ]
+        check_call(command)
 
 
 class Release:
@@ -394,17 +402,10 @@ def command_deploy_release(name, version):
     url = f'https://127.0.0.1:{options["runtime_environment"]["PROXY_PORT_443"]}/'
     if project.test_page(url):
         image_path = project.save_image(version, service_name='proxy')
-        production_path = project.send_image(image_path)
-        print(_('Дальше мы вызываем на удалённом хосте python manage.py vsevoland update {version}'))
-        # Написать этот SSH
+        # production_path = project.send_image(image_path)
+        project.update_production(version)
         # После деплоя удалять мою висящую версию
-        """
-        set -ev
-        alias run_on_production='sshpass -e ssh ${PRODUCTION_SERVER_USERNAME}@${PRODUCTION_SERVER_HOST}'
-        shopt -s expand_aliases
-        ssh-keyscan -t rsa ${PRODUCTION_SERVER_HOST} > ~/.ssh/known_hosts
-        # vsevoland vsevoland = (root) NOPASSWD: /bin/bash /root/scripts/delete_port_forwarding_B.sh
-        """
+        """# vsevoland vsevoland = (root) NOPASSWD: /bin/bash /root/scripts/delete_port_forwarding_B.sh"""
     else:
         raise SystemError(_('Go check stuff.'))
 
@@ -416,6 +417,7 @@ def command_update_project(name, version):
     Project.load_image(image_path)
 
     project, release, options = command_run_release(name, version)
+    project.create_index_page()
 
     url = f'https://127.0.0.1:{options["runtime_environment"]["PROXY_PORT_443"]}/'
     if project.test_page(url):
