@@ -401,19 +401,33 @@ class Release:
 
         check_call(command)
 
+    def _start_stop_remove(self, action, service_names):
+        command = ['docker', action]
+        for service_name in service_names:
+            command.append(f'{self.project.name}_{self.version}_{service_name}_1')
+        check_call(command)
+
     def start(self, service_names):
         print(_(f'Starting release...'))
-        command = ['docker', 'start']
-        for service_name in service_names:
-            command.extend(f'{self.project.name}_{self.version}_{service_name}_1')
-        check_call(command)
+        self._start_stop_remove(action='start', service_names)
 
     def stop(self, service_names):
         print(_(f'Stopping release...'))
-        command = ['docker', 'stop']
-        for service_name in service_names:
-            command.extend(f'{self.project.name}_{self.version}_{service_name}_1')
-        check_call(command)
+        self._start_stop_remove(action='stop', service_names)
+
+    def remove(self, service_names, with_image=True, with_network=True):
+        print(_(f'Removing release...'))
+        self._start_stop_remove(action='remove', service_names)
+
+        if with_image:
+            command = ['docker', 'rmi'],
+            for service_name in service_names:
+                command.append(f'{self.project.name}_{service_name}:{self.version}')
+            check_call(command)
+
+        if with_network:
+            command = ['docker', 'network', 'rm', f'{self.project.name}_{self.version}_default']
+            check_call(command)
 
 
 def command_initialize_project(name):
@@ -458,29 +472,39 @@ def command_update_project(name, version):
         create_port_forwarding('80', options["runtime_environment"]["PROXY_PORT_80"])
         create_port_forwarding('443', options["runtime_environment"]["PROXY_PORT_443"])
 
+        registry_entries = project.read_registry()
+
         # If not first launch
-        is_previous_release_known = len(project.read_registry()) > 1
-        if is_previous_release_known:
+        is_first_launch = len(registry_entries) > 1
+        if is_first_launch:
             delete_port_forwarding('80', get_opposite_port(options["runtime_environment"]["PROXY_PORT_80"]))
             delete_port_forwarding('443', get_opposite_port(options["runtime_environment"]["PROXY_PORT_443"]))
-
-        # убедиться, что сейчас заработал нужный, без всякого докер-стопа
-
-        import pdb; pdb.set_trace()
 
         url = f'https://127.0.0.1/'
         # if project.test_page(url):
         if True:
-            # стопануть предыдушую версию
-            # удалить пред предыдущую версию
-            # И её имейдж previous_nginx_image =\$(docker ps -a | grep '${PRODUCTION_NGINX_CONTAINER_PREVIOUS}' | awk '{print \$2}')
-            # и её нетворкdocker network rm ${PRODUCTION_DOCKER_PREFIX_PREVIOUS}_default
-            # удалить из темпа деплоевский тарник
+            # If previous release is unknown
+            print('Cleaning previous releases...')
+            if not is_first_launch:
+                previous_release_entry = registry_entries[1]
+                previous_release = Release(project, previous_release_entry['version'])
+                previous_release.stop(service_names=['proxy'])
+                
+                try:
+                    pre_previous_release_entry = registry_entries[2]
+                except IndexError:
+                    pass  # Do nothing if pre-previous release is unknown
+                else:
+                    pre_previous_release = Release(project, pre_previous_release_entry['version'])
+                    pre_previous_release.remove(service_names=['proxy'], with_image=True, with_network=True)
+
+            print(_('Removing image...'))
+            os.remove(image_path)
 
             print(_('Done.'))
             print(_(':-)'))
         else:
-            if is_previous_release_known:
+            if is_first_launch:
                 print(_('Restoring previous release...'))
 
                 release, options = project.restore_previous_release(service_names=['proxy'])
