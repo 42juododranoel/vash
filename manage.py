@@ -409,15 +409,15 @@ class Release:
 
     def start(self, service_names):
         print(_(f'Starting release...'))
-        self._start_stop_remove(action='start', service_names)
+        self._start_stop_remove(action='start', service_names=service_names)
 
     def stop(self, service_names):
         print(_(f'Stopping release...'))
-        self._start_stop_remove(action='stop', service_names)
+        self._start_stop_remove(action='stop', service_names=service_names)
 
     def remove(self, service_names, with_image=True, with_network=True):
         print(_(f'Removing release...'))
-        self._start_stop_remove(action='remove', service_names)
+        self._start_stop_remove(action='remove', service_names=service_names)
 
         if with_image:
             command = ['docker', 'rmi'],
