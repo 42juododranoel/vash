@@ -15,19 +15,27 @@ PORT_FORWARDING = [
 
 
 def create_port_forwarding(source, destination):
-    command = [
-        'sudo', 'iptables', '-A', 'PREROUTING', '-t', 'nat', '-i', 'eth0',
-        '-p', 'tcp', '--dport', source, '-j', 'REDIRECT', '--to-port', destination
-    ]
-    check_call(command)
+    command = 'sudo iptables ' \
+        '-t nat ' \
+        '-A PREROUTING ' \
+        '-i eth0 ' \
+        '-p tcp ' \
+        f'--destination-port {source} ' \
+        '-j REDIRECT ' \
+        f'--to-port {destination}'
+    check_call(command, shell=True)
 
 
 def delete_port_forwarding(source, destination):
-    command = [
-        'sudo', 'iptables', '-D', 'PREROUTING', '-t', 'nat', '-i', 'eth0',
-        '-p', 'tcp', '--dport', source, '-j', 'REDIRECT', '--to-port', destination
-    ]
-    check_call(command)
+    command = 'sudo iptables ' \
+        '-t nat ' \
+        '-D PREROUTING ' \
+        '-i eth0 ' \
+        '-p tcp ' \
+        f'--destination-port {source} ' \
+        '-j REDIRECT ' \
+        f'--to-port {destination}'
+    check_call(command, shell=True)
 
 
 def purge_release(name, version):
@@ -227,12 +235,6 @@ class Project:
             options = self._get_run_options_for_latest()
             release.run(**options)
 
-        elif version == 'previous':
-            version, options = self._get_run_options_for_previous()
-            release = Release(project=self, version=version)
-            release.run(**options)
-            self.update_registry(version, options)
-
         else:
             # Version is like “ec45d12”
             release = Release(project=self, version=version)
@@ -241,6 +243,14 @@ class Project:
             release.run(**options)
             self.update_registry(version, options)
 
+        return release, options
+
+    def restore_previous_release(self, service_names):
+        print(_('Starting release...'))
+        version, options = self._get_run_options_for_previous()
+        release = Release(project=self, version=version)
+        release.start(service_names)
+        self.update_registry(version, options)
         return release, options
 
     def create_index_page(self):
@@ -391,6 +401,20 @@ class Release:
 
         check_call(command)
 
+    def start(self, service_names):
+        print(_(f'Starting release...'))
+        command = ['docker', 'start']
+        for service_name in service_names:
+            command.extend(f'{self.project.name}_{self.version}_{service_name}_1')
+        check_call(command)
+
+    def stop(self, service_names):
+        print(_(f'Stopping release...'))
+        command = ['docker', 'stop']
+        for service_name in service_names:
+            command.extend(f'{self.project.name}_{self.version}_{service_name}_1')
+        check_call(command)
+
 
 def command_initialize_project(name):
     project = Project(name)
@@ -430,15 +454,23 @@ def command_update_project(name, version):
     url = f'https://127.0.0.1:{options["runtime_environment"]["PROXY_PORT_443"]}/'
     if project.test_page(url):
         print('Forwarding ports...')
+
         create_port_forwarding('80', options["runtime_environment"]["PROXY_PORT_80"])
         create_port_forwarding('443', options["runtime_environment"]["PROXY_PORT_443"])
-        delete_port_forwarding('80', get_opposite_port(options["runtime_environment"]["PROXY_PORT_80"]))
-        delete_port_forwarding('443', get_opposite_port(options["runtime_environment"]["PROXY_PORT_443"]))
+
+        # If not first launch
+        is_previous_release_known = len(project.read_registry()) > 1
+        if is_previous_release_known:
+            delete_port_forwarding('80', get_opposite_port(options["runtime_environment"]["PROXY_PORT_80"]))
+            delete_port_forwarding('443', get_opposite_port(options["runtime_environment"]["PROXY_PORT_443"]))
 
         # убедиться, что сейчас заработал нужный, без всякого докер-стопа
 
+        import pdb; pdb.set_trace()
+
         url = f'https://127.0.0.1/'
-        if project.test_page(url):
+        # if project.test_page(url):
+        if True:
             # стопануть предыдушую версию
             # удалить пред предыдущую версию
             # И её имейдж previous_nginx_image =\$(docker ps -a | grep '${PRODUCTION_NGINX_CONTAINER_PREVIOUS}' | awk '{print \$2}')
@@ -448,18 +480,20 @@ def command_update_project(name, version):
             print(_('Done.'))
             print(_(':-)'))
         else:
-            print(_('Restoring previous version...'))
+            if is_previous_release_known:
+                print(_('Restoring previous release...'))
 
-            # это по-хорошему надо сделать стартом, а не раном
-            project, release, options = command_run_release(name, version='previous')
+                release, options = project.restore_previous_release(service_names=['proxy'])
 
-            create_port_forwarding('80', options["runtime_environment"]["PROXY_PORT_80"])
-            create_port_forwarding('443', options["runtime_environment"]["PROXY_PORT_443"])
+                create_port_forwarding('80', options["runtime_environment"]["PROXY_PORT_80"])
+                create_port_forwarding('443', options["runtime_environment"]["PROXY_PORT_443"])
 
-            delete_port_forwarding('80', get_opposite_port(options["runtime_environment"]["PROXY_PORT_80"]))
-            delete_port_forwarding('443', get_opposite_port(options["runtime_environment"]["PROXY_PORT_443"]))
+                delete_port_forwarding('80', get_opposite_port(options["runtime_environment"]["PROXY_PORT_80"]))
+                delete_port_forwarding('443', get_opposite_port(options["runtime_environment"]["PROXY_PORT_443"]))
 
-            raise SystemError(_('Previous version restored. Go check stuff.'))
+                raise SystemError(_('Previous release restored. Go check stuff.'))
+            else:
+                raise SystemError(_('No previous release to restore. Go check stuff.'))
     else:
         registry_entries = project.read_registry()
         del registry_entries[0]
