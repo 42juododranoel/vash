@@ -5,7 +5,7 @@ from time import sleep
 from gettext import gettext as _
 from argparse import ArgumentParser
 from functools import partial
-from subprocess import check_call
+from subprocess import check_call, CalledProcessError
 
 PORT_FORWARDING = [
     ['80', '443'],
@@ -19,9 +19,7 @@ def create_port_forwarding(source, destination):
         'sudo', 'iptables', '-A', 'PREROUTING', '-t', 'nat', '-i', 'eth0',
         '-p', 'tcp', '--dport', source, '-j', 'REDIRECT', '--to-port', destination
     ]
-    # check_call(command)
-    """# vsevoland vsevoland = (root) NOPASSWD: /bin/bash /root/scripts/delete_port_forwarding_B.sh"""
-    print(command)
+    check_call(command)
 
 
 def delete_port_forwarding(source, destination):
@@ -29,9 +27,21 @@ def delete_port_forwarding(source, destination):
         'sudo', 'iptables', '-D', 'PREROUTING', '-t', 'nat', '-i', 'eth0',
         '-p', 'tcp', '--dport', source, '-j', 'REDIRECT', '--to-port', destination
     ]
-    # check_call(command)
-    """# vsevoland vsevoland = (root) NOPASSWD: /bin/bash /root/scripts/delete_port_forwarding_B.sh"""
-    print(command)
+    check_call(command)
+
+
+def purge_release(name, version):
+    commands = [
+        ['docker', 'stop', f'{name}_{version}_proxy_1'],
+        ['docker', 'rm', f'{name}_{version}_proxy_1'],
+        ['docker', 'rmi', f'{name}_proxy:{version}'],
+        ['docker', 'network', 'rm', f'{name}_{version}_default']
+    ]
+    for command in commands:
+        try:
+            check_call(command)
+        except CalledProcessError:
+            pass
 
 
 def get_opposite_port(port):
@@ -402,28 +412,26 @@ def command_deploy_release(name, version):
     url = f'https://127.0.0.1:{options["runtime_environment"]["PROXY_PORT_443"]}/'
     if project.test_page(url):
         image_path = project.save_image(version, service_name='proxy')
-        # production_path = project.send_image(image_path)
-        project.update_production(version)
-        # После деплоя удалять мою висящую версию
-        """# vsevoland vsevoland = (root) NOPASSWD: /bin/bash /root/scripts/delete_port_forwarding_B.sh"""
+        project.send_image(image_path)
+        purge_release(name, version)
     else:
         raise SystemError(_('Go check stuff.'))
 
 
 def command_update_project(name, version):
-    # Перед апдейтом удалять, если уже висит такая версия, её имейдж и нетворк
+    purge_release(name, version)  # Delete previous release with same version if exists
 
     image_path = f'/tmp/{name}_proxy_{version}.tar'
     Project.load_image(image_path)
 
     project, release, options = command_run_release(name, version)
-    project.create_index_page()
 
+    project.create_index_page()
     url = f'https://127.0.0.1:{options["runtime_environment"]["PROXY_PORT_443"]}/'
     if project.test_page(url):
+        print('Forwarding ports...')
         create_port_forwarding('80', options["runtime_environment"]["PROXY_PORT_80"])
         create_port_forwarding('443', options["runtime_environment"]["PROXY_PORT_443"])
-
         delete_port_forwarding('80', get_opposite_port(options["runtime_environment"]["PROXY_PORT_80"]))
         delete_port_forwarding('443', get_opposite_port(options["runtime_environment"]["PROXY_PORT_443"]))
 
