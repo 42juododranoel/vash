@@ -1,79 +1,65 @@
 import os
 import sys
 import json
+import logging
+import unittest
 from time import sleep
+from random import randint
 from gettext import gettext as _
 from argparse import ArgumentParser
-from functools import partial
-from subprocess import check_call, CalledProcessError
+from subprocess import (
+    check_call,
+    check_output,
+    CalledProcessError,
+    DEVNULL,
+)
 
-PORT_FORWARDING = [
-    ['80', '443'],
-    ['10080', '10443'],
-    ['20080', '20443'],
-]
+SERVICE_NAMES_RUN = ['bundler', 'engine', 'proxy']
+SERVICE_NAMES_DEPLOY = ['proxy']
+SERVICE_NAMES_UPDATE = ['proxy']
 
-
-def create_port_forwarding(source, destination):
-    command = 'sudo iptables ' \
-        '-t nat ' \
-        '-A PREROUTING ' \
-        '-i eth0 ' \
-        '-p tcp ' \
-        f'--destination-port {source} ' \
-        '-j REDIRECT ' \
-        f'--to-port {destination}'
-    check_call(command, shell=True)
+logger = logging.getLogger('manage')
+logger.setLevel(level=logging.DEBUG)
 
 
-def delete_port_forwarding(source, destination):
-    command = 'sudo iptables ' \
-        '-t nat ' \
-        '-D PREROUTING ' \
-        '-i eth0 ' \
-        '-p tcp ' \
-        f'--destination-port {source} ' \
-        '-j REDIRECT ' \
-        f'--to-port {destination}'
-    check_call(command, shell=True)
+class Registry:
+    ENTRIES_MAX_COUNT = 10
 
+    def __init__(self, path):
+        self.path = path
 
-def purge_release(name, version):
-    commands = [
-        ['docker', 'stop', f'{name}_{version}_proxy_1'],
-        ['docker', 'rm', f'{name}_{version}_proxy_1'],
-        ['docker', 'rmi', f'{name}_proxy:{version}'],
-        ['docker', 'network', 'rm', f'{name}_{version}_default']
-    ]
-    for command in commands:
-        try:
-            check_call(command)
-        except CalledProcessError:
-            pass
+    def prepare(self):
+        logger.info(_('Preparing registry...'))
+        if not os.path.isfile(self.path):
+            logger.debug(f'Create “{self.path}”')
+            with open(self.path, 'w') as file:
+                file.write('[]')
 
+    def read(self):
+        logger.info(_('Reading registry...'))
+        with open(self.path, 'r') as file:
+            return json.load(file)
 
-def get_opposite_port(port):
-    # 10080 -> 20080
-    if port == PORT_FORWARDING[1][0]:
-        return PORT_FORWARDING[2][0]
-    # 10443 -> 20443
-    elif port == PORT_FORWARDING[1][1]:
-        return PORT_FORWARDING[2][1]
-    # 20080 -> 10080
-    elif port == PORT_FORWARDING[2][0]:
-        return PORT_FORWARDING[1][0]
-    # 20443 -> 10443
-    else:
-        return PORT_FORWARDING[1][1]
+    def write(self, entries):
+        logger.info(_('Writing registry...'))
+        with open(self.path, 'w') as file:
+            json.dump(entries, file)
+
+    def update(self, entry):
+        logger.info(_('Updating registry...'))
+        entries = self.read()
+
+        entries.insert(0, entry)
+        if len(entries) > self.ENTRIES_MAX_COUNT:
+            del entries[self.ENTRIES_MAX_COUNT - 1:]
+
+        self.write(entries)
 
 
 class Project:
     REPOSITORY_URL = 'https://github.com/vsevolod-skripnik/vash.git'
-    SERVICE_NAMES = ['bundler', 'engine', 'proxy']
-    REGISTRY_ENTRIES_MAX_COUNT = 10
 
     def __init__(self, name: str):
-        print(_(f'Initializing project “{name}”...'))
         self.name = name
 
         # ~/projects/vash/manage.py
@@ -109,152 +95,32 @@ class Project:
         self.html_pages_folder_path = f'{self.resource_folder_paths["pages"]}/_html'
 
         # ~/projects/{name}/registry.json
-        self.registry_path = f'{self.project_folder_path}/registry.json'
+        registry_path = f'{self.project_folder_path}/registry.json'
+        self.registry = Registry(path=registry_path)
 
-    def prepare_registry(self):
-        print(_('Preparing registry...'))
-        if not os.path.isfile(self.registry_path):
-            print(f'Create “{self.registry_path}”')
-            with open(self.registry_path, 'w') as file:
-                file.write('[]')
-
-    def prepare_folders(self):
-        print(_('Preparing folders...'))
-
-        folder_paths = [
+        # Store them here for easy testing
+        self.folder_paths = [
             self.project_folder_path,
             self.versions_folder_path,
             self.resources_folder_path,
         ]
-        for folder_path in folder_paths:
-            if not os.path.isdir(folder_path):
-                print(_(f'Create “{folder_path}”'))
-                os.makedirs(folder_path)
-
         for resource_name, resource_folder_path in self.resource_folder_paths.items():
-            if not os.path.isdir(resource_folder_path):
-                print(_(f'Create “{resource_folder_path}”'))
-                os.makedirs(resource_folder_path)
+            self.folder_paths.append(resource_folder_path)
 
-    def read_registry(self):
-        with open(self.registry_path, 'r') as file:
-            return json.load(file)
+    def prepare_folders(self) -> list:
+        logger.info(_('Preparing folders...'))
 
-    def write_registry(self, entries):
-        with open(self.registry_path, 'w') as file:
-            json.dump(entries, file)
+        created_folders = []
+        for folder_path in self.folder_paths:
+            if not os.path.isdir(folder_path):
+                logger.debug(_(f'Create “{folder_path}”'))
+                os.makedirs(folder_path)
+                created_folders.append(folder_path)
 
-    def update_registry(self, version, options):
-        entries = self.read_registry()
+        return created_folders
 
-        entry = {'version': version, 'options': options}
-        entries.insert(0, entry)
-        if len(entries) > self.REGISTRY_ENTRIES_MAX_COUNT:
-            del entries[self.REGISTRY_ENTRIES_MAX_COUNT - 1:]
-
-        self.write_registry(entries)
-
-    def _get_run_options_for_latest(self):
-        options = {
-            'service_names': self.SERVICE_NAMES,
-            'as_daemon': False,
-            'no_build': False,
-            'runtime_environment': {
-                'PROXY_PORT_80': PORT_FORWARDING[0][0],
-                'PROXY_PORT_443': PORT_FORWARDING[0][1],
-            }
-        }
-        return options
-
-    def _get_run_options_for_previous(self):
-        registry_entries = self.read_registry()
-        if not registry_entries:
-            raise SystemError(_('No previous version, because registry is empty.'))
-        else:
-            options = registry_entries[1]['options']
-            version = registry_entries[1]['version']
-        return version, options
-
-    def _get_run_options_for_version(self):
-        options = {
-            'service_names': ['proxy'],
-            'as_daemon': True,
-            'no_build': True,
-        }
-
-        registry_entries = self.read_registry()
-        # If registry is empty, run on port 10080
-        if not registry_entries:
-            options['runtime_environment'] = {
-                'PROXY_PORT_80': PORT_FORWARDING[1][0],
-                'PROXY_PORT_443': PORT_FORWARDING[1][1],
-            }
-        else:
-            # If previous release was running on 10080, run current on 20080
-            if registry_entries[0]['options']['runtime_environment']['PROXY_PORT_80'] == PORT_FORWARDING[1][0]:
-                options['runtime_environment'] = {
-                    'PROXY_PORT_80': PORT_FORWARDING[2][0],
-                    'PROXY_PORT_443': PORT_FORWARDING[2][1],
-                }
-            # Otherwise run on 10080
-            else:
-                options['runtime_environment'] = {
-                    'PROXY_PORT_80': PORT_FORWARDING[1][0],
-                    'PROXY_PORT_443': PORT_FORWARDING[1][1],
-                }
-
-        return options
-
-    def _install_latest(self, release):
-        if not os.path.islink(release.folder_path):
-            os.symlink(self.repository_folder_path, release.folder_path, target_is_directory=True)
-
-    def _install_version(self, release):
-        if not os.path.isdir(release.folder_path):
-            working_folder_before_install = os.getcwd()
-
-            os.chdir(self.versions_folder_path)
-            command = ['git', 'clone', f'{self.REPOSITORY_URL}', f'{release.version}']
-            check_call(command)
-
-            os.chdir(release.folder_path)
-            command = ['git', 'checkout', f'{release.folder_path}']
-            check_call(command)
-
-            command = ['git', 'reset', '--hard']
-            check_call(command)
-
-            os.chdir(working_folder_before_install)
-
-    def run_release(self, version: str):
-        print(_(f'Preparing release “{version}”...'))
-
-        if version == 'latest':
-            release = Release(project=self, version=version)
-            self._install_latest(release)
-            options = self._get_run_options_for_latest()
-            release.run(**options)
-
-        else:
-            # Version is like “ec45d12”
-            release = Release(project=self, version=version)
-            self._install_version(release)
-            options = self._get_run_options_for_version()
-            release.run(**options)
-            self.update_registry(version, options)
-
-        return release, options
-
-    def restore_previous_release(self, service_names):
-        print(_('Starting release...'))
-        version, options = self._get_run_options_for_previous()
-        release = Release(project=self, version=version)
-        release.start(service_names)
-        self.update_registry(version, options)
-        return release, options
-
-    def create_index_page(self):
-        print(_('Creating index page...'))
+    def prepare_test_page(self):
+        logging.info(_('Preparing index page...'))
 
         if not os.path.isdir(self.html_pages_folder_path):
             os.makedirs(self.html_pages_folder_path)
@@ -276,114 +142,175 @@ class Project:
             with open(page_path, 'w') as file:
                 file.write(page_content)
 
-    def test_page(self, url: str):
-        print(_(f'Testing index page...'))
+    def run_release(self, version: str):
+        release = Release(
+            project=self,
+            version=version,
+            service_names=SERVICE_NAMES_RUN,
+        )
+        release.run(do_build=True, as_daemon=False)
+        logger.info(_('Done. Perfect.'))
 
-        import requests
-        requests.packages.urllib3.disable_warnings()
+    def deploy_release(self, version: str):
+        release = Release(
+            project=self,
+            version=version,
+            service_names=SERVICE_NAMES_DEPLOY,
+        )
+        release_data = release.run(
+            do_build=True,
+            as_daemon=True,
+        )
 
-        max_tries = 3
-        for try_ in range(max_tries):
-            try:
-                response = requests.get(url, verify=False)
-            except requests.exceptions.ConnectionError:
-                print(_('Fail. Sleep 5 seconds...'))
-                sleep(5)
-            else:
-                if response.status_code == 200:
-                    print(_('Fine.'))
-                    return True
-                else:
-                    print(_(f'Failed with status code {response.status_code}.'))
-                    return False
+        self.prepare_test_page()
+        page_url = f'https://127.0.0.1:{release_data["environment"]["PROXY_PORT_443"]}/'
+        is_working_fine_on_port = test_page(page_url)
+
+        if is_working_fine_on_port:
+            saved_image_paths = release.save_images()
+            for image_path in saved_image_paths:
+                send_image(image_path)
+
+            release.prune()
+            logger.info(_('Done. Perfect.'))
         else:
-            print(_('Max tries exceeded.'))
-            return False
+            raise SystemError(_('Broken. Go check stuff'))
 
-    @staticmethod
-    def get_production_credentials():
-        credentials = {
-            'host': os.environ.get('PRODUCTION_HOST') or input(_('Production host: ')),
-            'username': os.environ.get('PRODUCTION_USERNAME') or input(_('Production username: ')),
-        }
-        return credentials
+    def update_release(self, version):
+        release = Release(
+            project=self,
+            version=version,
+            service_names=SERVICE_NAMES_UPDATE,
+        )
 
-    def save_image(self, version, service_name):
-        print(_('Saving image...'))
+        try:
+            release.prune()  # Delete previous release with same version
+        except CalledProcessError:
+            pass  # It's fine if it doesn't exist
 
-        image_name = f'{self.name}_{service_name}:{version}'
-        image_file = f'{self.name}_{service_name}_{version}.tar'
-        image_path = f'/tmp/{image_file}'
+        image_path = f'/tmp/{self.name}_proxy_{version}.tar'
+        load_image(image_path)
 
-        command = ['docker', 'save', '-o', f'{image_path}', f'{image_name}']
-        check_call(command)
-        return image_path
+        release_data = release.run(
+            do_build=False,
+            as_daemon=True,
+        )
 
-    def send_image(self, image_path):
-        print(_('Sending image...'))
+        self.prepare_test_page()
+        page_url = f'https://127.0.0.1:{release_data["environment"]["PROXY_PORT_443"]}/'
+        is_working_fine_on_port = test_page(page_url)
 
-        credentials = self.get_production_credentials()
-        file_name = image_path.split(os.path.sep)[-1]
-        production_folder_path = '/tmp'
-        command = ['scp', f'{image_path}', f'{credentials["username"]}@{credentials["host"]}:{production_folder_path}']
-        check_call(command)
-        return f'{production_folder_path}/{file_name}'
+        if is_working_fine_on_port:
+            port_forwardings = list_port_forwardings()
 
-    @staticmethod
-    def load_image(image_path):
-        print(_('Loading image...'))
-        command = ['docker', 'load']
-        with open(image_path) as file:
-            check_call(command, stdin=file)
+            create_port_forwarding(80, release_data['environment']['PROXY_PORT_80'])
+            create_port_forwarding(443, release_data['environment']['PROXY_PORT_443'])
+            for source_port, destination_port in port_forwardings:
+                delete_port_forwarding(source_port, destination_port)
 
-    def update_production(self, version):
-        print(_('Updating production...'))
-        credentials = self.get_production_credentials()
-        production_manage_file_path = os.environ.get('PRODUCTION_MANAGE_FILE_PATH') \
-            or input('Path to `manage.py` on production: ')
+            domain = os.environ.get('PRODUCTION_DOMAIN') \
+                or input(_('Production domain: '))
+            page_url = f'https://{domain}/' \
+                if domain else f'https://127.0.0.1:{release_data["environment"]["PROXY_PORT_443"]}/'
+            is_working_fine_on_domain = test_page(page_url)
 
-        command = [
-            'ssh', f'{credentials["username"]}@{credentials["host"]}',
-            'python3', production_manage_file_path, 'update', self.name, version
-        ]
-        check_call(command)
+            if is_working_fine_on_domain:
+                self.registry.update(release_data)
+                logging.info(_('Done. Perfect.'))
+            else:
+                previous_releases = self.registry.read()
+                try:
+                    previous_release = previous_releases[0]
+                except IndexError:
+                    raise SystemError(_('Broken. Previous release is unknown. Go check stuff.'))
+                else:
+                    release = Release(
+                        project=self,
+                        version=previous_release['version'],
+                        service_names=previous_release['service_names']
+                    )
+                    release.start()
+
+                    for source_port, destination_port in port_forwardings:
+                        create_port_forwarding(source_port, destination_port)
+                    delete_port_forwarding(80, release_data['environment']['PROXY_PORT_80'])
+                    delete_port_forwarding(443, release_data['environment']['PROXY_PORT_443'])
+
+                    raise SystemError(_('Broken. Previous release restored. Go check stuff.'))
+        else:
+            raise SystemError(_('Broken. Go check stuff.'))
 
 
 class Release:
-    def __init__(self, project: Project, version: str):
+    def __init__(self, project: Project, version: str, service_names: list):
         self.project = project
         self.version = version
         self.folder_path = f'{self.project.versions_folder_path}/{version}'
-        self.environment = self.get_environment()
+        self.service_names = service_names
 
-    def get_environment(self):
-        print(_(f'Getting general environment...'))
+    def _prepare_version(self):
+        if self.version == 'latest':
+            if not os.path.islink(self.folder_path):
+                os.symlink(
+                    self.project.repository_folder_path, 
+                    self.folder_path, 
+                    target_is_directory=True,
+                )
+        else:
+            if not os.path.isdir(self.folder_path):
+                working_folder_before_install = os.getcwd()
 
+                os.chdir(self.project.versions_folder_path)
+                command = ['git', 'clone', f'{self.project.REPOSITORY_URL}', f'{self.version}']
+                check_call(command)
+
+                os.chdir(self.folder_path)
+                command = ['git', 'checkout', f'{self.folder_path}']
+                check_call(command)
+
+                command = ['git', 'reset', '--hard']
+                check_call(command)
+
+                os.chdir(working_folder_before_install)
+
+    def _call_docker_command(self, command):
+        command = ['docker', command]
+        for service_name in self.service_names:
+            command.append(f'{self.project.name}_{self.version}_{service_name}_1')
+        logger.debug(command)
+        check_call(command)
+
+    def _create_environment(self) -> dict:
         environment_variables = {
             'USER_ID': f'{os.getuid()}',
             'RESOURCES_FOLDER': f'{self.project.resources_folder_path}',
         }
 
+        ports = generate_unused_ports(count=2)
+        environment_variables['PROXY_PORT_80'] = f'{ports[0]}'
+        environment_variables['PROXY_PORT_443'] = f'{ports[1]}'
+
         for resource_name, resource_folder_path in self.project.resource_folder_paths.items():
             variable_name = f'{resource_name.upper()}_FOLDER'
             environment_variables[variable_name] = f'{resource_folder_path}'
 
-        return environment_variables
-
-    def run(self, service_names: list, runtime_environment: dict, as_daemon: bool, no_build: bool):
-        print(_(f'Getting runtime environment...'))
-        for service_name in self.project.SERVICE_NAMES:
+        for service_name in self.service_names:
             variable_name = f'DOCKER_{service_name.upper()}_IMAGE'
             variable_value = f'{self.project.name}_{service_name}:{self.version}'
-            runtime_environment[variable_name] = variable_value
-        self.environment.update(runtime_environment)
+            environment_variables[variable_name] = variable_value
 
-        for variable_name, variable_value in self.environment.items():
+        return environment_variables
+
+    @staticmethod
+    def _set_environment(environment_variables: dict):
+        for variable_name, variable_value in environment_variables.items():
             os.environ[variable_name] = variable_value
 
-        print(_(f'Running release “{self.version}”...'))
+    def run(self, do_build: bool, as_daemon: bool):
+        self._prepare_version()
+
         command = ['docker-compose']
-        for service_name in (service_names or self.project.SERVICE_NAMES):
+        for service_name in self.service_names:
             command.extend(['-f', f'{self.folder_path}/compose/{service_name}.yml'])
 
         command.extend(
@@ -393,165 +320,297 @@ class Release:
                 'up',
             ]
         )
-
-        if not no_build:
+        if do_build:
             command.append('--build')
         if as_daemon:
             command.append('--detach')
 
+        environment = self._create_environment()
+        self._set_environment(environment)
+
+        logger.info(_(f'Running release...'))
         check_call(command)
 
-    def _start_stop_remove(self, action, service_names):
-        command = ['docker', action]
-        for service_name in service_names:
-            command.append(f'{self.project.name}_{self.version}_{service_name}_1')
+        release_data = {
+            'version': self.version,
+            'service_names': self.service_names,
+            'do_build': do_build,
+            'as_daemon': as_daemon,
+            'environment': environment,
+        }
+        return release_data
+
+    def start(self):
+        logger.info(_('Starting release...'))
+        self._call_docker_command(command='start')
+
+    def stop(self):
+        logger.info(_('Stopping release...'))
+        self._call_docker_command(command='stop')
+
+    def save_images(self):
+        logger.info(_('Saving images...'))
+
+        image_paths = []
+        for service_name in self.service_names:
+            image_name = f'{self.project.name}_{service_name}:{self.version}'
+            image_file = f'{self.project.name}_{service_name}_{self.version}.tar'
+            image_path = f'/tmp/{image_file}'
+
+            command = ['docker', 'save', '-o', f'{image_path}', f'{image_name}']
+            logger.debug(command)
+            check_call(command)
+
+            image_paths.append(image_path)
+
+        return image_paths
+
+    def remove(self):
+        logger.info(_('Removing release...'))
+        self._call_docker_command(command='rm')
+
+    def remove_images(self):
+        logger.info(_('Removing images...'))
+        command = ['docker', 'rmi']
+        for service_name in self.service_names:
+            command.append(f'{self.project.name}_{service_name}:{self.version}')
+        logger.debug(command)
         check_call(command)
 
-    def start(self, service_names):
-        print(_(f'Starting release...'))
-        self._start_stop_remove(action='start', service_names=service_names)
+    def remove_network(self):
+        logger.info(_('Removing network...'))
+        command = ['docker', 'network', 'rm', f'{self.project.name}_{self.version}_default']
+        logger.debug(command)
+        check_call(command)
 
-    def stop(self, service_names):
-        print(_(f'Stopping release...'))
-        self._start_stop_remove(action='stop', service_names=service_names)
-
-    def remove(self, service_names, with_image=True, with_network=True):
-        print(_(f'Removing release...'))
-        self._start_stop_remove(action='remove', service_names=service_names)
-
-        if with_image:
-            command = ['docker', 'rmi'],
-            for service_name in service_names:
-                command.append(f'{self.project.name}_{service_name}:{self.version}')
-            check_call(command)
-
-        if with_network:
-            command = ['docker', 'network', 'rm', f'{self.project.name}_{self.version}_default']
-            check_call(command)
+    def prune(self):
+        logger.info(_('Pruning release...'))
+        self.stop()
+        self.remove()
+        self.remove_images()
+        self.remove_network()
 
 
-def command_initialize_project(name):
-    project = Project(name)
-    project.prepare_folders()
-    project.prepare_registry()
-    return project
+def test_page(url: str):
+    logging.info(_(f'Testing page...'))
 
+    import requests
+    requests.packages.urllib3.disable_warnings()
 
-def command_run_release(name, version):
-    project = command_initialize_project(name)
-    release, options = project.run_release(version)
-    return project, release, options
-
-
-def command_deploy_release(name, version):
-    project, release, options = command_run_release(name, version)
-
-    project.create_index_page()
-    url = f'https://127.0.0.1:{options["runtime_environment"]["PROXY_PORT_443"]}/'
-    if project.test_page(url):
-        image_path = project.save_image(version, service_name='proxy')
-        project.send_image(image_path)
-        purge_release(name, version)
-    else:
-        raise SystemError(_('Go check stuff.'))
-
-
-def command_update_project(name, version):
-    purge_release(name, version)  # Delete previous release with same version if exists
-
-    image_path = f'/tmp/{name}_proxy_{version}.tar'
-    Project.load_image(image_path)
-
-    project, release, options = command_run_release(name, version)
-
-    project.create_index_page()
-    url = f'https://127.0.0.1:{options["runtime_environment"]["PROXY_PORT_443"]}/'
-    if project.test_page(url):
-        print('Forwarding ports...')
-
-        create_port_forwarding('80', options["runtime_environment"]["PROXY_PORT_80"])
-        create_port_forwarding('443', options["runtime_environment"]["PROXY_PORT_443"])
-
-        registry_entries = project.read_registry()
-
-        # If not first launch
-        is_first_launch = len(registry_entries) > 1
-        if is_first_launch:
-            delete_port_forwarding('80', get_opposite_port(options["runtime_environment"]["PROXY_PORT_80"]))
-            delete_port_forwarding('443', get_opposite_port(options["runtime_environment"]["PROXY_PORT_443"]))
-
-        url = f'https://127.0.0.1/'
-        # if project.test_page(url):
-        if True:
-            # If previous release is unknown
-            print('Cleaning previous releases...')
-            if not is_first_launch:
-                previous_release_entry = registry_entries[1]
-                previous_release = Release(project, previous_release_entry['version'])
-                previous_release.stop(service_names=['proxy'])
-                
-                try:
-                    pre_previous_release_entry = registry_entries[2]
-                except IndexError:
-                    pass  # Do nothing if pre-previous release is unknown
-                else:
-                    pre_previous_release = Release(project, pre_previous_release_entry['version'])
-                    pre_previous_release.remove(service_names=['proxy'], with_image=True, with_network=True)
-
-            print(_('Removing image...'))
-            os.remove(image_path)
-
-            print(_('Done.'))
-            print(_(':-)'))
+    max_tries = 3
+    for try_ in range(max_tries):
+        try:
+            response = requests.get(url, verify=False)
+        except requests.exceptions.ConnectionError:
+            logger.info(_('Fail. Sleep 5 seconds...'))
+            sleep(5)
         else:
-            if is_first_launch:
-                print(_('Restoring previous release...'))
-
-                release, options = project.restore_previous_release(service_names=['proxy'])
-
-                create_port_forwarding('80', options["runtime_environment"]["PROXY_PORT_80"])
-                create_port_forwarding('443', options["runtime_environment"]["PROXY_PORT_443"])
-
-                delete_port_forwarding('80', get_opposite_port(options["runtime_environment"]["PROXY_PORT_80"]))
-                delete_port_forwarding('443', get_opposite_port(options["runtime_environment"]["PROXY_PORT_443"]))
-
-                raise SystemError(_('Previous release restored. Go check stuff.'))
+            if response.status_code == 200:
+                logger.info(_('Fine.'))
+                return True
             else:
-                raise SystemError(_('No previous release to restore. Go check stuff.'))
+                logger.info(_(f'Failed with status code {response.status_code}.'))
+                return False
     else:
-        registry_entries = project.read_registry()
-        del registry_entries[0]
-        project.write_registry(registry_entries)
-        raise SystemError(_('Go check stuff.'))
+        logger.warning(_('Max tries exceeded.'))
+        return False
 
 
-def get_command(argv):
-    category_parser = ArgumentParser()
-    category_parser.add_argument('category')
-    namespace, arguments = category_parser.parse_known_args(argv[1:])
+def send_image(image_path):
+    logger.info(_('Sending image...'))
 
-    argument_parser = ArgumentParser()
-    argument_parser.add_argument('name', help=_('Project name.'))
+    host = os.environ.get('PRODUCTION_HOST') or input(_('Production host: '))
+    username = os.environ.get('PRODUCTION_USERNAME') or input(_('Production username: '))
 
-    if namespace.category == 'initialize':
-        command_function = command_initialize_project
+    file_name = image_path.split(os.path.sep)[-1]
+    production_folder_path = '/tmp'
+    file_path = f'{production_folder_path}/{file_name}'
 
-    elif namespace.category in ('run', 'deploy', 'update'):
-        argument_parser.add_argument('version', help=_('Project version.'))
+    command = ['scp', f'{image_path}', f'{username}@{host}:{production_folder_path}']
+    logger.debug(command)
+    check_call(command)
+    return file_path
+
+
+def load_image(image_path):
+    logger.info(_('Loading image...'))
+    command = ['docker', 'load']
+    with open(image_path) as file:
+        logger.debug(f'{command}, stdin={image_path}')
+        check_call(command, stdin=file)
+
+
+def generate_unused_ports(count):
+    ports = []
+    for _ in range(count):
+        while True:
+            port = randint(1025, 65535)
+            command = f'sudo lsof -i -P -n | grep ":{port} (LISTEN)"'
+            try:
+                check_call(command, stdout=DEVNULL, shell=True)
+            except CalledProcessError:  # Port is not in use
+                if port not in ports:
+                    ports.append(port)
+                    break
+
+    return ports
+
+
+def list_port_forwardings():
+    command = 'sudo iptables -L PREROUTING -t nat'
+    output = check_output(command, shell=True).decode()
+    port_forwardings = []
+    for line in output.splitlines():
+        if line.startswith('REDIRECT'):
+            part_with_forwarding = line[line.find('tcp dpt:') + len(('tcp dpt:')):]
+            parts = part_with_forwarding.partition(' redir ports ')
+            source_port = {'http': '80', 'https': '443'}[parts[0]]
+            destination_port = parts[2]
+            port_forwardings.append([source_port, destination_port])
+
+    return port_forwardings
+
+
+def create_port_forwarding(source, destination):
+    logger.info(f'Forwarding {source} → {destination}...')
+    command = 'sudo iptables ' \
+        '-t nat ' \
+        '-A PREROUTING ' \
+        '-i eth0 ' \
+        '-p tcp ' \
+        f'--destination-port {source} ' \
+        '-j REDIRECT ' \
+        f'--to-port {destination}'
+    logger.debug(command)
+    check_call(command, shell=True)
+
+
+def delete_port_forwarding(source, destination):
+    logger.info(f'Removing forwarding {source} → {destination}')
+    command = 'sudo iptables ' \
+        '-t nat ' \
+        '-D PREROUTING ' \
+        '-i eth0 ' \
+        '-p tcp ' \
+        f'--destination-port {source} ' \
+        '-j REDIRECT ' \
+        f'--to-port {destination}'
+    logger.debug(command)
+    check_call(command, shell=True)
+
+
+def command_run(name, version):
+    project = Project(name=name)
+    project.prepare_folders()
+    project.run_release(version)
+
+
+def command_deploy(name, version):
+    project = Project(name=name)
+    project.prepare_folders()
+    project.deploy_release(version)
+
+
+def command_update(name, version):
+    project = Project(name=name)
+    project.prepare_folders()
+    project.update_release(version)
+
+
+def main(argv):
+    category_argument_parser = ArgumentParser()
+    category_argument_parser.add_argument('category')
+    namespace, arguments = category_argument_parser.parse_known_args(argv[1:])
+
+    command_argument_parser = ArgumentParser()
+    command_argument_parser.add_argument('name', help=_('Project name.'))
+
+    if namespace.category in ('run', 'deploy', 'update'):
+        command_argument_parser.add_argument('version', help=_('Project version.'))
+
         command_switch = {
-            'run': command_run_release,
-            'deploy': command_deploy_release,
-            'update': command_update_project,
+            'run': command_run,
+            'deploy': command_deploy,
+            'update': command_update,
         }
         command_function = command_switch[namespace.category]
 
     else:
-        raise SystemExit(_(f'Unknown command category {namespace.category}.'))
+        raise SystemError(_(f'Unknown command category {namespace.category}.'))
 
-    command_arguments = argument_parser.parse_args(arguments)
-    return partial(command_function, **vars(command_arguments))
+    command_arguments = command_argument_parser.parse_args(arguments)
+    command_function(**vars(command_arguments))
+
+
+TEST_PROJECT_NAME = 'vsevoland'
+TEST_RELEASE_VERSION = 'c44f2be'
+TEST_RELEASE_SERVICE_NAMES = ['proxy']
+
+
+class TestCommands(unittest.TestCase):
+    @unittest.skip  # Tests can't proceed because running doesn't support daemon mode
+    def test_run(self):
+        command_run(name=TEST_PROJECT_NAME, version=TEST_RELEASE_VERSION)
+
+    @unittest.skip  # Sending image to production takes too long time for tests
+    def test_deploy(self):
+        command_deploy(name=TEST_PROJECT_NAME, version=TEST_RELEASE_VERSION)
+
+    def test_update(self):
+        command_update(name=TEST_PROJECT_NAME, version=TEST_RELEASE_VERSION)
+
+
+class TestProject(unittest.TestCase):
+    def setUp(self):
+        self.project = Project(name=TEST_PROJECT_NAME)
+
+    def test_create_folders(self):
+        self.project.prepare_folders()
+        for folder_path in self.project.folder_paths:
+            self.assertTrue(os.path.isdir(folder_path))
+
+
+class TestRelease(unittest.TestCase):
+    def setUp(self):
+        self.project = Project(name=TEST_PROJECT_NAME)
+        self.project.prepare_folders()
+
+        self.release = Release(
+            project=self.project, 
+            version=TEST_RELEASE_VERSION, 
+            service_names=TEST_RELEASE_SERVICE_NAMES
+        )
+
+    def test_run(self):
+        self.release.run(do_build=True, as_daemon=True)
+
+
+class TestRunningRelease(TestRelease):
+    def test_start(self):
+        self.release.stop()
+        self.release.start()
+
+    def test_stop(self):
+        self.release.stop()
+
+    def test_remove(self):
+        self.release.stop()
+        self.release.remove()
+
+    @unittest.skip  # Broken, but not useful
+    def test_remove_images(self):
+        self.release.stop()
+        self.release.remove()
+        self.release.remove_images()
+
+    @unittest.skip  # Broken, but not useful
+    def test_remove_network(self):
+        self.release.stop()
+        self.release.remove()
+        self.release.remove_images()
+        self.release.remove_network()
 
 
 if __name__ == '__main__':
-    command = get_command(sys.argv)
-    command()
+    logger.setLevel(level=logging.INFO)
+    main(sys.argv)
