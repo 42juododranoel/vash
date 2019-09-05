@@ -119,6 +119,11 @@ class Project:
 
         return created_folders
 
+    def prepare(self):
+        logging.info(_('Preparing project...'))
+        self.prepare_folders()
+        self.registry.prepare()
+
     def prepare_test_page(self):
         logging.info(_('Preparing index page...'))
 
@@ -501,19 +506,19 @@ def delete_port_forwarding(source, destination):
 
 def command_run(name, version):
     project = Project(name=name)
-    project.prepare_folders()
+    project.prepare()
     project.run_release(version)
 
 
 def command_deploy(name, version):
     project = Project(name=name)
-    project.prepare_folders()
+    project.prepare()
     project.deploy_release(version)
 
 
 def command_update(name, version):
     project = Project(name=name)
-    project.prepare_folders()
+    project.prepare()
     project.update_release(version)
 
 
@@ -573,7 +578,7 @@ class TestProject(unittest.TestCase):
 class TestRelease(unittest.TestCase):
     def setUp(self):
         self.project = Project(name=TEST_PROJECT_NAME)
-        self.project.prepare_folders()
+        self.project.prepare()
 
         self.release = Release(
             project=self.project, 
