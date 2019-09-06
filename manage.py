@@ -18,6 +18,10 @@ SERVICE_NAMES_RUN = ['bundler', 'engine', 'proxy']
 SERVICE_NAMES_DEPLOY = ['proxy']
 SERVICE_NAMES_UPDATE = ['proxy']
 
+TEST_PROJECT_NAME = 'vsevoland'
+TEST_RELEASE_VERSION = 'c44f2be'
+TEST_RELEASE_SERVICE_NAMES = ['proxy']
+
 logger = logging.getLogger('manage')
 logger.setLevel(level=logging.DEBUG)
 
@@ -245,6 +249,23 @@ class Project:
         else:
             raise SystemError(_('Broken. Go check stuff.'))
 
+    def sync(self):
+        logging.info(_('Syncing with production...'))
+
+        host = os.environ.get('PRODUCTION_HOST') \
+            or input(_('Production host: '))
+        username = os.environ.get('PRODUCTION_USERNAME') \
+            or input(_('Production username: '))
+        resources_folder_path = os.environ.get('PRODUCTION_RESOURCES_FOLDER_PATH') \
+            or input(_('Production resources folder path: '))
+
+        if not resources_folder_path.endswith('/'):
+            resources_folder_path = f'{resource_folder_path}/'
+
+        command = f'rsync -zarvh {self.resources_folder_path}/ {username}@{host}:{resources_folder_path}'
+        logging.debug(command)
+        check_call(command, shell=True)
+
 
 class Release:
     def __init__(self, project: Project, version: str, service_names: list):
@@ -257,8 +278,8 @@ class Release:
         if self.version == 'latest':
             if not os.path.islink(self.folder_path):
                 os.symlink(
-                    self.project.repository_folder_path, 
-                    self.folder_path, 
+                    self.project.repository_folder_path,
+                    self.folder_path,
                     target_is_directory=True,
                 )
         else:
@@ -441,7 +462,7 @@ def load_image(image_path):
     logger.info(_('Loading image...'))
     command = ['docker', 'load']
     with open(image_path) as file:
-        logger.debug(f'{command}, stdin={image_path}')
+        logger.debug(f'{command}, stdin="{image_path}"')
         check_call(command, stdin=file)
 
 
@@ -504,22 +525,26 @@ def delete_port_forwarding(source, destination):
     check_call(command, shell=True)
 
 
-def command_run(name, version):
+def get_prepared_project(name):
     project = Project(name=name)
     project.prepare()
-    project.run_release(version)
+    return project
+
+
+def command_run(name, version):
+    get_prepared_project(name).run_release(version)
 
 
 def command_deploy(name, version):
-    project = Project(name=name)
-    project.prepare()
-    project.deploy_release(version)
+    get_prepared_project(name).deploy_release(version)
 
 
 def command_update(name, version):
-    project = Project(name=name)
-    project.prepare()
-    project.update_release(version)
+    get_prepared_project(name).update_release(version)
+
+
+def command_sync(name):
+    get_prepared_project(name).sync()
 
 
 def main(argv):
@@ -540,16 +565,14 @@ def main(argv):
         }
         command_function = command_switch[namespace.category]
 
+    elif namespace.category == 'sync':
+        command_function = command_sync
+
     else:
         raise SystemError(_(f'Unknown command category {namespace.category}.'))
 
     command_arguments = command_argument_parser.parse_args(arguments)
     command_function(**vars(command_arguments))
-
-
-TEST_PROJECT_NAME = 'vsevoland'
-TEST_RELEASE_VERSION = 'c44f2be'
-TEST_RELEASE_SERVICE_NAMES = ['proxy']
 
 
 class TestCommands(unittest.TestCase):
@@ -581,8 +604,8 @@ class TestRelease(unittest.TestCase):
         self.project.prepare()
 
         self.release = Release(
-            project=self.project, 
-            version=TEST_RELEASE_VERSION, 
+            project=self.project,
+            version=TEST_RELEASE_VERSION,
             service_names=TEST_RELEASE_SERVICE_NAMES
         )
 
