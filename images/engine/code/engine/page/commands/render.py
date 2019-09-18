@@ -222,8 +222,9 @@ def render(slug, is_test=False, no_images=False):
         script_data['defer'] = 'defer'
         json_blocks['scripts'].append(script_data)
 
+    key = f'/{slug}' if slug != 'index' else '/'
     json_data = {
-        f'/{slug}': {
+        key: {
             'title': page_meta['title'],
             'blocks': json_blocks,
         }
@@ -231,7 +232,7 @@ def render(slug, is_test=False, no_images=False):
     for related_page_slug in related_page_slugs:
         print(f'  Processing related page “{related_page_slug}”')
         with open(f'{RENDERED_JSON_FOLDER}/{related_page_slug}.json') as file:
-            related_page_link = f'/{related_page_slug}'
+            related_page_link = f'/{related_page_slug}' if related_page_slug != 'index' else '/'
             json_data[related_page_link] = json.load(file)[related_page_link]
     rendered_json_content = json.dumps(json_data)
 
