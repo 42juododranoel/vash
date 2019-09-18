@@ -7,13 +7,6 @@ import engine.template
 
 _ = gettext.gettext
 
-# Темплейт -- это типичный джанготемплейт
-# В странице нагромождены html-файлы с названиями блоков
-# Можно page render -> засунет в темплейт все наши блочки и выхлопнет в /resources куда-нибудь там
-# В _meta.json можно задать всем блокам конфиг
-# Ещё есть global.json
-# Завтра пишем рендер
-
 
 def get_namespaced_command(argv):
     parser = argparse.ArgumentParser()
