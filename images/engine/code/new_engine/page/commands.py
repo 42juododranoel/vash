@@ -23,7 +23,7 @@ class DeletePageCommand(BasePageCommand):
         page.delete()
 
 
-class RepathPageCommand(BasePageCommand):
+class RenamePageCommand(BasePageCommand):
     def get_parser(self):
         parser = super().get_parser()
         parser.add_argument('new_path', help='New page path.')
@@ -39,7 +39,7 @@ class RepathPageCommand(BasePageCommand):
 command_switch = {
     'create-page': CreatePageCommand,
     'delete-page': DeletePageCommand,
-    'rename-page': RepathPageCommand,
+    'rename-page': RenamePageCommand,
 }
 
 command_switch['make-page'] = command_switch['create-page']
