@@ -22,7 +22,7 @@ class Template:
     def validate_name(name):
         pattern = r'[\w-]+'
         if not re.fullmatch(pattern, name):
-            raise ValidationError(f'Invalid template name. Use pattern “{pattern}”')
+            raise ValidationError(f'Invalid template name. Use pattern “{pattern}”.')
 
     def validate(self):
         self.validate_name(self.name)

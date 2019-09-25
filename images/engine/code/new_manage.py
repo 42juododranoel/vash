@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 
 from new_engine.errors import error
 from new_engine.logger import logger
+from new_engine.page.commands import command_switch as page_commands
 from new_engine.template.commands import command_switch as template_commands
 
 
@@ -14,6 +15,7 @@ if __name__ == '__main__':
     namespace, remaining_arguments = namespace_parser.parse_known_args(argv[1:])
 
     command_switch = {}
+    command_switch.update(page_commands)
     command_switch.update(template_commands)
 
     try:
