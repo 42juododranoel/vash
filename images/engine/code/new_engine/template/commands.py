@@ -1,4 +1,4 @@
-from new_engine.command import AbstractCommand
+from new_engine.command.models import AbstractCommand
 from new_engine.template.models import Template
 
 
