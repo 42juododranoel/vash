@@ -83,7 +83,7 @@ def sanitize_html(html):
                     if class_ in tag_classes
                 ]
                 for class_ in tag_classes:
-                    if any([class_.endswith('-spacer'), class_.startswith('before-')]):
+                    if any([class_.endswith('-below'), class_.endswith('-above')]):
                         tag_to_wrapper_classes.append(class_)
                         tag_classes.remove(class_)
                 tag.attrs['class'] = tag_classes

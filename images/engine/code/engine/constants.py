@@ -11,8 +11,8 @@ TEMPLATES_FOLDER = '/resources/templates'
 RENDERED_HTML_FOLDER = f'{PAGES_FOLDER}/_html'
 RENDERED_JSON_FOLDER = f'{PAGES_FOLDER}/_json'
 
-TAGS_TO_WRAP = ['p', 'h1', 'h2', 'h3', 'figcaption', 'ul']
-CLASSES_TO_WRAP = ['title', 'subscription', 'accent', 'before-list', 'before-indent', 'indent-after']
+TAGS_TO_WRAP = ['p', 'h1', 'h2', 'h3', 'figcaption', 'ul', 'ol']
+CLASSES_TO_WRAP = ['subscription', 'medium-heading', 'indent']
 
 SLUG_HELP_TEXT = _('0-9, a-z, A-Z, -, _.')
 REQUIRED_BLOCKS = ['meta', 'styles', 'body']
