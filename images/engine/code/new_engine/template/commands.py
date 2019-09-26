@@ -42,7 +42,10 @@ command_switch = {
     'rename-template': RenameTemplateCommand,
 }
 
-command_switch['make-template'] = command_switch['create-template']
-command_switch['prepare-template'] = command_switch['create-template']
-
-command_switch['remove-template'] = command_switch['delete-template']
+command_aliases = {
+    'create-template': ['make-template', 'prepare-template'],
+    'delete-template': ['remove-template'],
+}
+for alias, commands in command_aliases.items():
+    for command in commands:
+        command_switch[command] = command_switch[alias]

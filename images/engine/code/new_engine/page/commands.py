@@ -42,7 +42,10 @@ command_switch = {
     'rename-page': RenamePageCommand,
 }
 
-command_switch['make-page'] = command_switch['create-page']
-command_switch['prepare-page'] = command_switch['create-page']
-
-command_switch['remove-page'] = command_switch['delete-page']
+command_aliases = {
+    'create-page': ['make-page', 'prepare-page'],
+    'delete-page': ['remove-page'],
+}
+for alias, commands in command_aliases.items():
+    for command in commands:
+        command_switch[command] = command_switch[alias]
