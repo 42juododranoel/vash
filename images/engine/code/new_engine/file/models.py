@@ -10,11 +10,14 @@ class File:
         self.folder = folder
         self.extension = extension
 
+    def get_initial_content(self):
+        return ''
+
     def create(self):
         if not self.is_present:
             logger.debug(f'Create file “{self.path}”')
             with open(self.path, 'w') as file:
-                file.write('')
+                file.write(self.get_initial_content())
 
     def delete(self):
         if self.is_present:
@@ -35,3 +38,8 @@ class File:
     @property
     def is_present(self):
         return os.path.isfile(self.path)
+
+
+class JsonFile(File):
+    def get_initial_content(self):
+        return '{}'
