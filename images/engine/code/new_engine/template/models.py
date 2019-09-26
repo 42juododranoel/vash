@@ -12,7 +12,7 @@ from new_engine.folder.models import Folder
 class Template:
     def __init__(self, name: str):
         self.name = name
-        self.folder = Folder(TEMPLATES_FOLDER, self.name)
+        self.folder = Folder(f'{TEMPLATES_FOLDER}/{self.name}')
         self.files = {
             'meta': File(self.folder, self.name, 'json'),
             'template': File(self.folder, self.name, 'html'),
@@ -43,6 +43,6 @@ class Template:
         """Change all occurencies of this template name in all files"""
         logger.info(f'Renaming template “{self.name}” to “{new_name}”...')
 
-        self.folder.rename(new_name)
+        self.folder.move(f'{TEMPLATES_FOLDER}/{new_name}')
         for _, file in self.files.items():
             file.rename(new_name)

@@ -26,9 +26,9 @@ class File:
 
     def rename(self, new_name):
         if self.is_present:
+            logger.debug(f'Renaming file “{self.name}” to “{new_name}”')
             old_path = self.path
-            self.name = new_name
-            logger.debug(f'Renaming file “{old_path}” to “{self.path}”')
+            self.__init__(self.folder, new_name, self.extension)
             os.rename(old_path, self.path)
 
     @property
