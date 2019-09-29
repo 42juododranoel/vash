@@ -1,51 +1,52 @@
-from new_engine.command.models import AbstractCommand
+import re
+
+import click
+
 from new_engine.page.models import Page
 
 
-class BasePageCommand(AbstractCommand):
-    def get_parser(self):
-        parser = super().get_parser()
-        parser.add_argument('path', help='Page path.')
-        return parser
+def validate_path(path):
+    pattern = r'[-a-zA-Z0-9/]+'
+    if re.fullmatch(pattern, path):
+        return path
+    else:
+        raise click.BadParameter(f'Invalid page path “{path}”. Use pattern “{pattern}”.')
 
 
-class CreatePageCommand(BasePageCommand):
-    def execute(self, path):
+def clean_paths(context, parameter, value):
+    return [validate_path(path) for path in value]
+
+
+def clean_path(context, parameter, value):
+    return validate_path(value)
+
+
+@click.command()
+@click.argument('paths', nargs=-1, callback=clean_paths)
+def create_pages(paths):
+    for path in paths:
         page = Page(path)
-        page.validate()
         page.create()
 
 
-class DeletePageCommand(BasePageCommand):
-    def execute(self, path):
+@click.command()
+@click.argument('paths', nargs=-1, callback=clean_paths)
+def delete_pages(paths):
+    for path in paths:
         page = Page(path)
-        page.validate()
         page.delete()
 
 
-class RenamePageCommand(BasePageCommand):
-    def get_parser(self):
-        parser = super().get_parser()
-        parser.add_argument('new_path', help='New page path.')
-        return parser
-
-    def execute(self, path, new_path):
-        page = Page(path)
-        page.validate()
-        page.validate_path(new_path)
-        page.rename(new_path)
+@click.command()
+@click.argument('path', callback=clean_path)
+@click.argument('new_path', callback=clean_path)
+def rename_page(path, new_path):
+    page = Page(path)
+    page.rename(new_path)
 
 
-command_switch = {
-    'create-page': CreatePageCommand,
-    'delete-page': DeletePageCommand,
-    'rename-page': RenamePageCommand,
-}
-
-command_aliases = {
-    'create-page': ['make-page', 'prepare-page'],
-    'delete-page': ['remove-page'],
-}
-for alias, commands in command_aliases.items():
-    for command in commands:
-        command_switch[command] = command_switch[alias]
+page_commands = [
+    create_pages,
+    delete_pages,
+    rename_page,
+]

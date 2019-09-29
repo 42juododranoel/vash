@@ -1,4 +1,3 @@
-import re
 import os
 import shutil
 
@@ -16,15 +15,6 @@ class Page:
 
         self.folder = Folder(f'{PAGES_FOLDER}/{self.path}')
         self.files = {'meta': File(self.folder, self.slug, 'json')}
-
-    @staticmethod
-    def validate_path(path):
-        pattern = r'[-\w/]+'
-        if not re.fullmatch(pattern, path):
-            raise ValidationError(f'Invalid page path. Use pattern “{pattern}”.')
-
-    def validate(self):
-        self.validate_path(self.path)
 
     def create(self):
         """Create folder structure and files"""

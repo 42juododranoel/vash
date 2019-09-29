@@ -18,15 +18,6 @@ class Template:
             'template': File(self.folder, self.name, 'html'),
         }
 
-    @staticmethod
-    def validate_name(name):
-        pattern = r'[\w-]+'
-        if not re.fullmatch(pattern, name):
-            raise ValidationError(f'Invalid template name. Use pattern “{pattern}”.')
-
-    def validate(self):
-        self.validate_name(self.name)
-
     def create(self):
         """Create folder structure and files"""
         logger.info(f'Creating template “{self.name}”...')

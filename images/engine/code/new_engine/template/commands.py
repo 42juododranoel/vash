@@ -1,51 +1,52 @@
-from new_engine.command.models import AbstractCommand
+import re
+
+import click
+
 from new_engine.template.models import Template
 
 
-class BaseTemplateCommand(AbstractCommand):
-    def get_parser(self):
-        parser = super().get_parser()
-        parser.add_argument('name', help='Template name.')
-        return parser
+def validate_name(name):
+    pattern = r'[\w-]+'
+    if re.fullmatch(pattern, name):
+        return name
+    else:
+        raise click.BadParameter(f'Invalid template name “{name}”. Use pattern “{pattern}”.')
 
 
-class CreateTemplateCommand(BaseTemplateCommand):
-    def execute(self, name):
-        template = Template(name=name)
-        template.validate()
+def clean_names(context, parameter, value):
+    return [validate_name(name) for name in value]
+
+
+def clean_name(context, parameter, value):
+    return validate_name(value)
+
+
+@click.command()
+@click.argument('names', nargs=-1, callback=clean_names)
+def create_templates(names):
+    for name in names:
+        template = Template(name)
         template.create()
 
 
-class DeleteTemplateCommand(BaseTemplateCommand):
-    def execute(self, name):
-        template = Template(name=name)
-        template.validate()
+@click.command()
+@click.argument('names', nargs=-1, callback=clean_names)
+def delete_templates(names):
+    for name in names:
+        template = Template(name)
         template.delete()
 
 
-class RenameTemplateCommand(BaseTemplateCommand):
-    def get_parser(self):
-        parser = super().get_parser()
-        parser.add_argument('new_name', help='New template name.')
-        return parser
-
-    def execute(self, name, new_name):
-        template = Template(name=name)
-        template.validate()
-        template.validate_name(new_name)
-        template.rename(new_name)
+@click.command()
+@click.argument('name', callback=clean_name)
+@click.argument('new_name', callback=clean_name)
+def rename_template(name, new_name):
+    template = Template(name)
+    template.rename(new_name)
 
 
-command_switch = {
-    'create-template': CreateTemplateCommand,
-    'delete-template': DeleteTemplateCommand,
-    'rename-template': RenameTemplateCommand,
-}
-
-command_aliases = {
-    'create-template': ['make-template', 'prepare-template'],
-    'delete-template': ['remove-template'],
-}
-for alias, commands in command_aliases.items():
-    for command in commands:
-        command_switch[command] = command_switch[alias]
+template_commands = [
+    create_templates,
+    delete_templates,
+    rename_template,
+]
