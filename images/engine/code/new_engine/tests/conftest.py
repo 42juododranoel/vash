@@ -45,6 +45,14 @@ def node(request):
     node.delete()
 
 
+@pytest.fixture(params=[File, Folder, Page, Template])
+def present_node(request):
+    node = request.param(TEST_NODE_PATH)
+    node.create()
+    yield node
+    node.delete()
+
+
 @pytest.fixture(params=[Resource, Page, Template])
 def resource(request):
     resource = request.param(TEST_RESOURCE_PATH)
