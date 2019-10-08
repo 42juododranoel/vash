@@ -1,14 +1,19 @@
 import pytest
 
 from new_engine.tests.conftest import (
-    TEST_NODE_PATHS,
-    TEST_NODE_NEW_PATH,
+    NODE_PATHS,
     NODE_SUBCLUSSES,
+    # NODE_NEW_PATH,
 )
 
 
-@pytest.fixture(params=TEST_NODE_PATHS)
+@pytest.fixture(params=NODE_PATHS)
 def node_path(request):
+    return request.param
+
+
+@pytest.fixture(params=NODE_PATHS[::-1])
+def node_new_path(request):
     return request.param
 
 
@@ -20,7 +25,7 @@ def node(request, node_path):
 
 
 @pytest.fixture(params=NODE_SUBCLUSSES)
-def present_node(request, node_path):
+def created_node(request, node_path):
     node = request.param(node_path)
     node.create()
     yield node
@@ -28,9 +33,11 @@ def present_node(request, node_path):
 
 
 @pytest.fixture(params=NODE_SUBCLUSSES)
-def moved_node(request, node_path):
+def moved_node(request, node_path, node_new_path):
     node = request.param(node_path)
     node.create()
-    node.move(TEST_NODE_NEW_PATH)
+    node.move(node_new_path)
     yield node
     node.delete()
+    node_before_moving = request.param(node_path)
+    node_before_moving.delete()
