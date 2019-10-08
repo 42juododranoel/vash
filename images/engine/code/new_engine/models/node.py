@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from new_engine.logger import logger
+from click import echo
 
 
 class Node:
@@ -22,19 +22,19 @@ class Node:
 
     def create(self):
         if not self.is_present:
-            logger.debug(f'Create “{self.path}”')
+            echo(f'Create “{self.path}”')
             if self.parent:  # Parent may be '' if path is 'plain', no 'hie/rar/chy'
                 os.makedirs(self.parent, exist_ok=True)
             self._create(self.path)
 
     def delete(self):
         if self.is_present:
-            logger.debug(f'Delete “{self.path}”')
+            echo(f'Delete “{self.path}”')
             self._delete(self.path)
 
     def move(self, new_path):
         if self.is_present:
-            logger.debug(f'Moving “{self.path}” to “{new_path}”')
+            echo(f'Moving “{self.path}” to “{new_path}”')
             old_path = self.path
             self.__init__(new_path)
             shutil.move(old_path, self.path)

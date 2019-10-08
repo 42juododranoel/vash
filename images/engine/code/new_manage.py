@@ -7,10 +7,8 @@ from new_engine.commands.template import template_commands
 
 
 @click.group()
-@click.option('--verbose', is_flag=True, help='Will print verbose messages.')
-def command_line_interpreter(verbose):
-    if verbose:
-        logging.basicConfig(level=logging.DEBUG)
+def command_line_interpreter():
+    pass
 
 
 if __name__ == '__main__':

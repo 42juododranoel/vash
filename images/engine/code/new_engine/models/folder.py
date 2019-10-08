@@ -1,7 +1,6 @@
 import os
 import shutil
 
-from new_engine.logger import logger
 from new_engine.models.node import Node
 
 
