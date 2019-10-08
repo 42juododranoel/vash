@@ -9,16 +9,19 @@ from new_engine.tests.conftest import (
 
 
 class TestCommonNodeMethods:
-    def test_attributes_after_initializing(self, node):
-        assert node.path == TEST_NODE_PATH
-        assert node.name == TEST_NODE_PATH.split('/')[-1]
-        assert node.parent == '/'.join(TEST_NODE_PATH.split('/')[:-1])
+    # TODO: test _get_absolute_path
+    # TODO: test __init__
+    # TODO: test path
+
+    # is_present
 
     def test_is_present_true_when_present(self, present_node):
         assert present_node.is_present
 
     def test_is_present_false_when_missing(self, node):
         assert not node.is_present
+
+    # create
 
     def test_create_idles_when_present(self, present_node):
         assert present_node.is_present
@@ -29,6 +32,8 @@ class TestCommonNodeMethods:
         node.create()
         assert node.is_present
 
+    # delete
+
     def test_delete_deletes_when_present(self, present_node):
         assert present_node.is_present
         present_node.delete()
@@ -38,13 +43,15 @@ class TestCommonNodeMethods:
         assert not node.is_present
         node.delete()
 
-    def test_move_moves_when_present(self, present_node):
-        assert present_node.is_present
-        old_path = present_node.path
-        present_node.move(TEST_NODE_NEW_PATH)
-        assert present_node.is_present
-        assert not present_node._check_presence(old_path)
+    # move
+
+    def test_move_moves_when_present(self, moved_node):
+        assert moved_node.is_present
 
     def test_move_idles_when_missing(self, node):
         assert not node.is_present
         node.move(TEST_NODE_NEW_PATH)
+
+    # TODO: test move to the same folder
+    # TODO: test move to upper folder
+    # TODO: test move to lower folder ← hard

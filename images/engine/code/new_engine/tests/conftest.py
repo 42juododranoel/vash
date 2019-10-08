@@ -6,8 +6,11 @@ from new_engine.models.resource import Resource
 from new_engine.models.file import File
 from new_engine.models.folder import Folder
 
+NODE_SUBCLUSSES = [File, Folder, Resource, Template, Page]
+
 TEST_NODE_PATH = '/tmp/the-holy-grail/french-castle/trojan-badger'
 TEST_NODE_NEW_PATH = '/tmp/the-holy-grail/the-black-knight'
+TEST_NODE_PATHS = [TEST_NODE_PATH, TEST_NODE_NEW_PATH]
 
 TEST_RESOURCE_PATH = TEST_NODE_PATH
 TEST_RESOURCE_NEW_PATH = TEST_NODE_NEW_PATH
@@ -36,21 +39,6 @@ def folder(request):
     folder = Folder(TEST_FOLDER_PATH)
     yield folder
     folder.delete()
-
-
-@pytest.fixture(params=[File, Folder, Page, Template])
-def node(request):
-    node = request.param(TEST_NODE_PATH)
-    yield node
-    node.delete()
-
-
-@pytest.fixture(params=[File, Folder, Page, Template])
-def present_node(request):
-    node = request.param(TEST_NODE_PATH)
-    node.create()
-    yield node
-    node.delete()
 
 
 @pytest.fixture(params=[Resource, Page, Template])
