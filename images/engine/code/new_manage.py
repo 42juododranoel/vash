@@ -2,20 +2,20 @@ import logging
 
 import click
 
-from new_engine.page.commands import page_commands
-from new_engine.template.commands import template_commands
+from new_engine.commands.page import page_commands
+from new_engine.commands.template import template_commands
 
 
 @click.group()
-@click.option('--verbose', is_flag=True, help="Will print verbose messages.")
-def cli(verbose):
+@click.option('--verbose', is_flag=True, help='Will print verbose messages.')
+def command_line_interpreter(verbose):
     if verbose:
         logging.basicConfig(level=logging.DEBUG)
 
 
 if __name__ == '__main__':
-    for commands in [template_commands, page_commands]:
+    for commands in [page_commands, template_commands]:
         for command in commands:
-            cli.add_command(command)
+            command_line_interpreter.add_command(command)
     else:
-        cli()
+        command_line_interpreter()

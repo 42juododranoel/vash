@@ -3,5 +3,6 @@ images/bundler/code/node_modules/
 images/bundler/code/package-lock.json
 
 __pycache__
+.pytest_cache
 .idea/
 venv/
