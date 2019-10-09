@@ -1,8 +1,8 @@
 from new_engine.models.file import File
-from new_engine.models.page import Page
 from new_engine.models.folder import Folder
-from new_engine.models.template import Template
 from new_engine.models.resource import Resource
+from new_engine.models.resources.page import Page
+from new_engine.models.resources.template import Template
 
 NODE_SUBCLUSSES = [File, Folder, Resource, Template, Page]
 

@@ -1,6 +1,6 @@
 import pytest
 
-from new_engine.models.page import Page
+from new_engine.models.resources.page import Page
 from new_engine.commands.page import create_page, delete_page
 
 

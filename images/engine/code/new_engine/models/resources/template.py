@@ -1,6 +1,6 @@
-from new_engine.models.resource import Resource
 from new_engine.models.file import File
 from new_engine.models.folder import Folder
+from new_engine.models.resource import Resource
 
 
 class Template(Resource):

@@ -1,6 +1,6 @@
 import pytest
 
-from new_engine.models.template import Template
+from new_engine.models.resources.template import Template
 from new_engine.commands.template import create_template, delete_template
 
 

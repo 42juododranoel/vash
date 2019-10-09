@@ -1,8 +1,8 @@
 import click
 
 from new_engine.commands.cli import cli
-from new_engine.models.template import Template
 from new_engine.commands.validators import clean_path, clean_paths
+from new_engine.models.resources.template import Template
 
 
 @cli.command(aliases=['create-templates'])
