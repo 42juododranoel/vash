@@ -1,10 +1,6 @@
 import pytest
 
-from new_engine.tests.conftest import (
-    NODE_PATHS,
-    NODE_SUBCLUSSES,
-    # NODE_NEW_PATH,
-)
+from new_engine.tests.conftest import NODE_PATHS, NODE_SUBCLUSSES
 
 
 @pytest.fixture(params=NODE_PATHS)

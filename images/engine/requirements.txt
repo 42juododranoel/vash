@@ -7,5 +7,6 @@ htmlmin==0.1.12  # Minify HTML
 richtypo==0.2.3  # Typograph text
 pygments==2.3.1  # Highlight code
 MarkupSafe==1.1.1  # Jinja requirement
+click-aliases==1.0.1  # Multiple names for CLI command
 beautifulsoup4==4.8.0  # HTML processing
 django-softhyphen==1.1.0  # Hyphenate HTML code

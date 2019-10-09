@@ -10,3 +10,8 @@ NODE_PATHS = [
     '/tmp/the-holy-grail/french-castle/trojan-badger',
     '/tmp/the-holy-grail/the-black-knight',
 ]
+
+RESOURCE_PATHS_SETS = [
+    ['tests/the-holy-grail/french-castle/trojan-badger', 'tests/the-holy-grail/the-black-knight'],
+    ['tests/the-black-knight'],
+]
