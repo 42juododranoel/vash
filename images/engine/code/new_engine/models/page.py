@@ -1,6 +1,6 @@
-from new_engine.models.resource import Resource
-from new_engine.models.file import File
 from new_engine.models.folder import Folder
+from new_engine.models.resource import Resource
+from new_engine.models.files.page_meta_file import PageMetaFile
 
 
 class Page(Resource):
@@ -10,5 +10,5 @@ class Page(Resource):
 
     def _get_files(self):
         return {
-            'meta': File(f'{self.path}/{self.name}.json'),
+            'meta': PageMetaFile(f'{self.path}/{self.name}.json'),
         }

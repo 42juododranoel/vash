@@ -4,7 +4,10 @@ import pytest
 
 
 class TestCommonResourceMethods:
-    # TODO: Move deletes old folders
+    # TODO: test move deletes old folders
+    # TODO: test root_folder
+    # TODO: test _get_files
+    # TODO: test _get_absolute_path
 
     def test_attributes_after_initializing(self, resource):
         assert resource.files.keys() == resource._get_files().keys()
