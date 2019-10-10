@@ -4,6 +4,9 @@ pytest_plugins = [
     'engine.tests.fixtures.folder',
     'engine.tests.fixtures.file',
     'engine.tests.fixtures.resource',
+    # Models/Processors
+    'engine.tests.fixtures.processor',
+    'engine.tests.fixtures.processors.minifier',
     # Commands
     'engine.tests.fixtures.cli',
 ]

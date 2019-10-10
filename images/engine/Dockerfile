@@ -29,7 +29,7 @@ RUN adduser -u ${USER_ID} -D ${USER_NAME} && \
 
 USER ${USER_NAME}
 COPY requirements.txt /tmp
-ENV PATH=~/.local/bin:${PATH}
+ENV PATH=/home/${USER_NAME}/.local/bin:${PATH}
 RUN pip3 --no-cache-dir install --user -r /tmp/requirements.txt
 
 COPY code ${CODE_FOLDER}
