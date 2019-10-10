@@ -1,29 +1,11 @@
-import sys
-import gettext
-import argparse
-
-import engine.page
-import engine.template
-
-_ = gettext.gettext
-
-
-def get_namespaced_command(argv):
-    parser = argparse.ArgumentParser()
-    parser.add_argument('category')
-
-    namespace, arguments = parser.parse_known_args(argv[1:])
-
-    if namespace.category == 'template':
-        command = engine.template.get_command(arguments)
-    elif namespace.category == 'page':
-        command = engine.page.get_command(arguments)
-    else:
-        raise SystemExit(_(f'Unknown command category {namespace.category}.'))
-
-    return command
+from engine.commands.cli import cli
+from engine.commands.page import page_commands
+from engine.commands.template import template_commands
 
 
 if __name__ == '__main__':
-    command = get_namespaced_command(sys.argv)
-    command()
+    for commands in [page_commands, template_commands]:
+        for command in commands:
+            cli.add_command(command)
+    else:
+        cli()
