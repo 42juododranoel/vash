@@ -3,8 +3,6 @@ import click
 from engine.commands.cli import cli
 from engine.commands.validators import clean_path, clean_paths
 from engine.models.resources.page import Page
-from legacy.page.commands.create import create
-from legacy.page.commands.render import render
 
 
 @cli.command(aliases=['create-pages'])
@@ -25,19 +23,20 @@ def delete_page(paths):
 
 @cli.command()
 @click.argument('slug')
-def legacy_create_page(slug):
-    create(slug)
-
-
-@cli.command()
-@click.argument('slug')
 def legacy_render_page(slug):
+    from engine.models.file import File
+    from engine.models.processors.brotler import Brotler
+    from legacy.page.commands.render import render
     rendered_files = render(slug)
+
+    for rendered_file in rendered_files:
+        file = File(rendered_file['path'])
+        file.write(rendered_file['content'])
+        Brotler.process_file(file)
 
 
 page_commands = [
     create_page,
     delete_page,
-    legacy_create_page,
     legacy_render_page,
 ]

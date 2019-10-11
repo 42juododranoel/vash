@@ -32,7 +32,6 @@ from legacy.extensions import (
     typograph_html,
     hyphenate_html,
     highlight_precode,
-    compress_file
 )
 from legacy.functions import RENDER_FUNCTIONS
 from legacy.functions.picture import folder_path_to_url
@@ -102,11 +101,11 @@ def render(slug, no_images=False):
 
     # Get meta from folder
     page_meta_path = f'{page_folder}/meta.json'
-    try:
-        with open(page_meta_path) as file:
-            page_meta = json.load(file)
-    except FileNotFoundError:
-        raise SystemError(_(f'Page “{slug}” doesn’t have a meta file.'))
+    if not os.path.isfile(page_meta_path):
+        page_meta_path = f'{page_folder}/{slug}.json'
+
+    with open(page_meta_path) as file:
+        page_meta = json.load(file)
 
     # Get page block names from folder
     page_block_names = [
@@ -241,16 +240,5 @@ def render(slug, no_images=False):
             'content': rendered_json_content
         }
     ]
-    for rendered_file in rendered_files:
-        rendered_file_path = rendered_file['path']
-
-        Path(rendered_file_path).touch()
-
-        with open(rendered_file_path, 'w') as file:
-            file.write(rendered_file['content'])
-
-        # Compress with Brotli
-        compress_file(rendered_file_path)
-        check_call(['touch', rendered_file_path, f'{rendered_file_path}.br'])
 
     return rendered_files

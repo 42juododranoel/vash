@@ -2,10 +2,6 @@ import os
 import argparse
 from functools import partial
 
-from legacy.page.commands.create import (
-    create,
-    argument_parser as create__argument_parser,
-)
 from legacy.page.commands.render import (
     render,
     get_argument_parser as render__argument_parser_getter,

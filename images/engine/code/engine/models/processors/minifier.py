@@ -4,5 +4,6 @@ from engine.models.processor import Processor
 
 
 class Minifier(Processor):
-    def process_content(self, content):
+    @staticmethod
+    def process_content(content):
         return html_minify(content)

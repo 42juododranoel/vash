@@ -5,6 +5,10 @@ from engine.models.node import Node
 
 
 class Folder(Node):
+    @property
+    def is_empty(self):
+        return not os.listdir(self.path)
+
     @staticmethod
     def _create(path):
         os.makedirs(path)
@@ -16,7 +20,3 @@ class Folder(Node):
     @staticmethod
     def _check_presence(path):
         return os.path.isdir(path)
-
-    @property
-    def is_empty(self):
-        return not os.listdir(self.path)
