@@ -51,12 +51,6 @@ def get_argument_parser():
         help=SLUG_HELP_TEXT
     )
     parser.add_argument(
-        '-t', '--test',
-        dest='is_test',
-        action='store_true',
-        help=_('Will be available under /slug-test')
-    )
-    parser.add_argument(
         '-ni', '--no-images',
         dest='no_images',
         action='store_true',
@@ -100,7 +94,7 @@ def sanitize_html(html):
         return html
 
 
-def render(slug, is_test=False, no_images=False):
+def render(slug, no_images=False):
     # Get page folder
     page_folder = f'{PAGES_FOLDER}/{slug}'
     if not os.path.isdir(page_folder):
@@ -239,24 +233,16 @@ def render(slug, is_test=False, no_images=False):
     # Write HTML and JSON files to disk
     rendered_files = [
         {
-            'path_normal': f'{RENDERED_HTML_FOLDER}/{slug}.html',
-            'path_test': f'{RENDERED_HTML_FOLDER}/{slug}-test.html',
+            'path': f'{RENDERED_HTML_FOLDER}/{slug}.html',
             'content': rendered_html_content
         },
         {
-            'path_normal': f'{RENDERED_JSON_FOLDER}/{slug}.json',
-            'path_test': f'{RENDERED_JSON_FOLDER}/{slug}-test.json',
+            'path': f'{RENDERED_JSON_FOLDER}/{slug}.json',
             'content': rendered_json_content
         }
     ]
     for rendered_file in rendered_files:
-        if is_test:
-            rendered_file_path = rendered_file['path_test']
-        else:
-            rendered_file_path = rendered_file['path_normal']
-
-            if os.path.isfile(rendered_file['path_test']):
-                os.remove(rendered_file['path_test'])
+        rendered_file_path = rendered_file['path']
 
         Path(rendered_file_path).touch()
 
@@ -266,3 +252,5 @@ def render(slug, is_test=False, no_images=False):
         # Compress with Brotli
         compress_file(rendered_file_path)
         check_call(['touch', rendered_file_path, f'{rendered_file_path}.br'])
+
+    return rendered_files

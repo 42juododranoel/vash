@@ -32,7 +32,7 @@ def legacy_create_page(slug):
 @cli.command()
 @click.argument('slug')
 def legacy_render_page(slug):
-    render(slug)
+    rendered_files = render(slug)
 
 
 page_commands = [
