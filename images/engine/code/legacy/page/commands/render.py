@@ -1,6 +1,5 @@
 import os
 import json
-import argparse
 from shutil import copyfile
 from pathlib import Path
 from functools import partial
@@ -15,6 +14,7 @@ from jinja2 import (
 )
 from bs4 import BeautifulSoup
 
+from engine.models.processors.minifier import Minifier
 from legacy.constants import (
     _,
     FILES_FOLDER,
@@ -43,21 +43,6 @@ environment = Environment(
 )
 
 
-def get_argument_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '-s', '--slug',
-        help=SLUG_HELP_TEXT
-    )
-    parser.add_argument(
-        '-ni', '--no-images',
-        dest='no_images',
-        action='store_true',
-        help=_('Will not process images')
-    )
-    return parser
-
-
 def sanitize_html(html):
     soup = BeautifulSoup(html, features='html.parser')
 
@@ -84,12 +69,12 @@ def sanitize_html(html):
             finally:
                 tag.wrap(soup.new_tag('div', attrs={'class': ' '.join(wrapper_classes)}))
     else:
-        # Terrible govnocode below and inside
         soup = wrap_hanging_punctuation(soup)
         soup = highlight_precode(soup)
         html = str(soup)
         html = typograph_html(html)
         html = hyphenate_html(html)
+        html = Minifier.process_content(html)
         return html
 
 

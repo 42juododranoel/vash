@@ -27,6 +27,7 @@ def legacy_render_page(slug):
     from engine.models.file import File
     from engine.models.processors.brotler import Brotler
     from legacy.page.commands.render import render
+
     rendered_files = render(slug)
 
     for rendered_file in rendered_files:
