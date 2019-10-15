@@ -1,23 +1,7 @@
 import pytest
 
-from engine.tests.conftest import NODE_SUBCLUSSES
 from engine.tests.conftest import RESOURCE_PATHS_SETS
 from engine.models.resource import Resource
-
-
-@pytest.fixture
-def resource(request, node_path):
-    resource = Resource(node_path)
-    yield resource
-    resource.delete()
-
-
-@pytest.fixture
-def created_resource(request, node_path):
-    resource = Resource(node_path)
-    resource.create()
-    yield resource
-    resource.delete()
 
 
 @pytest.fixture

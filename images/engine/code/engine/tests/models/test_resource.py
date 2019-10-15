@@ -1,14 +1,16 @@
+import pytest
+
+from engine.tests.conftest import RESOURCE_AND_SUBCLUSSES
+
 # TODO: test move deletes old folders
 # TODO: test root_folder
 # TODO: test _get_files
 # TODO: test _get_absolute_path
 
 
-def test_attributes_after_initializing(resource):
-    assert resource.files.keys() == resource._get_files().keys()
-
-
-def test_create_creates_files(created_resource):
+@pytest.mark.parametrize('model', RESOURCE_AND_SUBCLUSSES)
+def test_create_creates_files(create, model, resource_path):
+    created_resource = create(model, resource_path)
     for _, file in created_resource.files.items():
         assert file.is_present
 
