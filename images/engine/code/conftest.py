@@ -1,7 +1,6 @@
 pytest_plugins = [
     # Models
     'engine.tests.fixtures.node',
-    'engine.tests.fixtures.folder',
     'engine.tests.fixtures.file',
     'engine.tests.fixtures.resource',
     # Models/Processors

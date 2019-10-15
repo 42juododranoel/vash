@@ -20,18 +20,18 @@ RESOURCE_PATHS_SETS = [
 
 
 @pytest.fixture
-def initialize_and_create():
-    instances = []
+def create():
+    created_instances = []
 
-    def _initialize_and_create(model, *args, **kwargs):
+    def _create(model, *args, **kwargs):
         instance = model(*args, **kwargs)
         instance.create()
-        instances.append(instance)
+        created_instances.append(instance)
         return instance
 
-    yield _initialize_and_create
+    yield _create
 
-    for instance in instances:
+    for instance in created_instances:
         instance.delete()
 
 
@@ -41,3 +41,4 @@ def node_path(request):
 
 
 file_path = node_path
+folder_path = node_path
