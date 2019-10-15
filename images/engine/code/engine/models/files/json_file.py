@@ -1,4 +1,4 @@
-from engine.models.file import File
+from engine.models.files.file import File
 
 
 class JsonFile(File):

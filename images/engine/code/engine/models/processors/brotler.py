@@ -1,6 +1,6 @@
 import brotli
 
-from engine.models.file import File
+from engine.models.files.file import File
 from engine.models.processor import Processor
 
 

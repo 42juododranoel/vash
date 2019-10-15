@@ -24,7 +24,7 @@ def delete_page(paths):
 @cli.command()
 @click.argument('slug')
 def legacy_render_page(slug):
-    from engine.models.file import File
+    from engine.models.files.file import File
     from engine.models.processors.brotler import Brotler
     from legacy.page.commands.render import render
 

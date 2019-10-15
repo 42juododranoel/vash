@@ -1,4 +1,4 @@
-from engine.models.file import File
+from engine.models.files.file import File
 from engine.models.folder import Folder
 from engine.models.resource import Resource
 
