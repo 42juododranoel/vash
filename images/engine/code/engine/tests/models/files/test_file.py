@@ -1,6 +1,6 @@
 import pytest
 
-from engine.tests.conftest import FILE_AND_SUBCLUSSES
+from engine.tests.conftest import FILE_AND_SUBCLASSES
 
 # TODO: test write writes when present
 # TODO: test write creates and writes when missing
@@ -10,7 +10,7 @@ from engine.tests.conftest import FILE_AND_SUBCLUSSES
 # TODO: test read reads binary content
 
 
-@pytest.mark.parametrize('model', FILE_AND_SUBCLUSSES)
+@pytest.mark.parametrize('model', FILE_AND_SUBCLASSES)
 def test_create_creates_with_initial_content(create, model, file_path):
     created_file = create(model, file_path)
     with open(created_file.path) as file_on_disk:

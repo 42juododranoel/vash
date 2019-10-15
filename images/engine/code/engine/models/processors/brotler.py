@@ -1,7 +1,7 @@
 import brotli
 
 from engine.models.files.file import File
-from engine.models.processor import Processor
+from engine.models.processors.processor import Processor
 
 
 class Brotler(Processor):
