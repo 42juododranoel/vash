@@ -1,14 +1,12 @@
-from engine.models.files.file import File
-from engine.models.folder import Folder
 from engine.models.resource import Resource
+from engine.models.files.template_meta_file import TemplateMetaFile
 
 
 class Template(Resource):
-    @property
-    def root_folder(self):
-        return '/resources/templates'
+    ROOT_FOLDER = f'{Resource.ROOT_FOLDER}/templates'
 
     def _get_files(self):
-        return {
-            'meta': File(f'{self.path}/{self.name}.json'),
-        }
+        return {'meta': TemplateMetaFile(f'{self.path}/{self.name}.json')}
+
+    def get_meta(self):
+        return self.files['meta'].read()

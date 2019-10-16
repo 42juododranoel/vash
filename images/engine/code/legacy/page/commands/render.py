@@ -1,9 +1,7 @@
 import os
 import json
 from shutil import copyfile
-from pathlib import Path
 from functools import partial
-from subprocess import check_call
 
 from jinja2 import (
     Environment,
@@ -21,10 +19,8 @@ from legacy.constants import (
     PAGES_FOLDER,
     TEMPLATES_FOLDER,
     TAGS_TO_WRAP,
-    SLUG_HELP_TEXT,
     CLASSES_TO_WRAP,
     REQUIRED_BLOCKS,
-    RENDERED_HTML_FOLDER,
     RENDERED_JSON_FOLDER,
 )
 from legacy.extensions import (
@@ -78,19 +74,11 @@ def sanitize_html(html):
         return html
 
 
-def render(slug, no_images=False):
+def render(slug, page_meta, no_images=False):
     # Get page folder
     page_folder = f'{PAGES_FOLDER}/{slug}'
     if not os.path.isdir(page_folder):
         raise SystemError(_(f'Page “{slug}” doesn’t exist.'))
-
-    # Get meta from folder
-    page_meta_path = f'{page_folder}/meta.json'
-    if not os.path.isfile(page_meta_path):
-        page_meta_path = f'{page_folder}/{slug}.json'
-
-    with open(page_meta_path) as file:
-        page_meta = json.load(file)
 
     # Get page block names from folder
     page_block_names = [
@@ -214,16 +202,4 @@ def render(slug, no_images=False):
             json_data[related_page_link] = json.load(file)[related_page_link]
     rendered_json_content = json.dumps(json_data)
 
-    # Write HTML and JSON files to disk
-    rendered_files = [
-        {
-            'path': f'{RENDERED_HTML_FOLDER}/{slug}.html',
-            'content': rendered_html_content
-        },
-        {
-            'path': f'{RENDERED_JSON_FOLDER}/{slug}.json',
-            'content': rendered_json_content
-        }
-    ]
-
-    return rendered_files
+    return rendered_html_content, rendered_json_content

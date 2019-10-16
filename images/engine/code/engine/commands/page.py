@@ -1,7 +1,7 @@
 import click
 
 from engine.commands.cli import cli
-from engine.commands.validators import clean_path, clean_paths
+from engine.commands.validators import clean_paths
 from engine.models.resources.page import Page
 
 
@@ -21,23 +21,16 @@ def delete_page(paths):
         page.delete()
 
 
-@cli.command()
-@click.argument('slug')
-def legacy_render_page(slug):
-    from engine.models.files.file import File
-    from engine.models.processors.brotler import Brotler
-    from legacy.page.commands.render import render
-
-    rendered_files = render(slug)
-
-    for rendered_file in rendered_files:
-        file = File(rendered_file['path'])
-        file.write(rendered_file['content'])
-        Brotler.process_file(file)
+@cli.command(aliases=['render-pages'])
+@click.argument('paths', nargs=-1, callback=clean_paths)
+def render_page(paths):
+    for path in paths:
+        page = Page(path)
+        page.render()
 
 
 page_commands = [
     create_page,
+    render_page,
     delete_page,
-    legacy_render_page,
 ]
