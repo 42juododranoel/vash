@@ -32,7 +32,7 @@ from engine.commands.page import create_page, delete_page
 # from click.testing import CliRunner
 #
 # from engine.tests.conftest import RESOURCE_PATHS_SETS
-# from engine.models.resource import Resource
+# from engine\.models\.resources\.resource\  import Resource
 
 # TODO: Think on how to move it to conftest properly
 

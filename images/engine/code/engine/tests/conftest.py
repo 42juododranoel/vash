@@ -10,9 +10,9 @@ from engine.models.files.page_meta_file import PageMetaFile
 from engine.models.files.template_meta_file import TemplateMetaFile
 from engine.models.node import Node
 from engine.models.folder import Folder
-from engine.models.resource import Resource
 from engine.models.resources.page import Page
 from engine.models.resources.template import Template
+from engine.models.resources.resource import Resource
 
 TESTS_ROOT_FOLDER = '/tmp/tests'
 

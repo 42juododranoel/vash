@@ -1,4 +1,4 @@
-from engine.models.resource import Resource
+from engine.models.resources.resource import Resource
 from engine.models.files.template_meta_file import TemplateMetaFile
 
 

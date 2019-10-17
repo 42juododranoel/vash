@@ -1,7 +1,7 @@
 from engine.utilities import nested_merge
-from engine.models.resource import Resource
 from engine.models.files.file import File
 from legacy.page.commands.render import render as legacy_render
+from engine.models.resources.resource import Resource
 from engine.models.resources.template import Template
 from engine.models.files.page_meta_file import PageMetaFile
 
