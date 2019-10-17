@@ -1,4 +1,4 @@
-from engine.utilities import nested_merge
+from engine.utilities import merge_mappings
 from engine.models.files.file import File
 from legacy.page.commands.render import render as legacy_render
 from engine.models.resources.resource import Resource
@@ -25,7 +25,7 @@ class Page(Resource):
         for template_path in template_paths:
             template = Template(template_path)
             template_meta = template.get_meta()
-            nested_merge(meta, template_meta)
+            merge_mappings(meta, template_meta)
         else:
             meta.update(page_meta)
             return meta

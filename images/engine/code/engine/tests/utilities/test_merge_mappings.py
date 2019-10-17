@@ -1,6 +1,6 @@
 import pytest
 
-from engine.utilities import nested_merge
+from engine.utilities import merge_mappings
 
 
 @pytest.mark.parametrize(
@@ -15,6 +15,5 @@ from engine.utilities import nested_merge
         [{1: {2: {3: 4}}}, {1: {2: {5: 6}}}, {1: {2: {3: 4, 5: 6}}}],
     ]
 )
-def test_nested_merge(first, second, result):
-    nested_merge(first, second)
-    assert first == result
+def test_merge_mappings(first, second, result):
+    assert result == merge_mappings(first, second)
