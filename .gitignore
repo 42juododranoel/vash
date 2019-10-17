@@ -1,6 +1,7 @@
 images/bundler/code/resources/
 images/bundler/code/node_modules/
 images/bundler/code/package-lock.json
+images/engine/code/.coverage
 
 __pycache__
 .pytest_cache
