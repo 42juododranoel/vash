@@ -53,11 +53,3 @@ def test_delete_idles_when_not_created(model, node_path):
     node = model(node_path)
     assert not node.is_present
     node.delete()
-
-
-# TODO: broken by global teardown
-# @pytest.mark.parametrize('model', NODE_SUBCLASSES)
-# def test_move_moves_when_created(create, model, node_path, node_new_path):
-#     node = create(model, node_path)
-#     node.move(node_new_path)
-#     assert node.is_present
