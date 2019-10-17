@@ -10,8 +10,8 @@ from engine.tests.conftest import RESOURCE_AND_SUBCLASSES
 
 @pytest.mark.parametrize('model', RESOURCE_AND_SUBCLASSES)
 def test_create_creates_files(create, model, resource_path):
-    created_resource = create(model, resource_path)
-    for _, file in created_resource.files.items():
+    resource = create(model, resource_path)
+    for _, file in resource.files.items():
         assert file.is_present
 
 

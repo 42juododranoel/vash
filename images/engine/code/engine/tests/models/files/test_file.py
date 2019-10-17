@@ -10,17 +10,17 @@ from engine.tests.conftest import FILE_AND_SUBCLASSES
 
 @pytest.mark.parametrize('model', FILE_AND_SUBCLASSES)
 def test_create_creates_with_initial_content(create, model, file_path):
-    created_file = create(model, file_path)
-    with open(created_file.path) as file_on_disk:
-        assert file_on_disk.read() == created_file._get_initial_content()
+    file = create(model, file_path)
+    with open(file.path) as file_on_disk:
+        assert file_on_disk.read() == file._get_initial_content()
 
 
 @pytest.mark.parametrize('model', FILE_AND_SUBCLASSES)
 def test_write_writes_when_present(create, model, file_path):
-    created_file = create(model, file_path)
+    file = create(model, file_path)
     test_content = 'Test content'
-    created_file.write(test_content)
-    with open(created_file.path) as file_on_disk:
+    file.write(test_content)
+    with open(file.path) as file_on_disk:
         assert file_on_disk.read() == test_content
 
 
