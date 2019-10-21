@@ -1,15 +1,13 @@
 import pytest
 
-from engine.models.processors.processor import Processor
+from engine.tests.conftest import PROCESSOR_CLASSES
 
 
-# TODO: test all child models share similar interface
-
-def test_process_content_method_is_abstract():
-    processor = Processor()
-    pytest.raises(NotImplementedError, processor.process_content, None)
+@pytest.fixture(params=PROCESSOR_CLASSES)
+def model(request):
+    return request.param
 
 
-def test_process_file_method_is_abstract():
-    processor = Processor()
-    pytest.raises(NotImplementedError, processor.process_file, None)
+@pytest.mark.parametrize('method', ['process_content', 'process_file', 'get_file_path', 'IS_BINARY'])
+def test_classes_share_interface(model, method):
+    assert hasattr(model, method)
