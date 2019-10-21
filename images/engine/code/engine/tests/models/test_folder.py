@@ -1,13 +1,21 @@
-from engine.models.folder import Folder
+import pytest
+
+from engine.tests.conftest import (
+    TEST_ROOT_FOLDER,
+    FOLDER_CLASSES
+)
 
 
-def test_is_empty_true_when_empty(create, folder_path):
-    folder = create(Folder, folder_path)
-    assert folder.is_empty
+@pytest.fixture(params=FOLDER_CLASSES)
+def model(request, monkeypatch):
+    model = request.param
+    monkeypatch.setattr(model, 'ROOT_FOLDER', TEST_ROOT_FOLDER, raising=True)
+    return model
 
 
-def test_is_empty_false_when_populated(create, folder_path):
-    folder = create(Folder, folder_path)
-    with open(f'{folder.path}/test.txt', 'w') as file:
+def test_is_empty_false_when_populated(model, path):
+    folder = model(path)
+    folder.create()
+    with open(f'{folder.absolute_path}/test.txt', 'w') as file:
         file.write('')
     assert not folder.is_empty

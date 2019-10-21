@@ -2,7 +2,7 @@ import click
 
 from engine.commands.cli import cli
 from engine.commands.validators import clean_paths
-from engine.models.resources.page import Page
+from engine.models.folders.page import Page
 
 
 @cli.command(aliases=['create-pages'])

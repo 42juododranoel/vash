@@ -7,7 +7,7 @@ from engine.models.node import Node
 class Folder(Node):
     @property
     def is_empty(self):
-        return not os.listdir(self.path)
+        return not os.listdir(self.absolute_path)
 
     @staticmethod
     def _create(path):

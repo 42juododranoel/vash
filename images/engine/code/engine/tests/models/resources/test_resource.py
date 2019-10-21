@@ -1,26 +1,31 @@
 import pytest
 
-from engine.tests.conftest import RESOURCE_AND_SUBCLASSES
+from engine.tests.conftest import (
+    RESOURCE_CLASSES,
+    TEST_ROOT_FOLDER,
+)
 
-# TODO: test move deletes old folders
+
+@pytest.fixture(params=RESOURCE_CLASSES)
+def model(request, monkeypatch):
+    model = request.param
+    resource_root_folder = model.ROOT_FOLDER
+    monkeypatch.setattr(
+        model,
+        'ROOT_FOLDER',
+        f'{TEST_ROOT_FOLDER}{resource_root_folder}',
+        raising=True
+    )
+    return model
+
+
 # TODO: test root_folder
 # TODO: test _get_files
-# TODO: test _get_absolute_path
 
 
-@pytest.mark.parametrize('model', RESOURCE_AND_SUBCLASSES)
-def test_create_creates_files(create, model, resource_path):
-    resource = create(model, resource_path)
+def test_create_creates_files(model, path):
+    resource = model(path)
+    assert not resource.is_present
+    resource.create()
     for _, file in resource.files.items():
         assert file.is_present
-
-
-@pytest.mark.parametrize('model', RESOURCE_AND_SUBCLASSES)
-def test_move_moves_files(create, model, resource_path, resource_new_path):
-    resource = create(model, resource_path)
-    resource.move(resource_new_path)
-
-    new_name = resource.path.rpartition('/')[-1]
-    for _, file in resource.files.items():
-        assert file.is_present
-        assert new_name == file.name.rsplit('.')[0]

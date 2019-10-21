@@ -2,7 +2,7 @@ import click
 
 from engine.commands.cli import cli
 from engine.commands.validators import clean_path, clean_paths
-from engine.models.resources.template import Template
+from engine.models.folders.template import Template
 
 
 @cli.command(aliases=['create-templates'])

@@ -1,8 +1,7 @@
 from click.testing import CliRunner
 
 from engine.commands.page import render_page
-from engine.tests.conftest import RESOURCE_PATHS
-from engine.models.resources.page import Page
+from engine.models.folders.page import Page
 
 
 # def test_render_page_works(create, resource_path):

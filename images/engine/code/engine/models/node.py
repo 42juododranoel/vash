@@ -1,40 +1,33 @@
 import os
-import shutil
 
 from click import echo
 
 
 class Node:
-    def __init__(self, path: str):
-        absolute_path = path if path.startswith('/') else self._get_absolute_path(path)
-        self.parent, _, self.name = absolute_path.rpartition('/')
+    ROOT_FOLDER = ''
+
+    def __init__(self, path):
+        self.path = path
+        self.name = path.split('/')[-1]
 
     @property
     def is_present(self):
-        return self._check_presence(self.path)
+        return self._check_presence(self.absolute_path)
 
     @property
-    def path(self):
-        return f'{self.parent}/{self.name}'
-
-    def _get_absolute_path(self, path):
-        return os.path.abspath(path)
+    def absolute_path(self):
+        return self.path if self.path.startswith('/') \
+            else f'{self.ROOT_FOLDER}/{self.path}'
 
     def create(self):
         if not self.is_present:
             echo(f'Create “{self.path}”')
-            if self.parent:  # Parent may be '' if path is 'plain', no 'hie/rar/chy'
-                os.makedirs(self.parent, exist_ok=True)
-            self._create(self.path)
+            parent = '/'.join(self.absolute_path.split('/')[:-1])
+            if parent:  # `parent` is '' if `path` is 'plain', no 'hie/rar/chy'
+                os.makedirs(parent, exist_ok=True)
+            self._create(self.absolute_path)
 
     def delete(self):
         if self.is_present:
             echo(f'Delete “{self.path}”')
-            self._delete(self.path)
-
-    def move(self, new_path):
-        if self.is_present:
-            echo(f'Moving “{self.path}” to “{new_path}”')
-            old_path = self.path
-            self.__init__(new_path)
-            shutil.move(old_path, self.path)
+            self._delete(self.absolute_path)

@@ -74,21 +74,7 @@ def sanitize_html(html):
         return html
 
 
-def render(slug, page_meta, no_images=False):
-    # Get page folder
-    page_folder = f'{PAGES_FOLDER}/{slug}'
-    if not os.path.isdir(page_folder):
-        raise SystemError(_(f'Page “{slug}” doesn’t exist.'))
-
-    # Get page block names from folder
-    page_block_names = [
-        file_name.replace('.html', '')
-        for file_name in os.listdir(page_folder)
-        if file_name.endswith('.html')
-    ]
-
-    blocks = {}  # Will be used to render page as JSON and HTML
-
+def render(slug, page_meta, template_name, no_images=False):
     # Prepare render context
     render_context = RENDER_FUNCTIONS.copy()
     if no_images:
@@ -106,7 +92,6 @@ def render(slug, page_meta, no_images=False):
     )
 
     render_context.update(page_meta['variables'])
-    render_context['title'] = page_meta['title']
 
     # Prepare extensions
     for extension in page_meta.get('extensions', []):
@@ -126,50 +111,6 @@ def render(slug, page_meta, no_images=False):
             render_context['og_type'] = page_meta['variables']['og_type']
             render_context['og_locale'] = page_meta['variables']['og_locale']
             render_context['og_site_name'] = page_meta['variables']['og_site_name']
-
-    # Render and load page blocks
-
-    page_blocks = {}
-    for page_block_name in page_block_names:
-        page_block_template = environment.get_template(f'{slug}/{page_block_name}.html')
-        page_blocks[page_block_name] = Markup(page_block_template.render(**render_context))
-    else:
-        blocks.update(page_blocks)
-
-    # Check if template and title are specified in meta
-    for required_attribute in ['template', 'title']:
-        if required_attribute not in page_meta:
-            raise SystemError(_(f'Page meta doesn’t have a “{required_attribute}” attribute.'))
-    else:
-        template_name = page_meta['template']
-
-    # Render and load template blocks if present.
-    # Template blocks access page blocks as context variables
-    template_blocks = {}
-    for required_block_name in REQUIRED_BLOCKS:
-        try:
-            template_block = environment.get_template(
-                f'{template_name}-{required_block_name}.html'
-            )
-        except TemplateNotFound:
-            pass
-        else:
-            template_blocks[required_block_name] = Markup(
-                template_block.render(**render_context, **page_blocks)
-            )
-    else:
-        blocks.update(template_blocks)
-
-    try:
-        page_scripts = page_meta['scripts']
-    except KeyError:
-        pass
-    else:
-        scripts_block = ''
-        for script_data in page_scripts:
-            script_attributes = ' '.join([f'{key}="{script_data[key]}"' for key in script_data])
-            scripts_block += f'<script defer="defer" {script_attributes}></script>'
-        blocks['scripts'] = scripts_block
 
     # Get template and render page as HTML
     template = environment.get_template(f'_default.html')

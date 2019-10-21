@@ -23,20 +23,18 @@ class File(Node):
 
     def _read(self, is_binary):
         open_mode = 'rb' if is_binary else 'r'
-        with open(self.path, open_mode) as file:
+        with open(self.absolute_path, open_mode) as file:
             return file.read()
 
     def _write(self, content):
         open_mode = 'wb' if isinstance(content, bytes) else 'w'
-        with open(self.path, open_mode) as file:
+        with open(self.absolute_path, open_mode) as file:
             file.write(content)
 
-    @staticmethod
-    def _delete(path):
+    def _delete(self, path):
         os.remove(path)
 
-    @staticmethod
-    def _check_presence(path):
+    def _check_presence(self, path):
         return os.path.isfile(path)
 
     def _get_initial_content(self):

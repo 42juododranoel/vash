@@ -1,55 +1,69 @@
 import pytest
 
-from engine.tests.conftest import NODE_SUBCLASSES
-
-# TODO: refactor to split abstract base methods and normal methods
-
-# TODO: test _get_absolute_path
-# TODO: test __init__
-# TODO: test path
-# TODO: test move to the same folder
-# TODO: test move to upper folder
-# TODO: test move to lower folder ← hard
-# TODO: test move idles when missing
+from engine.tests.conftest import (
+    NODE_SUBCLASSES,
+    TEST_ROOT_FOLDER,
+)
 
 
-@pytest.mark.parametrize('model', NODE_SUBCLASSES)
-def test_is_present_true_when_created(create, model, node_path):
-    node = create(model, node_path)
-    assert node.is_present
+@pytest.fixture(params=NODE_SUBCLASSES)
+def model(request, monkeypatch):
+    model = request.param
+    monkeypatch.setattr(model, 'ROOT_FOLDER', TEST_ROOT_FOLDER, raising=True)
+    return model
 
 
-@pytest.mark.parametrize('model', NODE_SUBCLASSES)
-def test_is_present_false_when_not_created(model, node_path):
-    node = model(node_path)
-    assert not node.is_present
+def test_absolute_path_with_absolute_as_input(model, absolute_path):
+    node = model(absolute_path)
+    assert node.path == absolute_path
+    assert node.absolute_path == absolute_path
 
 
-@pytest.mark.parametrize('model', NODE_SUBCLASSES)
-def test_create_idles_when_created(create, model, node_path):
-    node = create(model, node_path)
-    assert node.is_present
-    node.create()
+def test_absolute_path_with_relative_as_input(model, relative_path):
+    node = model(relative_path)
+    assert node.path == relative_path
+    assert node.absolute_path == f'{node.ROOT_FOLDER}/{relative_path}'
 
 
-@pytest.mark.parametrize('model', NODE_SUBCLASSES)
-def test_create_creates_when_not_created(model, node_path):
-    node = model(node_path)
+def test_is_present_true_when_created(model, path):
+    node = model(path)
     assert not node.is_present
     node.create()
     assert node.is_present
 
 
-@pytest.mark.parametrize('model', NODE_SUBCLASSES)
-def test_delete_deletes_when_created(create, model, node_path):
-    node = create(model, node_path)
+def test_is_present_false_when_not_created(model, path):
+    node = model(path)
+    assert not node.is_present
+
+
+def test_create_idles_when_created(model, path):
+    node = model(path)
+    assert not node.is_present
+    node.create()
+    assert node.is_present
+    node.create()
+    assert node.is_present
+
+
+def test_create_creates_when_not_created(model, path):
+    node = model(path)
+    assert not node.is_present
+    node.create()
+    assert node.is_present
+
+
+def test_delete_deletes_when_created(model, path):
+    node = model(path)
+    assert not node.is_present
+    node.create()
     assert node.is_present
     node.delete()
     assert not node.is_present
 
 
-@pytest.mark.parametrize('model', NODE_SUBCLASSES)
-def test_delete_idles_when_not_created(model, node_path):
-    node = model(node_path)
+def test_delete_idles_when_not_created(model, path):
+    node = model(path)
     assert not node.is_present
     node.delete()
+    assert not node.is_present
