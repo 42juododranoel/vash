@@ -19,10 +19,6 @@ def model(request, monkeypatch):
     return model
 
 
-# TODO: test root_folder
-# TODO: test _get_files
-
-
 def test_create_creates_files(model, path):
     resource = model(path)
     assert not resource.is_present
