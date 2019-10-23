@@ -1,5 +1,3 @@
-import json
-
 import pytest
 
 from engine.tests.conftest import (
@@ -15,7 +13,7 @@ def model(request, monkeypatch):
     return model
 
 
-def test_initial_content_is_json(model, path):
+def test_initial_content_is_dictionary(model, path):
     json_file = model(path)
     initial_content = json_file._get_initial_content()
-    assert isinstance(json.loads(initial_content), dict)
+    assert isinstance(initial_content, dict)

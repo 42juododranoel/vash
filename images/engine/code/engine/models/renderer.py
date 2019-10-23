@@ -1,105 +1,131 @@
 import os
 
+from jinja2 import Markup
+from jinja2 import Template as JinjaTemplate
+
 from engine.utilities import merge_mappings
 from engine.models.files.html_file import HtmlFile
 from engine.models.folders.template import Template
 
 
+def get_templatetags():
+    templatetags = {'link': lambda *args, **kwargs: 'FOOBAR'}
+    templatetags['picture'] = templatetags['link']  # TODO: Temporary hack
+    return templatetags
+
+
 class Renderer:
-    def __init__(self, page):
-        self.page = page
+    REQUIRED_TEMPLATE_NAMES = ['meta', 'body']
 
-    def _get_meta(self):
-        page_meta = self.page.files['meta'].read()
-        template_paths = page_meta['template'].split('/')
-        meta = {}
-        for template_path in template_paths:
-            template = Template(template_path)
-            template_meta = template.get_meta()
-            meta = merge_mappings(meta, template_meta)
+    MAIN_TEMPLATE_PATH = 'default/default.html'
+
+    PAGES_ROOT = '/resources/pages'
+    TEMPLATES_ROOT = '/resources/templates'
+
+    templatetags = get_templatetags()
+
+    @staticmethod
+    def _get_all_meta(page_meta, templates):
+        all_meta = {}
+        for template in templates:
+            template_meta = template.files['meta'].read()
+            all_meta = merge_mappings(all_meta, template_meta)
         else:
-            meta.update(page_meta)
-            return meta
+            all_meta.update(page_meta)  # Page meta overrides template meta
+            return all_meta
 
-    def _get_functions(self):
-        functions = {'link': lambda *args, **kwargs: 'FOOBAR'}
-        functions['picture'] = functions['link']
-        return functions
-
-    def _get_scripts(self, meta):
-        return meta.get('scripts', [])
-
-    def _get_styles(self):
-        return
-
-    def _get_contents(self):
-        contents = {}
-        for file_name in os.listdir(self.page.path):
+    @staticmethod
+    def _get_content_files(page):
+        content_files = {}
+        for file_name in os.listdir(page.absolute_path):
             if file_name.endswith('.html'):
-                file = HtmlFile(f'{self.page.path}/{file_name}')
                 name = file_name.rpartition('.html')[0]
-                contents[name] = file
+                content_files[name] = HtmlFile(f'{page.absolute_path}/{file_name}')
         else:
-            return contents
+            return content_files
 
-    def _get_blocks(self, template_names):
-        blocks = {}
-        for block_name in ['meta', 'body']:
-            block_file = None
-            for template_name in template_names:
-                html_file = HtmlFile(
-                    f'/resources/templates/{template_name}/{block_name}.html')
-                if html_file.is_present:
-                    block_file = html_file
+    @staticmethod
+    def _get_template_files(templates):
+        template_files = {}
+
+        for template_name in Renderer.REQUIRED_TEMPLATE_NAMES:
+            latest_template_file_in_hierarchy = None
+
+            for template in templates:
+                template_file = HtmlFile(f'{template.absolute_path}/{template_name}.html')
+                if template_file.is_present:
+                    latest_template_file_in_hierarchy = template_file
             else:
-                blocks[block_name] = block_file
+                template_files[template_name] = latest_template_file_in_hierarchy
         else:
-            return blocks
+            return template_files
 
-    def _render_scripts(self, scripts):
-        html = ''
-        for script_data in scripts:
-            script_attributes = ' '.join(
-                [f'{key}="{script_data[key]}"' for key in script_data])
-            html += f'<script defer="defer" {script_attributes}></script>'
+    @staticmethod
+    def _render_tags(tags, tag_template):
+        rendered_tags = ''
+        for tag in tags:
+            attributes = ' '.join([f'{key}="{tag[key]}"' for key in tag])
+            rendered_tags += tag_template.format(attributes=attributes)
         else:
-            return {'scripts': html}
+            return rendered_tags
 
-    def _render_styles(self):
-        return
+    @staticmethod
+    def _render_styles(styles):
+        return Renderer._render_tags(styles, '<link rel="stylesheet" {attributes}/>')
 
-    def _render_file_mapping(self, file_mapping, context):
+    @staticmethod
+    def _render_scripts(scripts):
+        return Renderer._render_tags(scripts, '<script defer="defer" {attributes}></script>')
+
+    @staticmethod
+    def _render_html_file(html_file, context):
+        with open(html_file.absolute_path) as file:
+            jinja_file = JinjaTemplate(file.read())
+
+        rendered_file = jinja_file.render(**context)
+        unescaped_file = Markup(rendered_file)
+        return unescaped_file
+
+    @staticmethod
+    def _render_html_files(html_files, context):
         return {
-            name: file.render(context) if file else ''
-            for name, file in file_mapping.items()
+            name: Renderer._render_html_file(file, context) if file else ''
+            for name, file in html_files.items()
         }
 
-    def render(self):
-        meta = self._get_meta()
-        functions = self._get_functions()  # This is a hack
-        context = merge_mappings(meta.copy(), functions)
+    @staticmethod
+    def render_page(page):
+        if not page.is_present:
+            raise ValueError('Can\'t render missing page')
 
-        scripts = self._get_scripts(meta)
-        scripts_html = self._render_scripts(scripts)
-        context.update(scripts_html)
+        context = {}
+        page_meta = page.files['meta'].read()
 
-        contents = self._get_contents()
-        contents_html = self._render_file_mapping(contents, context)
-        context.update(contents_html)
+        styles = page_meta.get('styles', [])
+        rendered_styles = Renderer._render_styles(styles)
+        context.update(styles=rendered_styles)
 
-        template_names = meta['template'].split('/')
-        blocks = self._get_blocks(template_names)
-        blocks_html = self._render_file_mapping(blocks, context)
-        context.update(blocks_html)
+        scripts = page_meta.get('scripts', [])
+        rendered_scripts = Renderer._render_scripts(scripts)
+        context.update(scripts=rendered_scripts)
 
-        # Add sanitizing
+        context.update(Renderer.templatetags)
+        template_paths = page_meta['template'].split(' > ')
+        templates = [Template(path) for path in template_paths]
+        all_meta = Renderer._get_all_meta(page_meta, templates)
+        context.update(all_meta)
 
-        content = HtmlFile(
-            f'/resources/templates/default/default.html').render(context)
-        print(content)
+        content_files = Renderer._get_content_files(page)
+        rendered_html_files = Renderer._render_html_files(content_files, context)
+        context.update(rendered_html_files)
 
-        # for post_processor in meta.get('post-processors', []):
-        #     if post_processor == 'brotler':
-        #         from engine.models.processors.brotler import Brotler
-        #         Brotler.process_file(self.files['html'])
-        #         Brotler.process_file(self.files['json'])
+        template_files = Renderer._get_template_files(templates)
+        rendered_template_files = Renderer._render_html_files(template_files, context)
+        context.update(rendered_template_files)
+
+        main_template = Template(Renderer.MAIN_TEMPLATE_PATH)
+        main_template_file = HtmlFile(main_template.absolute_path)
+        rendered_main_template_file = Renderer._render_html_file(main_template_file, context)
+        print(rendered_main_template_file)
+
+        # Sanitize, Json, post-process

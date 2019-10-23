@@ -1,4 +1,5 @@
 from engine.models.files.file import File
+from engine.models.files.binary_file import BinaryFile
 
 
 class Processor:
@@ -19,9 +20,11 @@ class Processor:
     @classmethod
     def process_file(cls, file):
         path = cls.get_file_path(file)
-        processed_file = File(path)
 
-        original_content = file.read(is_binary=cls.IS_BINARY)
+        file_model = BinaryFile if cls.IS_BINARY else File
+        processed_file = file_model(path)
+
+        original_content = file.read()
         compressed_content = cls.process_content(original_content)
         processed_file.write(compressed_content)
 

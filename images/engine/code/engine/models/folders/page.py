@@ -7,10 +7,7 @@ class Page(Resource):
     ROOT_FOLDER = f'{Resource.ROOT_FOLDER}/pages'
 
     def _get_files(self):
-        return {
-            'meta': PageMetaFile(f'{self.absolute_path}/{self.name}.json'),
-        }
+        return {'meta': PageMetaFile(f'{self.absolute_path}/{self.name}.json')}
 
     def render(self):
-        renderer = Renderer(self)
-        renderer.render()
+        Renderer.render_page(self)

@@ -6,29 +6,38 @@ from engine.models.node import Node
 
 
 class File(Node):
-    def read(self, is_binary=False):
+    def read(self):
         if self.is_present:
-            echo(f'Read from “{self.path}”')
-            return self._read(is_binary=is_binary)
+            echo(f'Read from “{self.absolute_path}”')
+            serialized_content = self._read()
+            return self._deserialize(serialized_content)
+        else:
+            raise FileNotFoundError('Can\'t read from missing file.')
 
     def write(self, content):
         if not self.is_present:
             self.create()
-        echo(f'Write to “{self.path}”')
-        self._write(content)
+        echo(f'Write to “{self.absolute_path}”')
+        serialized_content = self._serialize(content)
+        self._write(serialized_content)
+
+    def _serialize(self, content):
+        return content
+
+    def _deserialize(self, content):
+        return content
 
     def _create(self, path):
         initial_content = self._get_initial_content()
-        self._write(initial_content)
+        serialized_content = self._serialize(initial_content)
+        self._write(serialized_content)
 
-    def _read(self, is_binary):
-        open_mode = 'rb' if is_binary else 'r'
-        with open(self.absolute_path, open_mode) as file:
+    def _read(self):
+        with open(self.absolute_path, 'r') as file:
             return file.read()
 
     def _write(self, content):
-        open_mode = 'wb' if isinstance(content, bytes) else 'w'
-        with open(self.absolute_path, open_mode) as file:
+        with open(self.absolute_path, 'w') as file:
             file.write(content)
 
     def _delete(self, path):

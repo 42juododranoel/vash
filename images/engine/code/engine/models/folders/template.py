@@ -6,9 +6,4 @@ class Template(Resource):
     ROOT_FOLDER = f'{Resource.ROOT_FOLDER}/templates'
 
     def _get_files(self):
-        return {
-            'meta': TemplateMetaFile(f'{self.absolute_path}/{self.name}.json')
-        }
-
-    def get_meta(self):
-        return self.files['meta'].read()
+        return {'meta': TemplateMetaFile(f'{self.absolute_path}/{self.name}.json')}

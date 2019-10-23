@@ -20,14 +20,3 @@ def model(monkeypatch):
 def test_get_files_has_keys(model, path, key):
     template = model(path)
     assert key in template._get_files()
-
-
-def test_get_meta_reads_meta(model, path):
-    template = model(path)
-    template.create()
-
-    test_content = 'foo bar 42'
-    template.files['meta'].write(test_content)
-
-    meta = template.get_meta()
-    assert meta == test_content
