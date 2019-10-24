@@ -3,24 +3,14 @@ import json
 from shutil import copyfile
 from functools import partial
 
-from jinja2 import (
-    Environment,
-    FileSystemLoader,
-    Markup,
-    select_autoescape,
-    TemplateNotFound
-)
 from bs4 import BeautifulSoup
 
 from engine.models.processors.minifier import Minifier
 from legacy.constants import (
-    _,
     FILES_FOLDER,
     PAGES_FOLDER,
-    TEMPLATES_FOLDER,
     TAGS_TO_WRAP,
     CLASSES_TO_WRAP,
-    REQUIRED_BLOCKS,
     RENDERED_JSON_FOLDER,
 )
 from legacy.extensions import (
@@ -29,14 +19,9 @@ from legacy.extensions import (
     hyphenate_html,
     highlight_precode,
 )
+
 from legacy.functions import RENDER_FUNCTIONS
 from legacy.functions.picture import folder_path_to_url
-
-
-environment = Environment(
-    loader=FileSystemLoader([TEMPLATES_FOLDER, PAGES_FOLDER]),
-    autoescape=select_autoescape(),
-)
 
 
 def sanitize_html(html):
@@ -112,23 +97,7 @@ def render(slug, page_meta, template_name, no_images=False):
             render_context['og_locale'] = page_meta['variables']['og_locale']
             render_context['og_site_name'] = page_meta['variables']['og_site_name']
 
-    # Get template and render page as HTML
-    template = environment.get_template(f'_default.html')
-    rendered_html_content = template.render(**render_context, **blocks)
-    rendered_html_content = sanitize_html(rendered_html_content)
-
     # Render page and related pages as JSON for seamless cache
-    json_blocks = {
-        block_name: sanitize_html(blocks[block_name])
-        for block_name in blocks.keys()
-        if block_name in REQUIRED_BLOCKS
-    }
-
-    json_blocks['scripts'] = []
-    for script_data in page_meta.get('scripts', []):
-        script_data['defer'] = 'defer'
-        json_blocks['scripts'].append(script_data)
-
     key = f'/{slug}' if slug != 'index' else '/'
     json_data = {
         key: {

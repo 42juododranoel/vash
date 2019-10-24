@@ -4,6 +4,7 @@ from jinja2 import Markup
 from jinja2 import Template as JinjaTemplate
 
 from engine.utilities import merge_mappings
+from engine.models.files.json_file import JsonFile
 from engine.models.files.html_file import HtmlFile
 from engine.models.folders.template import Template
 
@@ -15,12 +16,10 @@ def get_templatetags():
 
 
 class Renderer:
+    DEFAULT_TEMPLATE_NAMES = ['meta', 'body', 'styles', 'scripts']
     REQUIRED_TEMPLATE_NAMES = ['meta', 'body']
 
-    MAIN_TEMPLATE_PATH = 'default/default.html'
-
-    PAGES_ROOT = '/resources/pages'
-    TEMPLATES_ROOT = '/resources/templates'
+    DEFAULT_TEMPLATE_PATH = 'default/default.html'
 
     templatetags = get_templatetags()
 
@@ -33,6 +32,20 @@ class Renderer:
         else:
             all_meta.update(page_meta)  # Page meta overrides template meta
             return all_meta
+
+    @staticmethod
+    def _get_styles(page_meta):
+        styles = page_meta.get('styles', [])
+        for style in styles:
+            style['rel'] = 'stylesheet'
+        return styles
+
+    @staticmethod
+    def _get_scripts(page_meta):
+        scripts = page_meta.get('scripts', [])
+        for script in scripts:
+            script['defer'] = 'true'
+        return scripts
 
     @staticmethod
     def _get_content_files(page):
@@ -101,31 +114,49 @@ class Renderer:
         context = {}
         page_meta = page.files['meta'].read()
 
-        styles = page_meta.get('styles', [])
+        # Render page styles — meta `styles` attribute
+        styles = Renderer._get_styles(page_meta)
         rendered_styles = Renderer._render_styles(styles)
         context.update(styles=rendered_styles)
 
-        scripts = page_meta.get('scripts', [])
+        # Render page scripts — meta `scripts` attribute
+        scripts = Renderer._get_scripts(page_meta)
         rendered_scripts = Renderer._render_scripts(scripts)
         context.update(scripts=rendered_scripts)
 
+        # Prepare templates hierarchy, combine their and page meta
         context.update(Renderer.templatetags)
         template_paths = page_meta['template'].split(' > ')
         templates = [Template(path) for path in template_paths]
         all_meta = Renderer._get_all_meta(page_meta, templates)
         context.update(all_meta)
 
+        # Render page contents — all HTML files inside page folder
         content_files = Renderer._get_content_files(page)
         rendered_html_files = Renderer._render_html_files(content_files, context)
         context.update(rendered_html_files)
 
+        # Render page templates hierarchy — meta `template` attribute
         template_files = Renderer._get_template_files(templates)
         rendered_template_files = Renderer._render_html_files(template_files, context)
         context.update(rendered_template_files)
 
-        main_template = Template(Renderer.MAIN_TEMPLATE_PATH)
-        main_template_file = HtmlFile(main_template.absolute_path)
-        rendered_main_template_file = Renderer._render_html_file(main_template_file, context)
-        print(rendered_main_template_file)
+        # Render page as HTML via default template
+        default_template = Template(Renderer.DEFAULT_TEMPLATE_PATH)
+        default_template_file = HtmlFile(default_template.absolute_path)
+        rendered_html = Renderer._render_html_file(default_template_file, context)
 
-        # Sanitize, Json, post-process
+        # Render page as JSON for Seamless API and Seamless.js
+        rendered_json = {}
+        for default_template_name in Renderer.DEFAULT_TEMPLATE_NAMES:
+            if default_template_name == 'scripts':
+                value = scripts  # Seamless.js uses attribute structure for simplicity
+            else:
+                value = context.get(default_template_name, '')
+            rendered_json[default_template_name] = value
+
+        # Write rendered contents to files
+        html_file = HtmlFile(f'/resources/assets/html/{page.path}.html')
+        html_file.write(rendered_html)
+        json_file = JsonFile(f'/resources/assets/json/{page.path}.json')
+        json_file.write(rendered_json)
