@@ -21,31 +21,18 @@ class Renderer:
 
     DEFAULT_TEMPLATE_PATH = 'default/default.html'
 
-    templatetags = get_templatetags()
+    BLOCKS = {
+        'styles': {
+            'template': '<link {attributes}/>',
+            'attributes': {'rel': 'stylesheet'},
+        },
+        'scripts': {
+            'template': '<script {attributes}></script>',
+            'attributes': {'defer': 'true'},
+        }
+    }
 
-    @staticmethod
-    def _get_all_meta(page_meta, templates):
-        all_meta = {}
-        for template in templates:
-            template_meta = template.files['meta'].read()
-            all_meta = merge_mappings(all_meta, template_meta)
-        else:
-            all_meta.update(page_meta)  # Page meta overrides template meta
-            return all_meta
-
-    @staticmethod
-    def _get_styles(page_meta):
-        styles = page_meta.get('styles', [])
-        for style in styles:
-            style['rel'] = 'stylesheet'
-        return styles
-
-    @staticmethod
-    def _get_scripts(page_meta):
-        scripts = page_meta.get('scripts', [])
-        for script in scripts:
-            script['defer'] = 'true'
-        return scripts
+    TEMPLATETAGS = get_templatetags()
 
     @staticmethod
     def _get_content_files(page):
@@ -74,23 +61,6 @@ class Renderer:
             return template_files
 
     @staticmethod
-    def _render_tags(tags, tag_template):
-        rendered_tags = ''
-        for tag in tags:
-            attributes = ' '.join([f'{key}="{tag[key]}"' for key in tag])
-            rendered_tags += tag_template.format(attributes=attributes)
-        else:
-            return rendered_tags
-
-    @staticmethod
-    def _render_styles(styles):
-        return Renderer._render_tags(styles, '<link rel="stylesheet" {attributes}/>')
-
-    @staticmethod
-    def _render_scripts(scripts):
-        return Renderer._render_tags(scripts, '<script defer="defer" {attributes}></script>')
-
-    @staticmethod
     def _render_html_file(html_file, context):
         with open(html_file.absolute_path) as file:
             jinja_file = JinjaTemplate(file.read())
@@ -107,29 +77,37 @@ class Renderer:
         }
 
     @staticmethod
+    def _render_block(block_name, block_tags):
+        block = Renderer.BLOCKS[block_name]
+        rendered_block = ''
+        for block_tag in block_tags:
+            block_tag.update(block['attributes'])
+            attribute_pairs = [f'{key}="{value}"' for key, value in block_tag.items()]
+            attributes = ' '.join(attribute_pairs)
+            rendered_block += block['template'].format(attributes=attributes)
+        else:
+            return {block_name: rendered_block, f'raw_{block_name}': block_tags}
+
+    @staticmethod
     def render_page(page):
         if not page.is_present:
             raise ValueError('Can\'t render missing page')
 
-        context = {}
+        context = Renderer.TEMPLATETAGS
         page_meta = page.files['meta'].read()
 
-        # Render page styles — meta `styles` attribute
-        styles = Renderer._get_styles(page_meta)
-        rendered_styles = Renderer._render_styles(styles)
-        context.update(styles=rendered_styles)
-
-        # Render page scripts — meta `scripts` attribute
-        scripts = Renderer._get_scripts(page_meta)
-        rendered_scripts = Renderer._render_scripts(scripts)
-        context.update(scripts=rendered_scripts)
-
-        # Prepare templates hierarchy, combine their and page meta
-        context.update(Renderer.templatetags)
+        # Combine page meta with template meta
         template_paths = page_meta['template'].split(' > ')
         templates = [Template(path) for path in template_paths]
-        all_meta = Renderer._get_all_meta(page_meta, templates)
-        context.update(all_meta)
+        for template in templates:
+            template_meta = template.files['meta'].read()
+            context = merge_mappings(context, template_meta)
+        context.update(page_meta)  # Page meta owerrides template meta
+
+        # Render blocks `styles` and `scripts`
+        for block_name in ['styles', 'scripts']:
+            block_tags = page_meta.get(block_name, [])
+            context.update(Renderer._render_block(block_name, block_tags))
 
         # Render page contents — all HTML files inside page folder
         content_files = Renderer._get_content_files(page)
@@ -149,8 +127,8 @@ class Renderer:
         # Render page as JSON for Seamless API and Seamless.js
         rendered_json = {}
         for default_template_name in Renderer.DEFAULT_TEMPLATE_NAMES:
-            if default_template_name == 'scripts':
-                value = scripts  # Seamless.js uses attribute structure for simplicity
+            if default_template_name in ['scripts', 'styles']:
+                value = context[f'raw_{default_template_name}']  # Seamless.js uses attribute structure for simplicity
             else:
                 value = context.get(default_template_name, '')
             rendered_json[default_template_name] = value
@@ -160,3 +138,12 @@ class Renderer:
         html_file.write(rendered_html)
         json_file = JsonFile(f'/resources/assets/json/{page.path}.json')
         json_file.write(rendered_json)
+
+        return {'html': rendered_html, 'json': rendered_json}
+
+    def render_related_pages():
+        # - список релейтедов
+        # - отрендеренный джейсон
+        # Для каждой релейтед
+        #     В её отрендеренном джейсоне обновить кусочек с этой страницей
+        pass

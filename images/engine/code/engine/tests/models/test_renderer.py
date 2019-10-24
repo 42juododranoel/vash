@@ -15,27 +15,27 @@ def test_render_fails_when_page_is_not_created():
     pytest.raises(ValueError, renderer.render_page, page)
 
 
-def test_render_scripts():
-    # TODO: Unify with test_render_styles
-    scripts = [
-        {'src': 'https://example.com/assets/js/foobar.min.js'},
-        {'src': '/assets/js/foobar.min.js', 'async': 'true'}
-    ]
-    rendered_scripts = Renderer._render_scripts(scripts)
-    assert rendered_scripts == '<script defer="defer" src="https://example.com/assets/js/foobar.min.js"></script><script defer="defer" src="/assets/js/foobar.min.js" async="true"></script>'
-
-
-def test_render_styles():
-    # TODO: Multiple attributes with same name
-    # TODO: No styles returns ''
-    # TODO: &lt; and &gt; in input
-    # TODO: Test base `render_tags`
-    styles = [
-        {'href': 'https://example.com/assets/css/foobar.min.css'},
-        {'href': '/assets/css/foobar.min.css', 'crossorigin': 'anonymous'}
-    ]
-    rendered_styles = Renderer._render_styles(styles)
-    assert rendered_styles == '<link rel="stylesheet" href="https://example.com/assets/css/foobar.min.css"/><link rel="stylesheet" href="/assets/css/foobar.min.css" crossorigin="anonymous"/>'
+# def test_render_scripts():
+#     # TODO: Unify with test_render_styles
+#     scripts = [
+#         {'src': 'https://example.com/assets/js/foobar.min.js'},
+#         {'src': '/assets/js/foobar.min.js', 'async': 'true'}
+#     ]
+#     rendered_scripts = Renderer._render_scripts(scripts)
+#     assert rendered_scripts == '<script defer="defer" src="https://example.com/assets/js/foobar.min.js"></script><script defer="defer" src="/assets/js/foobar.min.js" async="true"></script>'
+#
+#
+# def test_render_styles():
+#     # TODO: Multiple attributes with same name
+#     # TODO: No styles returns ''
+#     # TODO: &lt; and &gt; in input
+#     # TODO: Test base `render_tags`
+#     styles = [
+#         {'href': 'https://example.com/assets/css/foobar.min.css'},
+#         {'href': '/assets/css/foobar.min.css', 'crossorigin': 'anonymous'}
+#     ]
+#     rendered_styles = Renderer._render_styles(styles)
+#     assert rendered_styles == '<link rel="stylesheet" href="https://example.com/assets/css/foobar.min.css"/><link rel="stylesheet" href="/assets/css/foobar.min.css" crossorigin="anonymous"/>'
 
 
 def test_get_all_meta():  # TODO: That needs refactoring
