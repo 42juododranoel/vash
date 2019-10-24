@@ -9,141 +9,132 @@ from engine.models.files.html_file import HtmlFile
 from engine.models.folders.template import Template
 
 
-def get_templatetags():
-    templatetags = {'link': lambda *args, **kwargs: 'FOOBAR'}
-    templatetags['picture'] = templatetags['link']  # TODO: Temporary hack
-    return templatetags
-
-
 class Renderer:
-    DEFAULT_TEMPLATE_NAMES = ['meta', 'body', 'styles', 'scripts']
-    REQUIRED_TEMPLATE_NAMES = ['meta', 'body']
+    RENDERED_HTML_FOLDER_PATH = f'/resources/assets/html'
+    RENDERED_JSON_FOLDER_PATH = f'/resources/assets/json'
 
-    DEFAULT_TEMPLATE_PATH = 'default/default.html'
+    MAIN_TEMPLATE_PATH = '/resources/templates/default/default.html'
 
-    BLOCKS = {
-        'styles': {
-            'template': '<link {attributes}/>',
-            'attributes': {'rel': 'stylesheet'},
-        },
-        'scripts': {
-            'template': '<script {attributes}></script>',
-            'attributes': {'defer': 'true'},
-        }
+    BLOCK_ATTRIBUTES = {
+        'styles': {'rel': 'stylesheet'},
+        'scripts': {'defer': 'true'},
     }
 
-    TEMPLATETAGS = get_templatetags()
+    @staticmethod
+    def jinja_render(file_path, context):
+        with open(file_path) as file:
+            file_content = file.read()
+            jinja_file = JinjaTemplate(file_content)
+        rendered_html = jinja_file.render(**context)
+        unescaped_html = Markup(rendered_html)
+        return unescaped_html
 
     @staticmethod
-    def _get_content_files(page):
-        content_files = {}
-        for file_name in os.listdir(page.absolute_path):
-            if file_name.endswith('.html'):
-                name = file_name.rpartition('.html')[0]
-                content_files[name] = HtmlFile(f'{page.absolute_path}/{file_name}')
+    def _get_templatetags():
+        templatetags = {'link': lambda *args, **kwargs: 'FOOBAR'}
+        templatetags['picture'] = templatetags['link']  # TODO: Temporary hack
+        return templatetags
+
+    def _get_page_meta(self, page):
+        return page.files['meta'].read()
+
+    def _get_templates(self, page_meta):
+        template_paths = page_meta['template'].split(' > ')
+        templates = [Template(path) for path in template_paths]
+        return templates
+
+    def _get_template_meta(self, page, templates):
+        meta = {}
+        for template in templates:
+            template_meta = template.files['meta'].read()
+            merge_mappings(meta, template_meta)
         else:
-            return content_files
+            return meta
 
-    @staticmethod
-    def _get_template_files(templates):
-        template_files = {}
+    def _get_styles_and_scripts_blocks(self, meta):
+        blocks = {}
 
-        for template_name in Renderer.REQUIRED_TEMPLATE_NAMES:
+        for block_name in ['styles', 'scripts']:
+            block_tags = meta.get(block_name, [])
+
+            for block_tag in block_tags:
+                block_tag.update(self.BLOCK_ATTRIBUTES[block_name])
+            else:
+                blocks[block_name] = block_tags
+
+        return blocks
+
+    def _get_meta_and_body_blocks(self, templates, context):
+        blocks = {}
+
+        for block_name in ['meta', 'body']:
+            blocks[block_name] = ''
             latest_template_file_in_hierarchy = None
 
             for template in templates:
-                template_file = HtmlFile(f'{template.absolute_path}/{template_name}.html')
+                template_file = HtmlFile(f'{template.absolute_path}/{block_name}.html')
                 if template_file.is_present:
                     latest_template_file_in_hierarchy = template_file
+
             else:
-                template_files[template_name] = latest_template_file_in_hierarchy
+                if latest_template_file_in_hierarchy:
+                    file_path = latest_template_file_in_hierarchy.absolute_path
+                    blocks[block_name] = self.jinja_render(file_path, context)
         else:
-            return template_files
+            return blocks
 
-    @staticmethod
-    def _render_html_file(html_file, context):
-        with open(html_file.absolute_path) as file:
-            jinja_file = JinjaTemplate(file.read())
-
-        rendered_file = jinja_file.render(**context)
-        unescaped_file = Markup(rendered_file)
-        return unescaped_file
-
-    @staticmethod
-    def _render_html_files(html_files, context):
-        return {
-            name: Renderer._render_html_file(file, context) if file else ''
-            for name, file in html_files.items()
-        }
-
-    @staticmethod
-    def _render_block(block_name, block_tags):
-        block = Renderer.BLOCKS[block_name]
-        rendered_block = ''
-        for block_tag in block_tags:
-            block_tag.update(block['attributes'])
-            attribute_pairs = [f'{key}="{value}"' for key, value in block_tag.items()]
-            attributes = ' '.join(attribute_pairs)
-            rendered_block += block['template'].format(attributes=attributes)
+    def _get_contents(self, page_folder_path, context):
+        contents = {}
+        for file_name in os.listdir(page_folder_path):
+            if file_name.endswith('.html'):
+                name = file_name.rpartition('.html')[0]
+                file_path = f'{page_folder_path}/{file_name}'
+                contents[name] = self.jinja_render(file_path, context)
         else:
-            return {block_name: rendered_block, f'raw_{block_name}': block_tags}
+            return contents
 
-    @staticmethod
-    def render_page(page):
+    def render_page(self, page):
         if not page.is_present:
             raise ValueError('Can\'t render missing page')
 
-        context = Renderer.TEMPLATETAGS
-        page_meta = page.files['meta'].read()
+        context = self._get_templatetags()
 
-        # Combine page meta with template meta
-        template_paths = page_meta['template'].split(' > ')
-        templates = [Template(path) for path in template_paths]
-        for template in templates:
-            template_meta = template.files['meta'].read()
-            context = merge_mappings(context, template_meta)
-        context.update(page_meta)  # Page meta owerrides template meta
+        # Combine page meta and template meta
+        meta = {}
+        page_meta = self._get_page_meta(page)
+        templates = self._get_templates(page_meta)
+        template_meta = self._get_template_meta(page, templates)
+        meta.update(template_meta)
+        meta.update(page_meta)  # Page meta overrides template meta
+        context.update(meta)
 
-        # Render blocks `styles` and `scripts`
-        for block_name in ['styles', 'scripts']:
-            block_tags = page_meta.get(block_name, [])
-            context.update(Renderer._render_block(block_name, block_tags))
+        # Contents are HTML files inside page folder
+        contents = self._get_contents(page.absolute_path, context)
+        context.update(contents)
 
-        # Render page contents — all HTML files inside page folder
-        content_files = Renderer._get_content_files(page)
-        rendered_html_files = Renderer._render_html_files(content_files, context)
-        context.update(rendered_html_files)
+        # Blocks are used to render main template and seamless cache
+        blocks = {}
+        styles_and_scripts = self._get_styles_and_scripts_blocks(meta)
+        blocks.update(styles_and_scripts)
+        meta_and_body = self._get_meta_and_body_blocks(templates, context)
+        blocks.update(meta_and_body)
+        context.update(blocks)
 
-        # Render page templates hierarchy — meta `template` attribute
-        template_files = Renderer._get_template_files(templates)
-        rendered_template_files = Renderer._render_html_files(template_files, context)
-        context.update(rendered_template_files)
+        # Render and save as HTML and JSON
+        html_file = self._render_as_html(page, context)
+        json_file = self._render_as_json(page, blocks)
 
-        # Render page as HTML via default template
-        default_template = Template(Renderer.DEFAULT_TEMPLATE_PATH)
-        default_template_file = HtmlFile(default_template.absolute_path)
-        rendered_html = Renderer._render_html_file(default_template_file, context)
+        return {'html': html_file, 'json': json_file}
 
-        # Render page as JSON for Seamless API and Seamless.js
-        rendered_json = {}
-        for default_template_name in Renderer.DEFAULT_TEMPLATE_NAMES:
-            if default_template_name in ['scripts', 'styles']:
-                value = context[f'raw_{default_template_name}']  # Seamless.js uses attribute structure for simplicity
-            else:
-                value = context.get(default_template_name, '')
-            rendered_json[default_template_name] = value
+    def _render_as_html(self, page, context):
+        html = self.jinja_render(self.MAIN_TEMPLATE_PATH, context)
+        html_file_path = f'{self.RENDERED_HTML_FOLDER_PATH}/{page.path}.html'
+        html_file = HtmlFile(html_file_path)
+        html_file.write(html)
+        return html_file
 
-        # Write rendered contents to files
-        html_file = HtmlFile(f'/resources/assets/html/{page.path}.html')
-        html_file.write(rendered_html)
-        json_file = JsonFile(f'/resources/assets/json/{page.path}.json')
-        json_file.write(rendered_json)
-
-        return {'html': rendered_html, 'json': rendered_json}
-
-    def render_related_pages():
-        # - список релейтедов
-        # - отрендеренный джейсон
-        # Для каждой релейтед
-        #     В её отрендеренном джейсоне обновить кусочек с этой страницей
-        pass
+    def _render_as_json(self, page, blocks):
+        json_file_path = f'{self.RENDERED_JSON_FOLDER_PATH}/{page.path}.json'
+        json_file = JsonFile(json_file_path)
+        json_file.write(blocks)
+        return json_file

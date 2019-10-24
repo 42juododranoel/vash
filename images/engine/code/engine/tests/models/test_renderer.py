@@ -7,66 +7,53 @@ from engine.models.files.html_file import HtmlFile
 from engine.models.folders.template import Template
 
 
-def test_render_fails_when_page_is_not_created():
-    # TODO: More specific error
-    # TODO: Correct test message
-    page = Page(ABSOLUTE_PATH_A)
-    renderer = Renderer()
-    pytest.raises(ValueError, renderer.render_page, page)
+def test_jinja_renders_templates():
+    ...
 
 
-# def test_render_scripts():
-#     # TODO: Unify with test_render_styles
-#     scripts = [
-#         {'src': 'https://example.com/assets/js/foobar.min.js'},
-#         {'src': '/assets/js/foobar.min.js', 'async': 'true'}
-#     ]
-#     rendered_scripts = Renderer._render_scripts(scripts)
-#     assert rendered_scripts == '<script defer="defer" src="https://example.com/assets/js/foobar.min.js"></script><script defer="defer" src="/assets/js/foobar.min.js" async="true"></script>'
-#
-#
-# def test_render_styles():
-#     # TODO: Multiple attributes with same name
-#     # TODO: No styles returns ''
-#     # TODO: &lt; and &gt; in input
-#     # TODO: Test base `render_tags`
-#     styles = [
-#         {'href': 'https://example.com/assets/css/foobar.min.css'},
-#         {'href': '/assets/css/foobar.min.css', 'crossorigin': 'anonymous'}
-#     ]
-#     rendered_styles = Renderer._render_styles(styles)
-#     assert rendered_styles == '<link rel="stylesheet" href="https://example.com/assets/css/foobar.min.css"/><link rel="stylesheet" href="/assets/css/foobar.min.css" crossorigin="anonymous"/>'
+def test_jinja_renders_as_unescaped_html():
+    ...
 
 
-def test_get_all_meta():  # TODO: That needs refactoring
-    # TODO: multiple templates
-    # TODO: simpler page creation
-    # TODO: relative paths
-    # TODO: validate separators
-    page = Page(ABSOLUTE_PATH_A)
-    page.create()
-    page_meta = page.files['meta'].read()
-    page_meta['template'] = ABSOLUTE_PATH_B
-    page.files['meta'].write(page_meta)
-
-    template = Template(ABSOLUTE_PATH_B)
-    template.create()
-    template_meta = template.files['meta'].read()
-    test_key = 'foo'
-    template_meta[test_key] = 'bar'
-    template.files['meta'].write(template_meta)
-
-    template_paths = page_meta['template'].split(' > ')
-    templates = [Template(path) for path in template_paths]
-
-    all_meta = Renderer._get_all_meta(page_meta, templates)
-    assert test_key in all_meta
+def test_get_templatetags():
+    ...
 
 
-def test_get_content_files():
-    # TODO: Returns instances of HtmlFile
-    page = Page(ABSOLUTE_PATH_A)
-    page.create()
+def test_get_page_meta_reads_page_meta():
+    ...
 
-    HtmlFile(f'{page.absolute_path}/test.html').create()
-    assert 'test' in Renderer._get_content_files(page)
+
+def test_get_templates_parses_template_hierarchy():
+    ...
+
+
+def test_get_template_meta_overrides_correctly():
+    ...
+
+
+def test_get_styles_and_scripts_blocks():
+    ...
+
+
+def test_get_meta_and_body_blocks():
+    ...
+
+
+def test_get_contents():
+    ...
+
+
+def test_render_as_html():
+    ...
+
+
+def test_render_as_json():
+    ...
+
+
+def test_render_page_fails_when_page_is_not_created():
+    ...
+
+
+def test_render_page():
+    ...

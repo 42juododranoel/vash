@@ -10,4 +10,5 @@ class Page(Resource):
         return {'meta': PageMetaFile(f'{self.absolute_path}/{self.name}.json')}
 
     def render(self):
-        Renderer.render_page(self)
+        renderer = Renderer()
+        renderer.render_page(self)
