@@ -120,9 +120,13 @@ class Renderer:
         blocks.update(meta_and_body)
         context.update(blocks)
 
-        # Render and save as HTML and JSON
-        html = self._render_as_html(page, context)
-        json = self._render_as_json(page, blocks)
+        # Render as HTML
+        html = self._render_as_html(context)
+
+        # Render as JSON
+        slug = page.path.rsplit('.')[0]  # Remove .html
+        title = context.get('title')
+        json = self._render_as_json(slug, title, blocks)
 
         # Write HTML to file
         html_file_path = f'{self.RENDERED_JSON_FOLDER_PATH}/{page.path}.json'
@@ -135,8 +139,15 @@ class Renderer:
     def _render_as_html(self, context):
         return self.jinja_render(self.MAIN_TEMPLATE_PATH, context)
 
-    def _render_as_json(self, blocks):
-        return blocks
+    def _render_as_json(self, slug, title, blocks):
+        key = f'/{slug}' if slug != 'index' else '/'
+        json = {
+            key: {
+                'title': title,
+                'blocks': blocks,
+            }
+        }
+        return json
 
     def _write_to_html_file(self, file_path, blocks):
         file = JsonFile(file_path)

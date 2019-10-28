@@ -1,14 +1,10 @@
-import os
 import json
-from shutil import copyfile
 from functools import partial
 
 from bs4 import BeautifulSoup
 
 from engine.models.processors.minifier import Minifier
 from legacy.constants import (
-    FILES_FOLDER,
-    PAGES_FOLDER,
     TAGS_TO_WRAP,
     CLASSES_TO_WRAP,
     RENDERED_JSON_FOLDER,
@@ -21,7 +17,6 @@ from legacy.extensions import (
 )
 
 from legacy.functions import RENDER_FUNCTIONS
-from legacy.functions.picture import folder_path_to_url
 
 
 def sanitize_html(html):
@@ -62,8 +57,6 @@ def sanitize_html(html):
 def render(slug, page_meta, template_name, no_images=False):
     # Prepare render context
     render_context = RENDER_FUNCTIONS.copy()
-    if no_images:
-        render_context['picture'] = partial(render_context['picture'], dry_run=True)
 
     render_context['picture'] = partial(
         render_context['picture'],
@@ -78,33 +71,6 @@ def render(slug, page_meta, template_name, no_images=False):
 
     render_context.update(page_meta['variables'])
 
-    # Prepare extensions
-    for extension in page_meta.get('extensions', []):
-        if extension == 'opengrapher':
-            og_image_name = page_meta['variables']['og_image']
-            og_image_folder = f'{FILES_FOLDER}/{slug}'
-            os.makedirs(og_image_folder, exist_ok=True)
-
-            old_image_path = f'{PAGES_FOLDER}/{slug}/images/{og_image_name}'
-            new_image_path = f'{og_image_folder}/{og_image_name}'
-            copyfile(old_image_path, new_image_path)
-            print(f'Processing OG image“{og_image_name}”...')
-            render_context['og_image'] = folder_path_to_url(new_image_path)
-
-            render_context['og_url'] = f'{page_meta["variables"]["site_url"]}/{slug}'
-            render_context['og_title'] = page_meta['title']
-            render_context['og_type'] = page_meta['variables']['og_type']
-            render_context['og_locale'] = page_meta['variables']['og_locale']
-            render_context['og_site_name'] = page_meta['variables']['og_site_name']
-
-    # Render page and related pages as JSON for seamless cache
-    key = f'/{slug}' if slug != 'index' else '/'
-    json_data = {
-        key: {
-            'title': page_meta['title'],
-            'blocks': json_blocks,
-        }
-    }
     for related_page_slug in related_page_slugs:
         print(f'  Processing related page “{related_page_slug}”')
         with open(f'{RENDERED_JSON_FOLDER}/{related_page_slug}.json') as file:
