@@ -8,6 +8,12 @@ def model(request, capybara_patch):
     return capybara_patch(request.param)
 
 
+def test_read_fails_when_not_created(model, path):
+    file = model(path)
+    assert not file.is_present
+    pytest.raises(FileNotFoundError, file.read)
+
+
 def test_create_creates_with_initial_content(model, path):
     file = model(path)
     file.create()
