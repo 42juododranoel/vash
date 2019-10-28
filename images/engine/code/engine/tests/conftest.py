@@ -4,15 +4,18 @@ from os.path import isdir
 import pytest
 
 from engine.models.node import Node
-from engine.models.folders.folder import Folder
+#
 from engine.models.folders.page import Page
+from engine.models.folders.folder import Folder
 from engine.models.folders.template import Template
 from engine.models.folders.resource import Resource
+#
 from engine.models.files.file import File
 from engine.models.files.json_file import JsonFile
 from engine.models.files.meta_file import MetaFile
 from engine.models.files.page_meta_file import PageMetaFile
 from engine.models.files.template_meta_file import TemplateMetaFile
+#
 from engine.models.processors.brotler import Brotler
 from engine.models.processors.minifier import Minifier
 from engine.models.processors.processor import Processor
@@ -40,6 +43,20 @@ NODE_CLASSES = [Node] + NODE_SUBCLASSES
 
 PROCESSOR_SUBCLASSES = [Minifier, Brotler]
 PROCESSOR_CLASSES = [Processor] + PROCESSOR_SUBCLASSES
+
+
+@pytest.fixture
+def capybara_patch(monkeypatch):
+    def get_patched_model(model):
+        monkeypatch.setattr(
+            model,
+            'ROOT_FOLDER',
+            f'{TEST_ROOT_FOLDER}{model.ROOT_FOLDER}',
+            raising=True
+        )
+        return model
+
+    return get_patched_model
 
 
 @pytest.fixture(autouse=True)

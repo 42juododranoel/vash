@@ -1,14 +1,11 @@
 import pytest
 
 from engine.models.files.meta_file import MetaFile
-from engine.tests.conftest import TEST_ROOT_FOLDER
 
 
-@pytest.fixture
-def model(request, monkeypatch):
-    model = MetaFile
-    monkeypatch.setattr(model, 'ROOT_FOLDER', TEST_ROOT_FOLDER, raising=True)
-    return model
+@pytest.fixture(params=[MetaFile])
+def model(request, capybara_patch):
+    return capybara_patch(request.param)
 
 
 def test_has_no_default_keys(model, path):

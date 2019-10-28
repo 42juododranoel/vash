@@ -1,22 +1,14 @@
 import pytest
 
 from engine.models.folders.template import Template
-from engine.tests.conftest import TEST_ROOT_FOLDER
 
 
-@pytest.fixture
-def model(monkeypatch):
-    model = Template
-    monkeypatch.setattr(
-        model,
-        'ROOT_FOLDER',
-        f'{TEST_ROOT_FOLDER}{model.ROOT_FOLDER}',
-        raising=True
-    )
-    return model
+@pytest.fixture(params=[Template])
+def model(request, capybara_patch):
+    return capybara_patch(request.param)
 
 
-@pytest.mark.parametrize('key', ['meta'])
-def test_get_files_has_keys(model, path, key):
+@pytest.mark.parametrize('file_name', ['meta'])
+def test_get_files_has_required_files(model, path, file_name):
     template = model(path)
-    assert key in template._get_files()
+    assert file_name in template._get_files()

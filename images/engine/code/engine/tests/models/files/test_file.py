@@ -1,18 +1,11 @@
-import string
-
 import pytest
 
-from engine.tests.conftest import (
-    TEST_ROOT_FOLDER,
-    FILE_CLASSES,
-)
+from engine.tests.conftest import FILE_CLASSES
 
 
 @pytest.fixture(params=FILE_CLASSES)
-def model(request, monkeypatch):
-    model = request.param
-    monkeypatch.setattr(model, 'ROOT_FOLDER', TEST_ROOT_FOLDER, raising=True)
-    return model
+def model(request, capybara_patch):
+    return capybara_patch(request.param)
 
 
 def test_create_creates_with_initial_content(model, path):

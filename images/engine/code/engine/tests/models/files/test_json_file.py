@@ -1,16 +1,11 @@
 import pytest
 
-from engine.tests.conftest import (
-    JSON_FILE_SUBCLASSES,
-    TEST_ROOT_FOLDER
-)
+from engine.tests.conftest import JSON_FILE_SUBCLASSES
 
 
 @pytest.fixture(params=JSON_FILE_SUBCLASSES)
-def model(request, monkeypatch):
-    model = request.param
-    monkeypatch.setattr(model, 'ROOT_FOLDER', TEST_ROOT_FOLDER, raising=True)
-    return model
+def model(request, capybara_patch):
+    return capybara_patch(request.param)
 
 
 def test_initial_content_is_dictionary(model, path):

@@ -1,25 +1,24 @@
 import pytest
 
-from engine.tests.conftest import (
-    RESOURCE_CLASSES,
-    TEST_ROOT_FOLDER,
-)
+from engine.tests.conftest import RESOURCE_CLASSES
 
 
 @pytest.fixture(params=RESOURCE_CLASSES)
-def model(request, monkeypatch):
-    model = request.param
-    resource_root_folder = model.ROOT_FOLDER
-    monkeypatch.setattr(
-        model,
-        'ROOT_FOLDER',
-        f'{TEST_ROOT_FOLDER}{resource_root_folder}',
-        raising=True
-    )
-    return model
+def model(request, capybara_patch):
+    return capybara_patch(request.param)
 
 
-def test_create_creates_files(model, path):
+def test_initialize_sets_files(model, path):
+    resource = model(path)
+    assert hasattr(resource, 'files')
+
+
+def test_get_files_returns_mapping(model, path):
+    resource = model(path)
+    assert isinstance(resource._get_files(), dict)
+
+
+def test_create_also_creates_files(model, path):
     resource = model(path)
     assert not resource.is_present
     resource.create()

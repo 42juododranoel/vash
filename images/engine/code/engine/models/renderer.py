@@ -121,20 +121,28 @@ class Renderer:
         context.update(blocks)
 
         # Render and save as HTML and JSON
-        html_file = self._render_as_html(page, context)
-        json_file = self._render_as_json(page, blocks)
+        html = self._render_as_html(page, context)
+        json = self._render_as_json(page, blocks)
 
-        return {'html': html_file, 'json': json_file}
+        # Write HTML to file
+        html_file_path = f'{self.RENDERED_JSON_FOLDER_PATH}/{page.path}.json'
+        html_file = self._write_to_html_file(html_file_path, html)
 
-    def _render_as_html(self, page, context):
-        html = self.jinja_render(self.MAIN_TEMPLATE_PATH, context)
-        html_file_path = f'{self.RENDERED_HTML_FOLDER_PATH}/{page.path}.html'
-        html_file = HtmlFile(html_file_path)
-        html_file.write(html)
-        return html_file
-
-    def _render_as_json(self, page, blocks):
+        # Write JSON to file
         json_file_path = f'{self.RENDERED_JSON_FOLDER_PATH}/{page.path}.json'
+        json_file = self._write_to_json_file(json_file_path, json)
+
+    def _render_as_html(self, context):
+        return self.jinja_render(self.MAIN_TEMPLATE_PATH, context)
+
+    def _render_as_json(self, blocks):
+        return blocks
+
+    def _write_to_html_file(self, file_path, blocks):
+        file = JsonFile(file_path)
+        file.write(blocks)
+
+    def _write_to_json_file(self, json_file_path, blocks):
         json_file = JsonFile(json_file_path)
         json_file.write(blocks)
         return json_file

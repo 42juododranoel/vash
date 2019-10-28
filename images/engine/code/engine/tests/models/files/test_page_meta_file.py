@@ -1,14 +1,11 @@
 import pytest
 
 from engine.models.files.page_meta_file import PageMetaFile
-from engine.tests.conftest import TEST_ROOT_FOLDER
 
 
-@pytest.fixture
-def model(request, monkeypatch):
-    model = PageMetaFile
-    monkeypatch.setattr(model, 'ROOT_FOLDER', TEST_ROOT_FOLDER, raising=True)
-    return model
+@pytest.fixture(params=[PageMetaFile])
+def model(request, capybara_patch):
+    return capybara_patch(request.param)
 
 
 @pytest.mark.parametrize('key', ['slug', 'type', 'title'])
