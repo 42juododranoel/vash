@@ -6,8 +6,8 @@ from engine.tests.conftest import NODE_SUBCLASSES
 
 
 @pytest.fixture(params=NODE_SUBCLASSES)
-def model(request, capybara_patch):
-    return capybara_patch(request.param)
+def model(request):
+    return request.param
 
 
 def test_has_root_folder(model, path):

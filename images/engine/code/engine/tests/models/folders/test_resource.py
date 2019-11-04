@@ -4,8 +4,8 @@ from engine.tests.conftest import RESOURCE_CLASSES
 
 
 @pytest.fixture(params=RESOURCE_CLASSES)
-def model(request, capybara_patch):
-    return capybara_patch(request.param)
+def model(request):
+    return request.param
 
 
 def test_initialize_sets_files(model, path):

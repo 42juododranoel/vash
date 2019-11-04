@@ -17,3 +17,10 @@ from engine.utilities import merge_mappings
 )
 def test_merge_mappings(first, second, result):
     assert result == merge_mappings(first, second)
+
+
+def test_modifies_first_argument():
+    first = {}
+    second = {1: 2}
+    merge_mappings(first, second)
+    assert first == second

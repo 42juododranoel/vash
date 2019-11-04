@@ -4,8 +4,8 @@ from engine.tests.conftest import FILE_CLASSES
 
 
 @pytest.fixture(params=FILE_CLASSES)
-def model(request, capybara_patch):
-    return capybara_patch(request.param)
+def model(request):
+    return request.param
 
 
 def test_read_fails_when_not_created(model, path):

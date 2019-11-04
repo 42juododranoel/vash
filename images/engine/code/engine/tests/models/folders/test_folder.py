@@ -6,8 +6,8 @@ from engine.tests.conftest import FOLDER_CLASSES
 
 
 @pytest.fixture(params=FOLDER_CLASSES)
-def model(request, capybara_patch):
-    return capybara_patch(request.param)
+def model(request):
+    return request.param
 
 
 def test_is_empty_true_when_empty(model, path):

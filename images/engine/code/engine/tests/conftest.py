@@ -45,22 +45,19 @@ PROCESSOR_SUBCLASSES = [Minifier, Brotler]
 PROCESSOR_CLASSES = [Processor] + PROCESSOR_SUBCLASSES
 
 
-@pytest.fixture
-def capybara_patch(monkeypatch):
-    def get_patched_model(model):
+@pytest.fixture(autouse=True)
+def monkey_patch_node_root_folder(monkeypatch):
+    for model in NODE_CLASSES:
         monkeypatch.setattr(
             model,
             'ROOT_FOLDER',
             f'{TEST_ROOT_FOLDER}{model.ROOT_FOLDER}',
             raising=True
         )
-        return model
-
-    return get_patched_model
 
 
 @pytest.fixture(autouse=True)
-def remove_test_folder(request):
+def remove_node_root_folder(request):
     yield
     if isdir(TEST_ROOT_FOLDER):
         rmtree(TEST_ROOT_FOLDER)
