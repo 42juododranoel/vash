@@ -1,14 +1,12 @@
 import brotli
 
-from engine.models.processors.processor import Processor
+from engine.models.processors.binary_processor import BinaryProcessor
 
 
-class Brotler(Processor):
-    IS_BINARY = True
-
+class Brotler(BinaryProcessor):
     @classmethod
-    def get_file_path(cls, file):
-        return f'{file.path}.br'
+    def _get_file_path(cls, file):
+        return f'{file.absolute_path}.br'
 
     @classmethod
     def _process(cls, content):

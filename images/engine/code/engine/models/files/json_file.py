@@ -22,3 +22,11 @@ class JsonFile(File):
 
     def _deserialize(self, content):
         return json.loads(content)
+
+    def get(self, key, default=None):
+        try:
+            value = self[key]
+        except KeyError:
+            value = default
+        finally:
+            return value

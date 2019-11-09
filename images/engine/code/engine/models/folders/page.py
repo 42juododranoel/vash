@@ -1,16 +1,25 @@
 import os
 
+from engine.models.files.file import File
 from engine.models.files.html_file import HtmlFile
 from engine.models.files.json_file import JsonFile
+from engine.models.files.page_meta_file import PageMetaFile
 from engine.models.folders.resource import Resource
 from engine.models.folders.template import Template
-from engine.models.files.page_meta_file import PageMetaFile
+from engine.models.processors.brotler import Brotler
+from engine.models.processors.minifier import Minifier
+from engine.models.processors.typograph import Typograph
 
+PROCESSORS = {
+    'brotler': Brotler,
+    'minifier': Minifier,
+    'typograph': Typograph,
+}
 
-def get_templatetags():
-    templatetags = {'link': lambda *args, **kwargs: 'FOOBAR'}
-    templatetags['picture'] = templatetags['link']
-    return templatetags
+TEMPLATETAGS = {
+    'link': lambda *args, **kwargs: 'FOOBAR'
+}
+TEMPLATETAGS['picture'] = TEMPLATETAGS['link']
 
 
 class PageContents:
@@ -112,7 +121,7 @@ class Page(Resource):
         if not self.is_present:
             raise ValueError('Can\'t render missing page')
 
-        context = get_templatetags()
+        context = TEMPLATETAGS
         context.update(self.meta)
 
         contents = self.contents.render(context)
@@ -124,6 +133,14 @@ class Page(Resource):
         self._render_as_html(context)
         self._render_as_json(blocks)
 
+    def _get_processors(self, stage, name, default):
+        try:
+            processors = self.meta['processors'][stage][name]
+        except KeyError:
+            processors = default
+        finally:
+            return processors
+
     def _get_files(self):
         return {
             'meta': PageMetaFile(f'{self.absolute_path}/{self.name}.json'),
@@ -133,10 +150,30 @@ class Page(Resource):
 
     def _render_as_html(self, context):
         main_template = Template.get_main_template()
-        html = HtmlFile(f'{main_template.absolute_path}/main.html').render(context)
-        self.files['html'].write(html)
+        html_file = HtmlFile(f'{main_template.absolute_path}/main.html')
+        html = html_file.render(context)
+
+        pre_processors = self._get_processors('pre', 'html', [])
+        for name in pre_processors:
+            processor = PROCESSORS[name]
+            html = processor.process_content(html)
+
+        file = self.files['html']
+        file.write(html)
+
+        post_processors = self._get_processors('post', 'html', [])
+        for name in post_processors:
+            processor = PROCESSORS[name]
+            processor.process_file(file)
 
     def _render_as_json(self, blocks):
+        pre_processors_by_block = self._get_processors('pre', 'json', {})
+        for block_name, processors in pre_processors_by_block.items():
+            for processor_name in processors:
+                block = blocks[block_name]
+                processor = PROCESSORS[processor_name]
+                blocks[block_name] = processor.process_content(block)
+
         slug = self.path.rsplit('.')[0]  # Remove .html
         key = f'/{slug}' if slug != 'index' else '/'
         json = {
@@ -145,4 +182,11 @@ class Page(Resource):
                 'blocks': blocks,
             }
         }
-        self.files['json'].write(json)
+
+        file = self.files['json']
+        file.write(json)
+
+        post_processors = self._get_processors('post', 'json', [])
+        for name in post_processors:
+            processor = PROCESSORS[name]
+            processor.process_file(file)
