@@ -1,9 +1,6 @@
-def link(slug, context):
-    context['relations-from-me'].append(slug)
+from engine.utilities.path_to_link import path_to_link
 
-    if slug == 'index':
-        link = '/'
-    else:
-        link = f'/{slug}'
 
-    return link
+def link(path, context):
+    context['relations-from-me'].append(path)
+    return path_to_link(path)

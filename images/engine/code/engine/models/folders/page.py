@@ -1,6 +1,7 @@
 import os
 from functools import partial
 
+from engine.utilities import path_to_link
 from engine.models.tags import TAGS
 from engine.models.processors import PROCESSORS
 from engine.models.files.html import HtmlFile
@@ -99,6 +100,10 @@ class Page(Resource):
         self.contents = PageContents(self)
 
     @property
+    def link(self):
+        return path_to_link(self.path)
+
+    @property
     def meta(self):
         template_meta = self.files['meta'].template_meta
         page_meta = self.files['meta'].read()
@@ -120,6 +125,8 @@ class Page(Resource):
 
         self._render_as_html(context)
         self._render_as_json(blocks)
+
+        self._update_relations_from_me(context['relations-from-me'])
 
     def _get_context(self):
         context = {
@@ -172,10 +179,8 @@ class Page(Resource):
                 processor = PROCESSORS[processor_name]
                 blocks[block_name] = processor.process_content(block)
 
-        slug = self.path.rsplit('.')[0]  # Remove .html
-        key = f'/{slug}' if slug != 'index' else '/'
         json = {
-            key: {
+            self.link: {
                 'title': self.meta['title'],
                 'blocks': blocks,
             }
@@ -188,3 +193,11 @@ class Page(Resource):
         for name in post_processors:
             processor = PROCESSORS[name]
             processor.process_file(file)
+
+    def _update_relations_from_me(self, relations):
+        relations_from_me = {}
+
+        for path in relations:
+            related_page = Page(path)
+            related_page_json = related_page.files['json'].read()
+            relations_from_me[related_page.link] = related_page_json[related_page.link]
