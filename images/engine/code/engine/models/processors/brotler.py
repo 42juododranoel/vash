@@ -1,6 +1,6 @@
 import brotli
 
-from engine.models.processors.binary_processor import BinaryProcessor
+from engine.models.processors._.binary import BinaryProcessor
 
 
 class Brotler(BinaryProcessor):

@@ -1,4 +1,4 @@
-from engine.models.folders.folder import Folder
+from engine.models.folders._.folder import Folder
 
 
 class Resource(Folder):

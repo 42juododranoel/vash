@@ -1,6 +1,6 @@
 from richtypo import Richtypo
 
-from engine.models.processors.processor import Processor
+from engine.models.processors._.processor import Processor
 
 
 class RichtypoBypassingStyleTag(Richtypo):

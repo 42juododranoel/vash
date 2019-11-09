@@ -1,6 +1,6 @@
 import pytest
 
-from engine.models.files.file import File
+from engine.models.files._.file import File
 from engine.models.processors.minifier import Minifier
 
 

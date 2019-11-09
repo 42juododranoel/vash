@@ -3,7 +3,6 @@ from functools import partial
 
 from bs4 import BeautifulSoup
 
-from engine.models.processors.minifier import Minifier
 from legacy.constants import (
     TAGS_TO_WRAP,
     CLASSES_TO_WRAP,
@@ -11,7 +10,6 @@ from legacy.constants import (
 )
 from legacy.extensions import (
     wrap_hanging_punctuation,
-    typograph_html,
     hyphenate_html,
     highlight_precode,
 )
@@ -48,9 +46,7 @@ def sanitize_html(html):
         soup = wrap_hanging_punctuation(soup)
         soup = highlight_precode(soup)
         html = str(soup)
-        html = typograph_html(html)
         html = hyphenate_html(html)
-        html = Minifier.process_content(html)
         return html
 
 
@@ -68,8 +64,6 @@ def render(slug, page_meta, template_name, no_images=False):
         render_context['link'],
         related_page_slugs=related_page_slugs,
     )
-
-    render_context.update(page_meta['variables'])
 
     for related_page_slug in related_page_slugs:
         print(f'  Processing related page “{related_page_slug}”')

@@ -1,6 +1,5 @@
 import os
 
-from engine.models.files.file import File
 from engine.models.files.html_file import HtmlFile
 from engine.models.files.json_file import JsonFile
 from engine.models.files.page_meta_file import PageMetaFile
