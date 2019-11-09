@@ -1,4 +1,4 @@
-from engine.models.files._.file import File
+from engine.models.files.bases.file import File
 
 
 class BinaryFile(File):

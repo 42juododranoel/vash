@@ -6,19 +6,19 @@ import pytest
 from engine.models.node import Node
 #
 from engine.models.folders.page import Page
-from engine.models.folders._.folder import Folder
+from engine.models.folders.bases.folder import Folder
 from engine.models.folders.template import Template
-from engine.models.folders.resource import Resource
+from engine.models.folders.bases.resource import Resource
 #
-from engine.models.files._.file import File
-from engine.models.files.json_file import JsonFile
-from engine.models.files.meta_file import MetaFile
-from engine.models.files.page_meta_file import PageMetaFile
-from engine.models.files.template_meta_file import TemplateMetaFile
+from engine.models.files.bases.file import File
+from engine.models.files.json import JsonFile
+from engine.models.files.meta import MetaFile
+from engine.models.files.page_meta import PageMetaFile
+from engine.models.files.template_meta import TemplateMetaFile
 #
 from engine.models.processors.brotler import Brotler
 from engine.models.processors.minifier import Minifier
-from engine.models.processors._.processor import Processor
+from engine.models.processors.bases.processor import Processor
 
 TEST_ROOT_FOLDER = '/tmp/tests'
 

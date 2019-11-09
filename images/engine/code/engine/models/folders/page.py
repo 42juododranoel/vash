@@ -1,24 +1,13 @@
 import os
+from functools import partial
 
-from engine.models.files.html_file import HtmlFile
-from engine.models.files.json_file import JsonFile
-from engine.models.files.page_meta_file import PageMetaFile
-from engine.models.folders.resource import Resource
+from engine.models.tags import TAGS
+from engine.models.processors import PROCESSORS
+from engine.models.files.html import HtmlFile
+from engine.models.files.json import JsonFile
+from engine.models.files.page_meta import PageMetaFile
+from engine.models.folders.bases.resource import Resource
 from engine.models.folders.template import Template
-from engine.models.processors.brotler import Brotler
-from engine.models.processors.minifier import Minifier
-from engine.models.processors.typograph import Typograph
-
-PROCESSORS = {
-    'brotler': Brotler,
-    'minifier': Minifier,
-    'typograph': Typograph,
-}
-
-TEMPLATETAGS = {
-    'link': lambda *args, **kwargs: 'FOOBAR'
-}
-TEMPLATETAGS['picture'] = TEMPLATETAGS['link']
 
 
 class PageContents:
@@ -113,14 +102,14 @@ class Page(Resource):
     def meta(self):
         template_meta = self.files['meta'].template_meta
         page_meta = self.files['meta'].read()
-        template_meta.update(page_meta)  # Page meta overrides template meta
+        template_meta.update(page_meta)
         return template_meta
 
     def render(self):
         if not self.is_present:
             raise ValueError('Can\'t render missing page')
 
-        context = TEMPLATETAGS
+        context = self._get_context()
         context.update(self.meta)
 
         contents = self.contents.render(context)
@@ -131,6 +120,16 @@ class Page(Resource):
 
         self._render_as_html(context)
         self._render_as_json(blocks)
+
+    def _get_context(self):
+        context = {
+            'relations-from-me': [],
+            'relations-to-me': [],
+        }
+        for name, tag in TAGS.items():
+            context[name] = partial(tag, context=context)
+        else:
+            return context
 
     def _get_processors(self, stage, name, default):
         try:

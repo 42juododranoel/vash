@@ -1,6 +1,6 @@
 import json
 
-from engine.models.files.json_file import JsonFile
+from engine.models.files.json import JsonFile
 
 
 class MetaFile(JsonFile):

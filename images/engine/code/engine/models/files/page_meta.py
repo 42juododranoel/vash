@@ -1,4 +1,4 @@
-from engine.models.files.meta_file import MetaFile
+from engine.models.files.meta import MetaFile
 from engine.models.folders.template import Template
 from engine.utilities import merge_mappings
 

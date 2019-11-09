@@ -1,6 +1,6 @@
 import pytest
 
-from engine.models.files.meta_file import MetaFile
+from engine.models.files.meta import MetaFile
 
 
 @pytest.fixture(params=[MetaFile])

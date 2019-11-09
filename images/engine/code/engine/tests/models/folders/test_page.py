@@ -3,7 +3,7 @@ import pytest
 from engine.tests.conftest import TEST_ROOT_FOLDER
 from engine.models.folders.page import Page
 from engine.models.folders.template import Template
-from engine.models.files.html_file import HtmlFile
+from engine.models.files.html import HtmlFile
 
 
 @pytest.fixture(params=[Page])

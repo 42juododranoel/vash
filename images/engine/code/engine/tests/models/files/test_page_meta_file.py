@@ -1,7 +1,7 @@
 import pytest
 
 from engine.models.folders.template import Template
-from engine.models.files.page_meta_file import PageMetaFile
+from engine.models.files.page_meta import PageMetaFile
 
 
 @pytest.fixture(params=[PageMetaFile])

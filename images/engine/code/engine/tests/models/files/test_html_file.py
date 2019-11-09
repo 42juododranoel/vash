@@ -1,6 +1,6 @@
 import pytest
 
-from engine.models.files.html_file import HtmlFile
+from engine.models.files.html import HtmlFile
 
 
 @pytest.fixture(params=[HtmlFile])

@@ -1,10 +1,10 @@
-from engine.models.files._.file import File
+from engine.models.files.bases.file import File
 
 
 class Processor:
     @classmethod
     def _get_file_path(cls, file):
-        raise NotImplementedError('Can\'t call abstract `get_file_path`. Override it')
+        return file.absolute_path
 
     @classmethod
     def _process(cls, content):

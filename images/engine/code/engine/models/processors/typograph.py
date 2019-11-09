@@ -1,6 +1,6 @@
 from richtypo import Richtypo
 
-from engine.models.processors._.processor import Processor
+from engine.models.processors.bases.processor import Processor
 
 
 class RichtypoBypassingStyleTag(Richtypo):
@@ -8,10 +8,6 @@ class RichtypoBypassingStyleTag(Richtypo):
 
 
 class Typograph(Processor):
-    @classmethod
-    def _get_file_path(cls, file):
-        return file.absolute_path
-
     @classmethod
     def _process(cls, content):
         richtypo = RichtypoBypassingStyleTag('ru-lite')

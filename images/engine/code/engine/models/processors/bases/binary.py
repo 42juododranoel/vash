@@ -1,6 +1,6 @@
-from engine.models.files._.file import File
-from engine.models.files._.binary import BinaryFile
-from engine.models.processors._.processor import Processor
+from engine.models.files.bases.file import File
+from engine.models.files.bases.binary import BinaryFile
+from engine.models.processors.bases.processor import Processor
 
 
 class BinaryProcessor(Processor):

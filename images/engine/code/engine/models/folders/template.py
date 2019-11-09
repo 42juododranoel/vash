@@ -1,5 +1,5 @@
-from engine.models.folders.resource import Resource
-from engine.models.files.template_meta_file import TemplateMetaFile
+from engine.models.folders.bases.resource import Resource
+from engine.models.files.template_meta import TemplateMetaFile
 
 
 class Template(Resource):
