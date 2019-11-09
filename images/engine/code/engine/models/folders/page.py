@@ -127,6 +127,7 @@ class Page(Resource):
         self._render_as_json(blocks)
 
         self._update_relations_from_me(context['relations-from-me'])
+        # self._update_relations_to_me(context['relations-to-me'])  # Somehow
 
     def _get_context(self):
         context = {
@@ -201,3 +202,12 @@ class Page(Resource):
             related_page = Page(path)
             related_page_json = related_page.files['json'].read()
             relations_from_me[related_page.link] = related_page_json[related_page.link]
+
+    def _update_relations_to_me(self, relations):
+        my_json = self.files['json'].read()
+
+        for path in relations:
+            related_page = Page(path)
+            related_page_json = related_page.files['json'].read()
+            related_page_json[self.link] = my_json[self.link]
+            related_page.files['json'].write(related_page_json)
