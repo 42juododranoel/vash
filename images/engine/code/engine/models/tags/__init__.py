@@ -1,6 +1,7 @@
 from engine.models.tags.link import link
+from legacy.picture import picture
 
 TAGS = {
     'link': link,
-    'picture': lambda *args, **kwargs: 'FFOBBARR'
+    'picture': picture,
 }

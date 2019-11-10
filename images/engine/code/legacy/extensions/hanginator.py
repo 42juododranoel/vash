@@ -12,6 +12,7 @@ BLACKLISTED_TAGS = [
 
 class DontEscapeDammit(PreformattedString):
     """A trick that prevents BeautifulSoup from changing < to &lt;"""
+
     def output_ready(self, formatter=None):
         self.format_string(self, formatter)
         return self.PREFIX + self + self.SUFFIX

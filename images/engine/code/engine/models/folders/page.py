@@ -1,7 +1,7 @@
 import os
 from functools import partial
 
-from engine.utilities import path_to_link
+from engine.utilities import merge_metas, path_to_link
 from engine.models.tags import TAGS
 from engine.models.processors import PROCESSORS
 from engine.models.files.html import HtmlFile
@@ -64,16 +64,17 @@ class PageBlocks:
 
     @property
     def styles(self):
-        return self._get_tag_block('styles', {'rel': 'stylesheet'})
+        return self._get_tag_block('styles')
 
     @property
     def scripts(self):
-        return self._get_tag_block('scripts', {'defer': 'true'})
+        return self._get_tag_block('scripts')
 
-    def _get_tag_block(self, name, attributes):
+    def _get_tag_block(self, name):
         tags = self.page.meta.get(name, [])
         for tag in tags:
-            tag.update(attributes)
+            if name == 'scripts':
+                tag.update({'defer': 'true'})
         return tags
 
     def _get_file_block(self, name):
@@ -107,7 +108,7 @@ class Page(Resource):
     def meta(self):
         template_meta = self.files['meta'].template_meta
         page_meta = self.files['meta'].read()
-        template_meta.update(page_meta)
+        merge_metas(template_meta, page_meta)
         return template_meta
 
     def render(self):
@@ -133,6 +134,7 @@ class Page(Resource):
         context = {
             'relations-from-me': [],
             'relations-to-me': [],
+            'page': self,
         }
         for name, tag in TAGS.items():
             context[name] = partial(tag, context=context)

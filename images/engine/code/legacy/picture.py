@@ -3,15 +3,27 @@ from shutil import copyfile
 
 from jinja2 import Markup
 
-from legacy.constants import (
-    FILES_URL,
-    PAGES_FOLDER,
-    FILES_FOLDER,
-    FRONTEND_BREAKPOINT_MD,
-    FRONTEND_BREAKPOINT_LG,
-    FRONTEND_COLUMNS_COUNT,
-)
-from legacy.image.processor import ImageProcessor
+from legacy.processor import ImageProcessor
+
+FILES_URL = '/files'
+
+FILES_FOLDER = '/resources/files'
+PAGES_FOLDER = '/resources/pages'
+TEMPLATES_FOLDER = '/resources/templates'
+
+RENDERED_HTML_FOLDER = f'/resources/assets/html'
+RENDERED_JSON_FOLDER = f'/resources/assets/json'
+
+TAGS_TO_WRAP = ['p', 'h1', 'h2', 'h3', 'figcaption', 'ul', 'ol']
+CLASSES_TO_WRAP = ['subscription', 'medium-heading', 'indent']
+
+SLUG_HELP_TEXT = '0-9, a-z, A-Z, -, _.'
+REQUIRED_BLOCKS = ['meta', 'styles', 'body']
+
+FRONTEND_BREAKPOINT_SM = 0
+FRONTEND_BREAKPOINT_MD = 960
+FRONTEND_BREAKPOINT_LG = 1400
+FRONTEND_COLUMNS_COUNT = 16
 
 
 def folder_path_to_url(path):
@@ -20,10 +32,12 @@ def folder_path_to_url(path):
     return path.replace(FILES_FOLDER, FILES_URL, 1)
 
 
-def picture(file_name, dry_run=False, page_slug='', alt_text='', image_classes='', wrapper_classes='', is_borderless=False, col_sm=None, col_md=None, col_lg=None):
+def picture(file_name, context, dry_run=False, alt_text='', image_classes='', wrapper_classes='', is_borderless=False, col_sm=None, col_md=None, col_lg=None):
     """
     Output complex HTML with “picture” and “.picture-wrapper”
     """
+
+    page_slug = context['page'].path
 
     col_sm = col_sm or FRONTEND_COLUMNS_COUNT
     col_md = col_md or col_sm

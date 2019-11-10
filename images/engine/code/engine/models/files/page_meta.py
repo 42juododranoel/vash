@@ -1,4 +1,4 @@
-from engine.utilities import merge_mappings
+from engine.utilities import merge_metas
 from engine.models.files.meta import MetaFile
 from engine.models.folders.template import Template
 
@@ -24,6 +24,6 @@ class PageMetaFile(MetaFile):
         meta = {}
         for template in self.templates:
             template_meta = template.meta.read()
-            merge_mappings(meta, template_meta)
+            merge_metas(meta, template_meta)
         else:
             return meta

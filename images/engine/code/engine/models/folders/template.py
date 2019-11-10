@@ -14,4 +14,4 @@ class Template(Resource):
         return self.files['meta']
 
     def _get_files(self):
-        return {'meta': TemplateMetaFile(f'{self.absolute_path}/{self.name}.json')}
+        return {'meta': TemplateMetaFile(f'{self.absolute_path}/_/{self.name}.json')}
