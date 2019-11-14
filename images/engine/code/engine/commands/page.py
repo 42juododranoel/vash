@@ -26,6 +26,7 @@ def delete_page(paths):
 def render_page(paths):
     for path in paths:
         page = Page(path)
+        page.create()
         page.render()
 
 

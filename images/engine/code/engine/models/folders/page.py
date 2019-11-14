@@ -131,9 +131,11 @@ class PageBackwardRelations:
         my_json = self.page.files['json'].read()
         for page in self.pages:
             echo(f'  “{page.path}”')
-            page_json = page.files['json'].read()
-            page_json[self.page.link] = my_json[self.page.link]
-            page.files['json'].write(page_json)
+
+            if page.files['json'].is_present:
+                page_json = page.files['json'].read()
+                page_json[self.page.link] = my_json[self.page.link]
+                page.files['json'].write(page_json)
 
 
 class PageRenderers:
@@ -164,9 +166,6 @@ class PageRenderers:
     def render(self):
         echo(f'Render “{self.page.path}”')
 
-        if not self.page.is_present:
-            raise ValueError('Can\'t render missing page')
-
         context = self._get_context()
         context.update(self.page.meta)
 
@@ -195,7 +194,7 @@ class PageHtmlRenderer:
         echo(f'Render “{self.page.path}” as HTML')
 
         main_template = Template.get_main_template()
-        html_file = HtmlFile(f'{main_template.absolute_path}/main.html')
+        html_file = HtmlFile(f'{main_template.absolute_path}/_/main.html')
         html = html_file.render(context)
 
         pre_processors = self.renderers._get_processors('pre', 'html', [])
@@ -203,9 +202,10 @@ class PageHtmlRenderer:
             processor = PROCESSORS[name]
             html = processor.process_content(html)
 
-        file = self.page.files['html']
-        file.write(html)
+        self.page.files['html'].write(html)
 
+    def post_process(self):
+        file = self.page.files['html']
         post_processors = self.renderers._get_processors('post', 'html', [])
         for name in post_processors:
             processor = PROCESSORS[name]
@@ -234,9 +234,10 @@ class PageJsonRenderer:
             }
         }
 
-        file = self.page.files['json']
-        file.write(json)
+        self.page.files['json'].write(json)
 
+    def post_process(self):
+        file = self.page.files['json']
         post_processors = self.renderers._get_processors('post', 'json', [])
         for name in post_processors:
             processor = PROCESSORS[name]
@@ -271,6 +272,6 @@ class Page(Resource):
         return {
             'json': JsonFile(f'{Resource.ROOT_FOLDER}/assets/json/{self.path}.json'),
             'html': HtmlFile(f'{Resource.ROOT_FOLDER}/assets/html/{self.path}.html'),
-            'meta': PageMetaFile(f'{self.absolute_path}/{self.name}.json'),
-            'cache': PageCacheFile(f'{self.absolute_path}/cache.json'),
+            'meta': PageMetaFile(f'{self.absolute_path}/_/{self.name}.json'),
+            'cache': PageCacheFile(f'{self.absolute_path}/_/cache.json'),
         }
