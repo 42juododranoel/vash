@@ -3,10 +3,10 @@ from engine.models.files.meta import MetaFile
 from engine.models.folders.template import Template
 
 
-class PageMetaFile(MetaFile):
+class PageCacheFile(MetaFile):
     INITIAL_KEYS = {
-        'title': '',
-        'template': 'main',
+        'forward-relations': [],
+        'backward-relations': [],
     }
 
     @property

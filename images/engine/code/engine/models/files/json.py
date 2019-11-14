@@ -4,6 +4,8 @@ from engine.models.files.bases.file import File
 
 
 class JsonFile(File):
+    INITIAL_KEYS = {}
+
     def __getitem__(self, key):
         return self.read()[key]
 
@@ -15,7 +17,7 @@ class JsonFile(File):
         self.write(content)
 
     def _get_initial_content(self):
-        return {}
+        return self.INITIAL_KEYS
 
     def _serialize(self, content):
         return json.dumps(content, indent=2)
@@ -30,3 +32,12 @@ class JsonFile(File):
             value = default
         finally:
             return value
+
+    def update(self, items):
+        if not self.is_present:
+            self.create()
+        content = self.read()
+        for key in items:
+            content[key] = items[key]
+        else:
+            self.write(content)

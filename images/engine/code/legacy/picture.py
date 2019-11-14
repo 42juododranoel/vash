@@ -60,7 +60,6 @@ def picture(file_name, context, dry_run=False, alt_text='', image_classes='', wr
         copyfile(image_path_old, image_path_new)
         print(f'Processing “{file_name}”...')
     else:
-        print(f'Image “{file_name}” already exists, forcing dry run')
         dry_run = True
 
     image_processor = ImageProcessor(image_path_new)

@@ -1,12 +1,15 @@
 import os
 from functools import partial
 
+from click import echo
+
 from engine.utilities import merge_metas, path_to_link
 from engine.models.tags import TAGS
 from engine.models.processors import PROCESSORS
 from engine.models.files.html import HtmlFile
 from engine.models.files.json import JsonFile
 from engine.models.files.page_meta import PageMetaFile
+from engine.models.files.page_cache import PageCacheFile
 from engine.models.folders.bases.resource import Resource
 from engine.models.folders.template import Template
 
@@ -41,10 +44,10 @@ class PageBlocks:
     @property
     def raw(self):
         return {
-            'meta': self.meta,
-            'body': self.body,
-            'styles': self.styles,
-            'scripts': self.scripts,
+            'meta': self._get_file_block('meta'),
+            'body': self._get_file_block('body'),
+            'styles': self._get_tag_block('styles'),
+            'scripts': self._get_tag_block('scripts'),
         }
 
     def render(self, context):
@@ -53,22 +56,6 @@ class PageBlocks:
             blocks[name] = blocks[name].render(context) if blocks[name] else ''
         else:
             return blocks
-
-    @property
-    def meta(self):
-        return self._get_file_block('meta')
-
-    @property
-    def body(self):
-        return self._get_file_block('body')
-
-    @property
-    def styles(self):
-        return self._get_tag_block('styles')
-
-    @property
-    def scripts(self):
-        return self._get_tag_block('scripts')
 
     def _get_tag_block(self, name):
         tags = self.page.meta.get(name, [])
@@ -92,6 +79,170 @@ class PageBlocks:
         return file
 
 
+class PageRelations:
+    def __init__(self, page):
+        self.page = page
+        self.forward = PageForwardRelations(page)
+        self.backward = PageBackwardRelations(page)
+
+
+class PageForwardRelations:
+    def __init__(self, page):
+        self.page = page
+
+    @property
+    def pages(self):
+        paths = self.page.files['cache']['forward-relations']
+        return [Page(path) for path in paths]
+
+    def update(self):
+        echo(f'Update “{self.page.path}” forward relations')
+        relations = {}
+        for page in self.pages:
+            echo(f'  “{page.path}”')
+
+            if page.files['json'].is_present:
+                page_json = page.files['json'].read()
+                if page.link in page_json:
+                    relations[page.link] = page_json[page.link]
+
+            if page.files['cache'].is_present:
+                page_cache = page.files['cache'].read()
+                relations_set = set(page_cache['backward-relations'])
+                relations_set.add(self.page.path)
+                relations_list = list(relations_set)
+                page_cache['backward-relations'] = relations_list
+                page.files['cache'].update(page_cache)
+
+        self.page.files['json'].update(relations)
+
+
+class PageBackwardRelations:
+    def __init__(self, page):
+        self.page = page
+
+    @property
+    def pages(self):
+        paths = self.page.files['cache']['backward-relations']
+        return [Page(path) for path in paths]
+
+    def update(self):
+        echo(f'Update “{self.page.path}” backward relations')
+        my_json = self.page.files['json'].read()
+        for page in self.pages:
+            echo(f'  “{page.path}”')
+            page_json = page.files['json'].read()
+            page_json[self.page.link] = my_json[self.page.link]
+            page.files['json'].write(page_json)
+
+
+class PageRenderers:
+    def __init__(self, page):
+        self.page = page
+        self.html = PageHtmlRenderer(self, page)
+        self.json = PageJsonRenderer(self, page)
+
+    def _get_context(self):
+        context = {
+            'forward-relations': [],
+            'backward-relations': [],
+            'page': self.page,
+        }
+        for name, tag in TAGS.items():
+            context[name] = partial(tag, context=context)
+        else:
+            return context
+
+    def _get_processors(self, stage, name, default):
+        try:
+            processors = self.page.meta['processors'][stage][name]
+        except KeyError:
+            processors = default
+        finally:
+            return processors
+
+    def render(self):
+        echo(f'Render “{self.page.path}”')
+
+        if not self.page.is_present:
+            raise ValueError('Can\'t render missing page')
+
+        context = self._get_context()
+        context.update(self.page.meta)
+
+        contents = self.page.contents.render(context)
+        context.update(contents)
+
+        blocks = self.page.blocks.render(context)
+        context.update(blocks)
+
+        self.html.render(context)
+        self.json.render(blocks)
+
+        related_page_paths = context['forward-relations']
+        self.page.files['cache']['forward-relations'] = related_page_paths
+        self.page.relations.forward.update()
+
+        self.page.relations.backward.update()
+
+
+class PageHtmlRenderer:
+    def __init__(self, renderers, page):
+        self.renderers = renderers
+        self.page = page
+
+    def render(self, context):
+        echo(f'Render “{self.page.path}” as HTML')
+
+        main_template = Template.get_main_template()
+        html_file = HtmlFile(f'{main_template.absolute_path}/main.html')
+        html = html_file.render(context)
+
+        pre_processors = self.renderers._get_processors('pre', 'html', [])
+        for name in pre_processors:
+            processor = PROCESSORS[name]
+            html = processor.process_content(html)
+
+        file = self.page.files['html']
+        file.write(html)
+
+        post_processors = self.renderers._get_processors('post', 'html', [])
+        for name in post_processors:
+            processor = PROCESSORS[name]
+            processor.process_file(file)
+
+
+class PageJsonRenderer:
+    def __init__(self, renderers, page):
+        self.renderers = renderers
+        self.page = page
+
+    def render(self, blocks):
+        echo(f'Render “{self.page.path}” as JSON')
+
+        pre_processors_by_block = self.renderers._get_processors('pre', 'json', {})
+        for block_name, processors in pre_processors_by_block.items():
+            for processor_name in processors:
+                block = blocks[block_name]
+                processor = PROCESSORS[processor_name]
+                blocks[block_name] = processor.process_content(block)
+
+        json = {
+            self.page.link: {
+                'title': self.page.meta['title'],
+                'blocks': blocks,
+            }
+        }
+
+        file = self.page.files['json']
+        file.write(json)
+
+        post_processors = self.renderers._get_processors('post', 'json', [])
+        for name in post_processors:
+            processor = PROCESSORS[name]
+            processor.process_file(file)
+
+
 class Page(Resource):
     ROOT_FOLDER = f'{Resource.ROOT_FOLDER}/pages'
 
@@ -99,6 +250,8 @@ class Page(Resource):
         super().__init__(path)
         self.blocks = PageBlocks(self)
         self.contents = PageContents(self)
+        self.relations = PageRelations(self)
+        self.renderers = PageRenderers(self)
 
     @property
     def link(self):
@@ -112,104 +265,12 @@ class Page(Resource):
         return template_meta
 
     def render(self):
-        if not self.is_present:
-            raise ValueError('Can\'t render missing page')
-
-        context = self._get_context()
-        context.update(self.meta)
-
-        contents = self.contents.render(context)
-        context.update(contents)
-
-        blocks = self.blocks.render(context)
-        context.update(blocks)
-
-        self._render_as_html(context)
-        self._render_as_json(blocks)
-
-        self._update_relations_from_me(context['relations-from-me'])
-        # self._update_relations_to_me(context['relations-to-me'])  # Somehow
-
-    def _get_context(self):
-        context = {
-            'relations-from-me': [],
-            'relations-to-me': [],
-            'page': self,
-        }
-        for name, tag in TAGS.items():
-            context[name] = partial(tag, context=context)
-        else:
-            return context
-
-    def _get_processors(self, stage, name, default):
-        try:
-            processors = self.meta['processors'][stage][name]
-        except KeyError:
-            processors = default
-        finally:
-            return processors
+        self.renderers.render()
 
     def _get_files(self):
         return {
-            'meta': PageMetaFile(f'{self.absolute_path}/{self.name}.json'),
-            'html': HtmlFile(f'{Resource.ROOT_FOLDER}/assets/html/{self.path}.html'),
             'json': JsonFile(f'{Resource.ROOT_FOLDER}/assets/json/{self.path}.json'),
+            'html': HtmlFile(f'{Resource.ROOT_FOLDER}/assets/html/{self.path}.html'),
+            'meta': PageMetaFile(f'{self.absolute_path}/{self.name}.json'),
+            'cache': PageCacheFile(f'{self.absolute_path}/cache.json'),
         }
-
-    def _render_as_html(self, context):
-        main_template = Template.get_main_template()
-        html_file = HtmlFile(f'{main_template.absolute_path}/main.html')
-        html = html_file.render(context)
-
-        pre_processors = self._get_processors('pre', 'html', [])
-        for name in pre_processors:
-            processor = PROCESSORS[name]
-            html = processor.process_content(html)
-
-        file = self.files['html']
-        file.write(html)
-
-        post_processors = self._get_processors('post', 'html', [])
-        for name in post_processors:
-            processor = PROCESSORS[name]
-            processor.process_file(file)
-
-    def _render_as_json(self, blocks):
-        pre_processors_by_block = self._get_processors('pre', 'json', {})
-        for block_name, processors in pre_processors_by_block.items():
-            for processor_name in processors:
-                block = blocks[block_name]
-                processor = PROCESSORS[processor_name]
-                blocks[block_name] = processor.process_content(block)
-
-        json = {
-            self.link: {
-                'title': self.meta['title'],
-                'blocks': blocks,
-            }
-        }
-
-        file = self.files['json']
-        file.write(json)
-
-        post_processors = self._get_processors('post', 'json', [])
-        for name in post_processors:
-            processor = PROCESSORS[name]
-            processor.process_file(file)
-
-    def _update_relations_from_me(self, relations):
-        relations_from_me = {}
-
-        for path in relations:
-            related_page = Page(path)
-            related_page_json = related_page.files['json'].read()
-            relations_from_me[related_page.link] = related_page_json[related_page.link]
-
-    def _update_relations_to_me(self, relations):
-        my_json = self.files['json'].read()
-
-        for path in relations:
-            related_page = Page(path)
-            related_page_json = related_page.files['json'].read()
-            related_page_json[self.link] = my_json[self.link]
-            related_page.files['json'].write(related_page_json)

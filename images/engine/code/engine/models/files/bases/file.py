@@ -1,14 +1,11 @@
 import os
 
-from click import echo
-
 from engine.models.node import Node
 
 
 class File(Node):
     def read(self):
         if self.is_present:
-            echo(f'Read from “{self.absolute_path}”')
             serialized_content = self._read()
             return self._deserialize(serialized_content)
         else:
@@ -17,7 +14,6 @@ class File(Node):
     def write(self, content):
         if not self.is_present:
             self.create()
-        echo(f'Write to “{self.absolute_path}”')
         serialized_content = self._serialize(content)
         self._write(serialized_content)
 
