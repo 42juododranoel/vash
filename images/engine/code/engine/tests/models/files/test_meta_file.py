@@ -10,4 +10,4 @@ def model(request):
 
 def test_has_no_default_keys(model, path):
     meta_file = model(path)
-    assert not meta_file.DEFAULT_KEYS
+    assert not meta_file.INITIAL_KEYS

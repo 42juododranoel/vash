@@ -9,11 +9,11 @@ def model(request):
     return request.param
 
 
-@pytest.mark.parametrize('key', PageMetaFile.DEFAULT_KEYS)
+@pytest.mark.parametrize('key', PageMetaFile.INITIAL_KEYS)
 def test_key_in_default_keys(model, path, key):
     page_meta_file = model(path)
     page_meta_file.create()
-    assert page_meta_file.read() == page_meta_file.DEFAULT_KEYS
+    assert page_meta_file.read() == page_meta_file.INITIAL_KEYS
 
 
 def test_templates_returns_list_of_templates(model, path):

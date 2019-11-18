@@ -268,7 +268,8 @@ class Page(Resource):
     def render(self):
         self.renderers.render()
 
-    def _get_files(self):
+    @property
+    def files(self):
         return {
             'json': JsonFile(f'{Resource.ROOT_FOLDER}/assets/json/{self.path}.json'),
             'html': HtmlFile(f'{Resource.ROOT_FOLDER}/assets/html/{self.path}.html'),

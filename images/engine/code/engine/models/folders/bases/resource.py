@@ -4,11 +4,8 @@ from engine.models.folders.bases.folder import Folder
 class Resource(Folder):
     ROOT_FOLDER = '/resources'
 
-    def __init__(self, path: str):
-        super().__init__(path)
-        self.files = self._get_files()
-
-    def _get_files(self):
+    @property
+    def files(self):
         return {}
 
     def create(self):

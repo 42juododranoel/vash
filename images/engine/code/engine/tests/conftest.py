@@ -16,7 +16,6 @@ from engine.models.files.meta import MetaFile
 from engine.models.files.page_meta import PageMetaFile
 from engine.models.files.template_meta import TemplateMetaFile
 #
-from engine.models.processors.brotler import Brotler
 from engine.models.processors.minifier import Minifier
 from engine.models.processors.bases.processor import Processor
 

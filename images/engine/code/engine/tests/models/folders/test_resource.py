@@ -13,9 +13,9 @@ def test_initialize_sets_files(model, path):
     assert hasattr(resource, 'files')
 
 
-def test_get_files_returns_mapping(model, path):
+def test_files_returns_dictionary(model, path):
     resource = model(path)
-    assert isinstance(resource._get_files(), dict)
+    assert isinstance(resource.files, dict)
 
 
 def test_create_also_creates_files(model, path):

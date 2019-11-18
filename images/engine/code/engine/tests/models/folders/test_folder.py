@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import pytest
 
@@ -14,7 +15,11 @@ def test_is_empty_true_when_empty(model, path):
     folder = model(path)
     folder.create()
     for file in os.listdir(folder.absolute_path):
-        os.remove(f'{folder.absolute_path}/{file}')
+        try:
+            os.remove(f'{folder.absolute_path}/{file}')
+        except IsADirectoryError:
+            shutil.rmtree(f'{folder.absolute_path}/{file}')
+
     assert folder.is_empty
 
 

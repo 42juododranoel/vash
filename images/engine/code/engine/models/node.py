@@ -1,7 +1,5 @@
 import os
 
-from click import echo
-
 
 class Node:
     ROOT_FOLDER = ''
@@ -21,7 +19,6 @@ class Node:
 
     def create(self):
         if not self.is_present:
-            echo(f'Create “{self.path}”')
             parent = '/'.join(self.absolute_path.split('/')[:-1])
             if parent:  # `parent` is '' if `path` is 'plain', no 'hie/rar/chy'
                 os.makedirs(parent, exist_ok=True)
@@ -29,5 +26,4 @@ class Node:
 
     def delete(self):
         if self.is_present:
-            echo(f'Delete “{self.path}”')
             self._delete(self.absolute_path)
