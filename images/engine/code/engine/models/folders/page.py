@@ -69,7 +69,7 @@ class PageBlocks:
         latest_template_file_in_hierarchy = None
         for template in self.page.files['meta'].templates:
             template_file = HtmlFile(f'{template.absolute_path}/{name}.html')
-            if template_file.is_present:
+            if template_file.is_created:
                 latest_template_file_in_hierarchy = template_file
         else:
             if latest_template_file_in_hierarchy:
@@ -101,12 +101,12 @@ class PageForwardRelations:
         for page in self.pages:
             echo(f'  “{page.path}”')
 
-            if page.files['json'].is_present:
+            if page.files['json'].is_created:
                 page_json = page.files['json'].read()
                 if page.link in page_json:
                     relations[page.link] = page_json[page.link]
 
-            if page.files['cache'].is_present:
+            if page.files['cache'].is_created:
                 page_cache = page.files['cache'].read()
                 relations_set = set(page_cache['backward-relations'])
                 relations_set.add(self.page.path)
@@ -132,7 +132,7 @@ class PageBackwardRelations:
         for page in self.pages:
             echo(f'  “{page.path}”')
 
-            if page.files['json'].is_present:
+            if page.files['json'].is_created:
                 page_json = page.files['json'].read()
                 page_json[self.page.link] = my_json[self.page.link]
                 page.files['json'].write(page_json)

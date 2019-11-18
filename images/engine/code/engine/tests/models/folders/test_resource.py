@@ -20,7 +20,7 @@ def test_files_returns_dictionary(model, path):
 
 def test_create_also_creates_files(model, path):
     resource = model(path)
-    assert not resource.is_present
+    assert not resource.is_created
     resource.create()
     for _, file in resource.files.items():
-        assert file.is_present
+        assert file.is_created

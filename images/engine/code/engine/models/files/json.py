@@ -10,7 +10,7 @@ class JsonFile(File):
         return self.read()[key]
 
     def __setitem__(self, key, item):
-        if not self.is_present:
+        if not self.is_created:
             self.create()
         content = self.read()
         content[key] = item
@@ -34,7 +34,7 @@ class JsonFile(File):
             return value
 
     def update(self, items):
-        if not self.is_present:
+        if not self.is_created:
             self.create()
         content = self.read()
         for key in items:

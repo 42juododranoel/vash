@@ -35,32 +35,32 @@ def test_absolute_path_with_relative_path_as_path(model, relative_path):
     assert node.absolute_path == f'{node.ROOT}/{relative_path}'
 
 
-def test_is_present_true_when_created(model, path):
+def test_is_created_true_when_created(model, path):
     node = model(path)
-    assert not node.is_present
+    assert not node.is_created
     node.create()
-    assert node.is_present
+    assert node.is_created
 
 
-def test_is_present_false_when_not_created(model, path):
+def test_is_created_false_when_not_created(model, path):
     node = model(path)
-    assert not node.is_present
+    assert not node.is_created
 
 
 def test_create_idles_when_created(model, path):
     node = model(path)
-    assert not node.is_present
+    assert not node.is_created
     node.create()
-    assert node.is_present
+    assert node.is_created
     node.create()
-    assert node.is_present
+    assert node.is_created
 
 
 def test_create_creates_when_not_created(model, path):
     node = model(path)
-    assert not node.is_present
+    assert not node.is_created
     node.create()
-    assert node.is_present
+    assert node.is_created
 
 
 def test_create_creates_parent_folder(model):
@@ -75,15 +75,15 @@ def test_create_creates_parent_folder(model):
 
 def test_delete_deletes_when_created(model, path):
     node = model(path)
-    assert not node.is_present
+    assert not node.is_created
     node.create()
-    assert node.is_present
+    assert node.is_created
     node.delete()
-    assert not node.is_present
+    assert not node.is_created
 
 
 def test_delete_idles_when_not_created(model, path):
     node = model(path)
-    assert not node.is_present
+    assert not node.is_created
     node.delete()
-    assert not node.is_present
+    assert not node.is_created
