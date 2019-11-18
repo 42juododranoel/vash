@@ -2,7 +2,7 @@ import os
 
 
 class Node:
-    ROOT_FOLDER = ''
+    ROOT = ''
 
     def __init__(self, path):
         self.path = path
@@ -15,7 +15,7 @@ class Node:
     @property
     def absolute_path(self):
         return self.path if self.path.startswith('/') \
-            else f'{self.ROOT_FOLDER}/{self.path}'
+            else f'{self.ROOT}/{self.path}'
 
     def create(self):
         if not self.is_present:

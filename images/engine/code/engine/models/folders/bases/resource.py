@@ -2,7 +2,7 @@ from engine.models.folders.bases.folder import Folder
 
 
 class Resource(Folder):
-    ROOT_FOLDER = '/resources'
+    ROOT = '/resources'
 
     @property
     def files(self):

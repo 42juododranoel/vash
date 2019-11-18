@@ -1,6 +1,6 @@
 import pytest
 
-from engine.tests.conftest import TEST_ROOT_FOLDER
+from engine.tests.conftest import TEST_ROOT
 from engine.models.folders.page import Page
 from engine.models.folders.template import Template
 from engine.models.files.html import HtmlFile
@@ -21,7 +21,7 @@ def model(request):
 #     page = model(path)
 #     files = page._get_files()
 #     for key, file in files.items():
-#         assert file.path.startswith(TEST_ROOT_FOLDER)
+#         assert file.path.startswith(TEST_ROOT)
 #
 #
 # def test_render_renders_when_created(model, path):

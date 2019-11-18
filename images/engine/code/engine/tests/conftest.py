@@ -19,13 +19,13 @@ from engine.models.files.template_meta import TemplateMetaFile
 from engine.models.processors.minifier import Minifier
 from engine.models.processors.bases.processor import Processor
 
-TEST_ROOT_FOLDER = '/tmp/tests'
+TEST_ROOT = '/tmp/tests'
 
 RELATIVE_PATH_A = 'the-holy-grail/french-castle'
 RELATIVE_PATH_B = 'the-holy-grail/the-black-knight'
 
-ABSOLUTE_PATH_A = f'{TEST_ROOT_FOLDER}/{RELATIVE_PATH_A}'
-ABSOLUTE_PATH_B = f'{TEST_ROOT_FOLDER}/{RELATIVE_PATH_B}'
+ABSOLUTE_PATH_A = f'{TEST_ROOT}/{RELATIVE_PATH_A}'
+ABSOLUTE_PATH_B = f'{TEST_ROOT}/{RELATIVE_PATH_B}'
 
 FILE_SUBCLASSES = [JsonFile]
 JSON_FILE_SUBCLASSES = [MetaFile]
@@ -45,21 +45,21 @@ PROCESSOR_CLASSES = [Processor] + PROCESSOR_SUBCLASSES
 
 
 @pytest.fixture(autouse=True)
-def monkey_patch_node_root_folder(monkeypatch):
+def monkey_patch_node_root(monkeypatch):
     for model in NODE_CLASSES:
         monkeypatch.setattr(
             model,
-            'ROOT_FOLDER',
-            f'{TEST_ROOT_FOLDER}{model.ROOT_FOLDER}',
+            'ROOT',
+            f'{TEST_ROOT}{model.ROOT}',
             raising=True
         )
 
 
 @pytest.fixture(autouse=True)
-def remove_node_root_folder(request):
+def remove_node_root(request):
     yield
-    if isdir(TEST_ROOT_FOLDER):
-        rmtree(TEST_ROOT_FOLDER)
+    if isdir(TEST_ROOT):
+        rmtree(TEST_ROOT)
 
 
 @pytest.fixture

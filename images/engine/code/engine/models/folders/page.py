@@ -245,7 +245,7 @@ class PageJsonRenderer:
 
 
 class Page(Resource):
-    ROOT_FOLDER = f'{Resource.ROOT_FOLDER}/pages'
+    ROOT = f'{Resource.ROOT}/pages'
 
     def __init__(self, path: str):
         super().__init__(path)
@@ -271,8 +271,8 @@ class Page(Resource):
     @property
     def files(self):
         return {
-            'json': JsonFile(f'{Resource.ROOT_FOLDER}/assets/json/{self.path}.json'),
-            'html': HtmlFile(f'{Resource.ROOT_FOLDER}/assets/html/{self.path}.html'),
+            'json': JsonFile(f'{Resource.ROOT}/assets/json/{self.path}.json'),
+            'html': HtmlFile(f'{Resource.ROOT}/assets/html/{self.path}.html'),
             'meta': PageMetaFile(f'{self.absolute_path}/_/{self.name}.json'),
             'cache': PageCacheFile(f'{self.absolute_path}/_/cache.json'),
         }

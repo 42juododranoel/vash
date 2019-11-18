@@ -10,7 +10,7 @@ class HtmlFile(File):
             file_content = file.read()
 
         environment = Environment(
-            loader=FileSystemLoader(Template.ROOT_FOLDER),
+            loader=FileSystemLoader(Template.ROOT),
             autoescape=select_autoescape(['html']),
         )
         jinja_file = environment.from_string(file_content)

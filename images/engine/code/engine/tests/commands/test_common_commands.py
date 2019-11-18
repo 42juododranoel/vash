@@ -6,7 +6,7 @@
 # from engine.models.folders.page import Page
 # from engine.models.folders.template import Template
 # from engine.tests.conftest import (
-#     TEST_ROOT_FOLDER,
+#     TEST_ROOT,
 #     RELATIVE_PATH_A,
 # )
 #
@@ -16,8 +16,8 @@
 #     model = request.param
 #     monkeypatch.setattr(
 #         model,
-#         'ROOT_FOLDER',
-#         f'{TEST_ROOT_FOLDER}{model.ROOT_FOLDER}',
+#         'ROOT',
+#         f'{TEST_ROOT}{model.ROOT}',
 #         raising=True
 #     )
 #     return model

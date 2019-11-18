@@ -3,7 +3,7 @@ from engine.models.files.template_meta import TemplateMetaFile
 
 
 class Template(Resource):
-    ROOT_FOLDER = f'{Resource.ROOT_FOLDER}/templates'
+    ROOT = f'{Resource.ROOT}/templates'
 
     @classmethod
     def get_main_template(cls):
