@@ -5,7 +5,7 @@ from engine.models.processors.bases.processor import Processor
 
 class Minifier(Processor):
     @classmethod
-    def _get_file_path(cls, file):
+    def _get_processed_file_path(cls, file):
         name, dot, extension = file.name.rpartition('.')
         new_name = f'{name}.min.{extension}'  # filename.html → filename.min.html
         parent, slash_if_present, name = file.absolute_path.rpartition('/')

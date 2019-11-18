@@ -5,7 +5,7 @@ from engine.models.processors.bases.binary import BinaryProcessor
 
 class Brotler(BinaryProcessor):
     @classmethod
-    def _get_file_path(cls, file):
+    def _get_processed_file_path(cls, file):
         return f'{file.absolute_path}.br'
 
     @classmethod

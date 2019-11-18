@@ -3,12 +3,12 @@ from engine.models.files.bases.file import File
 
 class Processor:
     @classmethod
-    def _get_file_path(cls, file):
+    def _get_processed_file_path(cls, file):
         return file.absolute_path
 
     @classmethod
     def _process(cls, content):
-        raise NotImplementedError('Can\'t call abstract `_process`. Override it')
+        return content
 
     @classmethod
     def _read_original_content(cls, file):
@@ -18,7 +18,7 @@ class Processor:
 
     @classmethod
     def _write_processed_content(cls, file, processed_content):
-        processed_file_path = cls._get_file_path(file)
+        processed_file_path = cls._get_processed_file_path(file)
         processed_file = File(processed_file_path)
         processed_file.write(processed_content)
         return processed_file

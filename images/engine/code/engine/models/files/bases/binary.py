@@ -9,3 +9,6 @@ class BinaryFile(File):
     def _write(self, content):
         with open(self.absolute_path, 'wb') as file:
             file.write(content)
+
+    def _get_initial_content(self):
+        return b''
