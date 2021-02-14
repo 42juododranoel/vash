@@ -1,5 +1,5 @@
 click==7.0  # Easy CLI
-pillow==6.1.0  # Manage images
+pillow==6.2.0  # Manage images
 brotli==1.0.7  # Compress files
 pytest==5.1.3  # Test application code
 Jinja2==2.10.1  # Render templates
